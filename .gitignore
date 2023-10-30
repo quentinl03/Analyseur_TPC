@@ -1,3 +1,6 @@
+obj/
+*.pdf
+
 # Prerequisites
 *.d
 

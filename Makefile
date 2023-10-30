@@ -7,11 +7,11 @@
 CC=gcc
 CFLAGS=-Wall
 LDFLAGS=-Wall -lfl
-EXEC=ex6
+EXEC=tpc
 
 # Filenames
 PARSER=tpc
-LEXER=lexer
+LEXER=tpc
 
 FLEX_FLAGS=
 BISON_FLAGS=-Wcounterexamples

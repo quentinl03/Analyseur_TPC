@@ -1,3 +1,14 @@
+%{
+#include <ctype.h>
+#include <stdio.h>
+
+void yyerror(char *msg);
+int yylex();
+extern int nbline;
+%}
+%token TYPE IDENT VOID RETURN 
+%token IF ELSE WHILE NUM CHARACTER
+%token OR AND EQ ORDER ADDSUB DIVSTAR
 %%
 Prog:  DeclVars DeclFoncts
     ;
@@ -39,7 +50,7 @@ Instr:
     |  IF '(' Exp ')' Instr
     |  IF '(' Exp ')' Instr ELSE Instr
     |  WHILE '(' Exp ')' Instr
-    |  IDENT '(' Arguments  ')' ';'
+    |  IDENT '(' Arguments ')' ';'
     |  RETURN Exp ';'
     |  RETURN ';'
     |  '{' SuiteInstr '}'
@@ -83,3 +94,10 @@ ListExp:
     |  Exp
     ;
 %%
+void yyerror(char* msg){
+    fprintf(stderr,"%s near line %d\n", msg, nbline);
+}
+
+int main(void){
+    return yyparse();
+}
