@@ -16,28 +16,34 @@ LEXER=tpc
 FLEX_FLAGS=
 BISON_FLAGS=-Wcounterexamples
 
+SRC_DIR=src
 OBJS_DIR=obj
 BIN_DIR=bin
-SRC_DIR=src
+OUT_DIRS=$(OBJS_DIR) $(BIN_DIR)
 
 OBJS=$(wildcard $(OBJS_DIR)/*.tab.* $(OBJS_DIR)/*.yy.* $(OBJS_DIR)/*.o)
 # $(info $(OBJS))
 
 all: $(BIN_DIR)/$(EXEC)
 
-$(OBJS_DIR)/%.o: $(SRC_DIR)/%.c
+# https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
+# Evite de créer les dossiers à chaque fois, et n'impacte pas le message "Up to date"
+$(OUT_DIRS):
+	@mkdir -p $@
+
+$(OBJS_DIR)/%.o: $(SRC_DIR)/%.c | $(OUT_DIRS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJS_DIR)/$(LEXER).yy.c: $(SRC_DIR)/$(LEXER).lex $(OBJS_DIR)/$(PARSER).tab.h
+$(OBJS_DIR)/$(LEXER).yy.c: $(SRC_DIR)/$(LEXER).lex $(OBJS_DIR)/$(PARSER).tab.h | $(OUT_DIRS)
 	flex $(FLEX_FLAGS) --outfile=$@ $<
 
-$(OBJS_DIR)/$(PARSER).tab.h $(OBJS_DIR)/$(PARSER).tab.c &: $(SRC_DIR)/$(PARSER).y
+$(OBJS_DIR)/$(PARSER).tab.h $(OBJS_DIR)/$(PARSER).tab.c &: $(SRC_DIR)/$(PARSER).y | $(OUT_DIRS)
 	bison $(BISON_FLAGS) -d $< -o $(OBJS_DIR)/$(PARSER).tab.c
 
-$(BIN_DIR)/$(EXEC): $(OBJS_DIR)/$(LEXER).yy.o $(OBJS_DIR)/$(PARSER).tab.o
+$(BIN_DIR)/$(EXEC): $(OBJS_DIR)/$(LEXER).yy.o $(OBJS_DIR)/$(PARSER).tab.o | $(OUT_DIRS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-.PHONY: clean distclean
+.PHONY: clean distclean dir
 
 distclean:
 	rm -f $(OBJS)
