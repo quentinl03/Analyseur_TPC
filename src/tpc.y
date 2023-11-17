@@ -6,19 +6,33 @@ void yyerror(char *msg);
 int yylex();
 extern int nbline;
 %}
-%token TYPE IDENT VOID RETURN 
-%token IF ELSE WHILE NUM CHARACTER
-%token OR AND EQ ORDER ADDSUB DIVSTAR
+%union {
+    Node *node;
+    char byte;
+    int num;
+    char ident[64];
+    char comp[3];
+}
+%type <node> Prog DeclVars Declarateurs DeclFoncts DeclFonct EnTeteFonct Parametres ListTypVar Corps
+%type <node> SuiteInstr Instr Exp TB FB M E T F LValue Arguments ListExp
+%token <byte> ADDSUB DIVSTAR CHARACTER
+%token <num> NUM
+%token <ident> TYPE IDENT VOID RETURN IF ELSE WHILE
+%token <comp> OR AND EQ ORDER
 %%
-Prog:  DeclVars DeclFoncts
+Prog:  DeclVars DeclFoncts {$$ = makeNode(Prog); addChild($$,$1); addChild($$,$2);
+                            printTree($$);};
     ;
 DeclVars:
-       DeclVars TYPE Declarateurs ';'
-    |
+       DeclVars TYPE Declarateurs ';'       {Node* i = makeNode(TYPE);
+                                            addChild(i,$3);
+                                            $$ = addSibling($1,i);};
+    |                                       {$$ = makeNode(DeclVars);};
     ;
 Declarateurs:
-       Declarateurs ',' IDENT
-    |  IDENT
+       Declarateurs ',' IDENT               {$$ = $1;
+                                            addSibling($$,IDENT);};
+    |  IDENT                                {$$ = makeNode(IDENT);};
     ;
 DeclFoncts:
        DeclFoncts DeclFonct
