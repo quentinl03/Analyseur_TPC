@@ -19,9 +19,9 @@ def test_input(file: Path) -> int:
 
 class SyntaxTest(unittest.TestCase):
 
-    def _subtest_files(self, path_glob, expected_retcode, err_msg):
+    def _subtest_files(self, path_glob: str, expected_retcode: int, err_msg: str):
         count = 0
-        files = list(Path("tests/").glob(path_glob))
+        files = list(Path("test/").glob(path_glob))
 
         for filename in files:
             with self.subTest(filename=str(filename)) as sub:
