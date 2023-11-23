@@ -1,6 +1,4 @@
 /* tree.h */
-#ifndef _TREE_H_
-#define _TREE_H_
 
 #define FOREACH_NODE(NODE) \
     NODE(Prog)             \
@@ -14,6 +12,7 @@
     NODE(ListTypVar)       \
     NODE(SuiteInstr)       \
     NODE(Instr)            \
+    NODE(EmptyInstr)       \
     NODE(LValue)           \
     NODE(Exp)              \
     NODE(Arguments)        \
@@ -57,5 +56,3 @@ void printTree(Node *node);
 #define FIRSTCHILD(node) node->firstChild
 #define SECONDCHILD(node) node->firstChild->nextSibling
 #define THIRDCHILD(node) node->firstChild->nextSibling->nextSibling
-
-#endif
