@@ -4,6 +4,7 @@ bin/
 __pycache__/
 .vscode/
 .pytest_cache/
+*.zip
 
 # Prerequisites
 *.d

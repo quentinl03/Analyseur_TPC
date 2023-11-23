@@ -4,7 +4,8 @@
 
 void yyerror(char *msg);
 int yylex();
-extern int nbline;
+extern unsigned int nbline;
+extern unsigned int nbchar;
 %}
 %token TYPE IDENT VOID RETURN 
 %token IF ELSE WHILE NUM CHARACTER
@@ -95,7 +96,7 @@ ListExp:
     ;
 %%
 void yyerror(char* msg){
-    fprintf(stderr,"%s near line %d\n", msg, nbline);
+    fprintf(stderr, "%s: line %u column %u", msg, nbline, nbchar);
 }
 
 int main(void){

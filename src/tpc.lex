@@ -1,6 +1,11 @@
 %{
 #include "tpc.tab.h"
-int nbline = 1;
+unsigned int nbline = 1;
+unsigned int nbchar = 1;
+
+#define CHAR_INC (nbchar += yyleng)
+#define CHAR_RST (nbchar = 0)
+
 %}
 
 %option nounput
@@ -15,32 +20,33 @@ LITERAL                     \'({ESCAPED_ASCII}|[ -&]|[(-~])\'
 
 %%
 
-"/*"                        {BEGIN COMMENT;};
-<COMMENT>(.|{SEPARATOR})    {/* Do nothing */};
-<COMMENT>"*/"               {BEGIN INITIAL;};
+"/*"                        {CHAR_INC; BEGIN COMMENT;};
+<COMMENT>\n                 {nbline++; CHAR_RST;};
+<COMMENT>(.|{SEPARATOR})    {CHAR_INC;};
+<COMMENT>"*/"               {CHAR_INC; BEGIN INITIAL;};
 
-"//"(.|\t)*                 {/* Do nothing */};
+"//"(.|\t)*                 {CHAR_INC;};
 
-int|char                    {return TYPE;};
-void                        {return VOID;};
-if                          {return IF;};
-else                        {return ELSE;};
-while                       {return WHILE;};
-return                      {return RETURN;};
-[*/%]                       {return DIVSTAR;};
-[+-]                        {return ADDSUB;};
-"<"|">"|"<="|">="           {return ORDER;};
-"||"                        {return OR;};
-"&&"                        {return AND;};
-"=="|"!="                   {return EQ;};
+int|char                    {CHAR_INC; return TYPE;};
+void                        {CHAR_INC; return VOID;};
+if                          {CHAR_INC; return IF;};
+else                        {CHAR_INC; return ELSE;};
+while                       {CHAR_INC; return WHILE;};
+return                      {CHAR_INC; return RETURN;};
+[*/%]                       {CHAR_INC; return DIVSTAR;};
+[+-]                        {CHAR_INC; return ADDSUB;};
+"<"|">"|"<="|">="           {CHAR_INC; return ORDER;};
+"||"                        {CHAR_INC; return OR;};
+"&&"                        {CHAR_INC; return AND;};
+"=="|"!="                   {CHAR_INC; return EQ;};
 
-[1-9][0-9]*|0               {return NUM;};
-({IDENTIFIER})              {return IDENT;};
-({LITERAL})                 {return CHARACTER;}; 
+[1-9][0-9]*|0               {CHAR_INC; return NUM;};
+({IDENTIFIER})              {CHAR_INC; return IDENT;};
+({LITERAL})                 {CHAR_INC; return CHARACTER;}; 
 
-\n                          {++nbline;};
-({SEPARATOR})               {/* Do nothing */};
-.                           {return yytext[0];};
+\n                          {nbline++; CHAR_RST;};
+({SEPARATOR})               {CHAR_INC; };
+.                           {CHAR_INC; return yytext[0];};
 <<EOF>>                     {return 0;}; 
 
 %%

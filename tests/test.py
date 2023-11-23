@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from subprocess import run
 
-EXECUTABLE = "./bin/tpc"
+EXECUTABLE = "./bin/tpcas"
 
 def test_input(file: Path) -> int:
     with open(file, "r") as f:

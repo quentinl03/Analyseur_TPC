@@ -7,7 +7,7 @@
 CC=gcc
 CFLAGS=-Wall
 LDFLAGS=-Wall -lfl
-EXEC=tpc
+EXEC=tpcas
 
 # Filenames
 PARSER=tpc
