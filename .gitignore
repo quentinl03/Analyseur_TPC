@@ -1,6 +1,9 @@
 obj/
 bin/
 *.pdf
+__pycache__/
+.vscode/
+.pytest_cache/
 
 # Prerequisites
 *.d
