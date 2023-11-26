@@ -172,6 +172,6 @@ void yyerror(char* msg){
     fprintf(stderr, "%s: line %u column %u", msg, nbline, nbchar);
 }
 
-int main(void){
+int main(int argc, char** argv){
     return yyparse();
 }
