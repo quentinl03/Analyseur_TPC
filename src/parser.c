@@ -12,7 +12,7 @@
 
 char* parser(int argc, char** argv, int* flag_h, int* flag_t) {
     int option_index = 0, opt;
-    char* map = NULL;
+    char* path = NULL;
     static struct option long_options[] = {
         {"help", no_argument, 0, 'h'},
         {"tree", no_argument, 0, 't'},
@@ -43,7 +43,7 @@ char* parser(int argc, char** argv, int* flag_h, int* flag_t) {
     }
     if (optind < argc) {
         if (optind == argc - 1) {
-            map = argv[optind];
+            path = argv[optind];
         } else {
             printf("Too much arguments (1 for map)\n");
         }

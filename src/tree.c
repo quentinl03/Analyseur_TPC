@@ -30,6 +30,10 @@ Node *makeNode(label_t label) {
     return node;
 }
 
+void addAttribut(Node *node, Attribut att) {
+    node->att = att;
+}
+
 void addSibling(Node *node, Node *sibling) {
     Node *curr = node;
     while (curr->nextSibling != NULL) {

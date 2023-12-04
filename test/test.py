@@ -6,6 +6,7 @@ from subprocess import run
 
 EXECUTABLE = "./bin/tpcas"
 
+
 def test_input(file: Path) -> int:
     with open(file, "r") as f:
         print(f"Test with {file}")
@@ -15,6 +16,7 @@ def test_input(file: Path) -> int:
             input=f.read()
         )
         # process.stdin.close()
+        # affciher stderr
         return process.returncode
 
 class SyntaxTest(unittest.TestCase):
@@ -32,10 +34,11 @@ class SyntaxTest(unittest.TestCase):
         print(f"{count}/{len(files)} of {path_glob} are ok\n")
 
     def test_valid_inputs(self):
-        self._subtest_files("good/*.c", 0, "Input was not accepted while it should")
+        self._subtest_files("good/*", 0, "Input was not accepted while it should")
 
     def test_rejected_inputs(self):
-        self._subtest_files("syn-err/*.c", 1, "Input was accepted while it should not")
+        self._subtest_files("syn-err/*", 1, "Input was accepted while it should not")
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=0)

@@ -22,7 +22,24 @@
     NODE(E)                \
     NODE(T)                \
     NODE(F)                \
-    NODE(ListExp)
+    NODE(ListExp)          \
+    NODE(Addsub)           \
+    NODE(Divstar)          \
+    NODE(Character)        \
+    NODE(Num)              \
+    NODE(Type)             \
+    NODE(Ident)            \
+    NODE(Void)             \
+    NODE(Return)           \
+    NODE(If)               \
+    NODE(Else)             \
+    NODE(While)            \
+    NODE(Or)               \
+    NODE(And)              \
+    NODE(Eq)               \
+    NODE(Order)            \
+    NODE(Not)              \
+    NODE(Assignation)
 
 #define GENERATE_ENUM(ENUM) ENUM,
 #define GENERATE_STRING(STRING) #STRING,
@@ -41,13 +58,29 @@ typedef enum {
 //     /* To avoid listing them twice, see https://stackoverflow.com/a/10966395 */
 // } label_t;
 
+typedef union {
+    char byte;
+    int num;
+    char ident[64];
+    char key_word[5];
+} Attribut;
+
+typedef enum {
+    type_char,
+    type_int,
+    type_ident,
+    type_comp,
+} type_t;
+
 typedef struct Node {
     label_t label;
     struct Node *firstChild, *nextSibling;
+    Attribut att;
     int lineno;
 } Node;
 
 Node *makeNode(label_t label);
+void addAttribut(Node *node, Attribut att);
 void addSibling(Node *node, Node *sibling);
 void addChild(Node *parent, Node *child);
 void deleteTree(Node *node);
