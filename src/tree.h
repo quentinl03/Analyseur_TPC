@@ -69,7 +69,6 @@ typedef enum {
     type_char,
     type_int,
     type_ident,
-    type_comp,
 } type_t;
 
 typedef struct Node {

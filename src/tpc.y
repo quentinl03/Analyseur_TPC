@@ -14,6 +14,7 @@ extern unsigned int nbchar;
     int num;
     char ident[64];
     char comp[3];
+    char key_word[10];
 }
 %type <node> Prog DeclVars Declarateurs DeclFoncts DeclFonct EnTeteFonct Parametres ListTypVar Corps
 %type <node> SuiteInstr Instr Exp TB FB M E T F LValue Arguments ListExp
@@ -163,7 +164,7 @@ ListExp:
     ;
 %%
 void yyerror(char* msg){
-    fprintf(stderr, "%s: line %u column %u", msg, nbline, nbchar);
+    fprintf(stderr, "%s: line %u column %u\n", msg, nbline, nbchar);
 }
 
 int main(int argc, char** argv){
