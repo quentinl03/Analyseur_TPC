@@ -40,7 +40,11 @@
     NODE(Order)            \
     NODE(Not)              \
     NODE(Assignation)      \
-    NODE(Array)
+    NODE(Variable)         \
+    NODE(DeclArray)        \
+    NODE(ListTypVarElem)   \
+    NODE(DeclFonctArray)   \
+    NODE(ArrayLR)          
 
 #define GENERATE_ENUM(ENUM) ENUM,
 #define GENERATE_STRING(STRING) #STRING,
