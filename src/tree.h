@@ -39,7 +39,8 @@
     NODE(Eq)               \
     NODE(Order)            \
     NODE(Not)              \
-    NODE(Assignation)
+    NODE(Assignation)      \
+    NODE(Array)
 
 #define GENERATE_ENUM(ENUM) ENUM,
 #define GENERATE_STRING(STRING) #STRING,

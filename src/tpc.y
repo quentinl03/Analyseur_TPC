@@ -17,7 +17,7 @@ extern unsigned int nbchar;
     char key_word[10];
 }
 %type <node> Prog DeclVars Declarateurs DeclFoncts DeclFonct EnTeteFonct Parametres ListTypVar Corps
-%type <node> SuiteInstr Instr Exp TB FB M E T F LValue Arguments ListExp
+%type <node> SuiteInstr Instr Exp TB FB M E T F LValue Arguments ListExp Array Variable
 %token <byte> ADDSUB DIVSTAR CHARACTER
 %token <num> NUM
 %token <ident> TYPE IDENT VOID RETURN IF ELSE WHILE
@@ -35,10 +35,21 @@ DeclVars:
                                         addChild($$, i);};
     |                                   {$$ = makeNode(DeclVars);};
     ;
-Declarateurs:
-       Declarateurs ',' IDENT           {$$ = $1;
-                                        addSibling($$, makeNode(Ident));};
+
+Array:
+    IDENT '[' NUM ']'                   {$$ = makeNode(Ident);
+                                        addChild($$, makeNode(Num));};
+    ;
+
+Variable:
+       Array                            {$$ = $1;};
     |  IDENT                            {$$ = makeNode(Ident);};
+    ;
+
+Declarateurs:
+       Declarateurs ',' Variable        {$$ = $1;
+                                        addSibling($$, $3);};
+    |  Variable                         {$$ = $1;};
     ;
 DeclFoncts:
        DeclFoncts DeclFonct             {$$ = $1;
