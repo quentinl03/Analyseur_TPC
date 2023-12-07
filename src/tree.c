@@ -27,10 +27,12 @@ Node *makeNode(label_t label) {
     node->label = label;
     node->firstChild = node->nextSibling = NULL;
     node->lineno = nbline;
+    node->type = type_void;
     return node;
 }
 
-void addAttribut(Node *node, Attribut att) {
+void addAttribut(Node *node, Attribut att, type_t type) {
+    node->type = type;
     node->att = att;
 }
 
@@ -69,8 +71,26 @@ void printTree(Node *node) {
     if (depth > 0) {  // 2514 = L form; 2500 = horizontal line; 251c = vertical line and right horiz
         printf(rightmost[depth] ? "\u2514\u2500\u2500 " : "\u251c\u2500\u2500 ");
     }
-    printf("%s", NODE_STRING[node->label]);
-    printf("\n");
+
+    switch (node->type) {
+        case type_byte:
+            printf("%c\n", node->att.byte);
+            break;
+        case type_num:
+            printf("%c\n", node->att.num);
+            break;
+        case type_ident:
+            printf("%s\n", node->att.ident);
+            break;
+        case type_key_word:
+            printf("%s\n", node->att.key_word);
+            break;
+        case type_void:
+        default:
+            printf("%s\n", NODE_STRING[node->label]);
+            break;
+    }
+    // printf("\n");
     depth++;
     for (Node *child = node->firstChild; child != NULL; child = child->nextSibling) {
         rightmost[depth] = (child->nextSibling) ? false : true;

@@ -66,20 +66,23 @@ typedef union {
 } Attribut;
 
 typedef enum {
-    type_char,
-    type_int,
+    type_byte,
+    type_num,
     type_ident,
+    type_key_word,
+    type_void,
 } type_t;
 
 typedef struct Node {
     label_t label;
     struct Node *firstChild, *nextSibling;
     Attribut att;
+    type_t type;
     int lineno;
 } Node;
 
 Node *makeNode(label_t label);
-void addAttribut(Node *node, Attribut att);
+void addAttribut(Node *node, Attribut att, type_t type);
 void addSibling(Node *node, Node *sibling);
 void addChild(Node *parent, Node *child);
 void deleteTree(Node *node);
