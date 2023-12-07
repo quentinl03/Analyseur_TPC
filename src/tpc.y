@@ -78,11 +78,15 @@ EnTeteFonct:
        TYPE IDENT '(' Parametres ')'    {$$ = makeNode(EnTeteFonct);
                                         addChild($$,makeNode(Type));
                                         addChild($$,makeNode(Ident));
-                                        addChild($$,$4);};
+                                        Node* params = makeNode(Parametres);
+                                        addChild(params, $4);
+                                        addChild($$, params);};
     |  VOID IDENT '(' Parametres ')'    {$$ = makeNode(EnTeteFonct);
                                         addChild($$,makeNode(Void));
                                         addChild($$,makeNode(Ident));
-                                        addChild($$,$4);};
+                                        Node* params = makeNode(Parametres);
+                                        addChild(params, $4);
+                                        addChild($$, params);};
     ;
 
 Parametres:
