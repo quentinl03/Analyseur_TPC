@@ -2,10 +2,12 @@
 
 import unittest
 import logging
+import os
 from pathlib import Path
 from subprocess import run
 
-EXECUTABLE = "./bin/tpcas"
+EXECUTABLE = Path("./bin/tpcas").resolve()
+os.chdir(Path(__file__).resolve().parent)
 
 logger = logging.getLogger("Test")
 
@@ -26,12 +28,12 @@ class ColoredFormatter(logging.Formatter):
 
 def test_input(file: Path, expected_retcode: int) -> int:
     """Open a file and compares its output to expected_retcode"""
-    with open(file, "r") as f:
-        logger.debug(f"Test with {file}...")
+    with open(file, "r", encoding="utf-8") as f:
+        logger.debug(f"Test with {file} ...")
         process = run(
             [EXECUTABLE],
             capture_output=True, text=True,
-            input=f.read()
+            input=f.read(), check=False
         )
 
         if process.returncode == expected_retcode:
@@ -46,10 +48,10 @@ class SyntaxTest(unittest.TestCase):
 
     def _subtest_files(self, path_glob: str, expected_retcode: int, err_msg: str):
         count = 0
-        files = list(Path("test/").glob(path_glob))
+        files = list(Path(".").glob(path_glob))
 
         for filename in files:
-            with self.subTest(filename=str(filename)) as sub:
+            with self.subTest(str(filename)):
                 retcode = test_input(filename, expected_retcode)
                 count += retcode == expected_retcode
                 self.assertEqual(retcode, expected_retcode, err_msg)
