@@ -94,9 +94,7 @@ Instr:
     |  IF '(' Exp ')' Instr ELSE Instr  {$$ = makeNode(If);
                                         addChild($$,$3);
                                         addChild($$,$5);
-                                        Node* i = makeNode(Else);
-                                        addChild(i,$7);
-                                        addSibling($$,i);};
+                                        addChild($$,$7);};
     |  WHILE '(' Exp ')' Instr          {$$ = makeNode(While);
                                         addChild($$,$3);
                                         addChild($$,$5);};
