@@ -83,6 +83,12 @@ typedef struct Node {
 
 Node *makeNode(label_t label);
 void addAttribut(Node *node, Attribut att, type_t type);
+
+void addAttributIdent(Node *node, char value[64]);
+void addAttributKeyWord(Node *node, char value[5]);
+void addAttributByte(Node *node, char value);
+void addAttributNum(Node *node, int value);
+
 void addSibling(Node *node, Node *sibling);
 void addChild(Node *parent, Node *child);
 void deleteTree(Node *node);

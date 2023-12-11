@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 extern int nbline; /* from lexer */
 
 // static const char *StringFromLabel[] = {
@@ -31,9 +32,31 @@ Node *makeNode(label_t label) {
     return node;
 }
 
-void addAttribut(Node *node, Attribut att, type_t type) {
+void addAttributIdent(Node *node, char value[64]) {
+    node->type = type_ident;
+    // node->att.ident = value;
+    strcpy(node->att.ident, value);
+}
+
+void addAttributKeyWord(Node *node, char value[5]) {
+    node->type = type_key_word;
+    strcpy(node->att.key_word, value);
+}
+
+void addAttributByte(Node *node, char value) {
+    node->type = type_byte;
+    node->att.byte = value;
+}
+
+void addAttributNum(Node *node, int value) {
+    node->type = type_num;
+    node->att.num = value;
+}
+
+void addAttribut(Node *node, Attribut attrib, type_t type) {
     node->type = type;
-    node->att = att;
+    // strcpy(node->att.ident, attrib.ident);
+    node->att = attrib;
 }
 
 void addSibling(Node *node, Node *sibling) {
@@ -77,7 +100,7 @@ void printTree(Node *node) {
             printf("%c\n", node->att.byte);
             break;
         case type_num:
-            printf("%c\n", node->att.num);
+            printf("%d\n", node->att.num);
             break;
         case type_ident:
             printf("%s\n", node->att.ident);

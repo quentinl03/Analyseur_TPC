@@ -49,7 +49,7 @@ return                      {CHAR_INC; return RETURN;};
                             CHAR_INC; return NUM;};
 ({IDENTIFIER})              {strcpy(yylval.key_word, yytext);
                             CHAR_INC; return IDENT;};
-({LITERAL})                 {yylval.byte = yytext[0];
+({LITERAL})                 {yylval.byte = yytext[1];
                             CHAR_INC; return CHARACTER;}; 
 
 \n                          {nbline++; CHAR_RST;};
