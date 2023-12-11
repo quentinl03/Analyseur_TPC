@@ -16,7 +16,7 @@ extern unsigned int nbchar;
     char key_word[5];
 }
 %type <node> Prog DeclVars Declarateurs DeclFoncts DeclFonct EnTeteFonct Parametres ListTypVar Corps
-%type <node> SuiteInstr Instr Exp TB FB M E T F LValue Arguments ListExp
+%type <node> SuiteInstr Instr Exp TB FB M E T F LValue Arguments ListExp DeclArray DeclFonctArray ArrayLR
 %token <byte> ADDSUB DIVSTAR CHARACTER
 %token <num> NUM
 %token <ident> IDENT VOID RETURN IF ELSE WHILE
@@ -40,8 +40,26 @@ Declarateurs:
                                         Node* i = makeNode(Ident);
                                         addAttributIdent(i, $3);
                                         addSibling($$, i);};
+    |  Declarateurs ',' DeclArray       {$$ = $1;};
     |  IDENT                            {$$ = makeNode(Ident);
                                         addAttributIdent($$, $1);};
+    |  DeclArray                        {$$ = $1;};
+    ;
+DeclFonctArray:
+    TYPE IDENT '[' ']'                  {$$ = makeNode(DeclFonctArray);
+                                        Node* type = makeNode(Type);
+                                        addChild($$, type);
+                                        Node* ident = makeNode(Ident);
+                                        addChild(type, ident);};
+    ;
+
+DeclArray:
+    IDENT '[' NUM ']'                   {$$ = makeNode(Ident);
+                                        addChild($$, makeNode(Num));};
+
+ArrayLR:
+    IDENT '[' Exp ']'                   {$$ = makeNode(Ident);
+                                        addChild($$, $3);};
     ;
 DeclFoncts:
        DeclFoncts DeclFonct             {$$ = $1;
@@ -70,6 +88,7 @@ EnTeteFonct:
                                         addChild($$, j);
                                         addChild($$, $4);};
     ;
+
 Parametres:
        VOID                             {$$ = makeNode(Void);};
     |  ListTypVar                       {$$ = $1;};
@@ -89,6 +108,7 @@ ListTypVar:
                                         addAttributIdent(j, $2);
                                         addChild(i, j);
                                         addChild($$, i);};
+    |  DeclFonctArray                   {$$ = $1;}
     ;
 Corps: '{' DeclVars SuiteInstr '}'      {$$ = makeNode(Corps);
                                         addChild($$,$2);
@@ -176,6 +196,7 @@ F   :  ADDSUB F                         {$$ = makeNode(Addsub);
 LValue:
        IDENT                            {$$ = makeNode(Ident);
                                         addAttributIdent($$, $1);};
+    |  ArrayLR                          {$$ = $1;}
     ;
 Arguments:
        ListExp                          {$$ = $1;};

@@ -39,7 +39,10 @@
     NODE(Eq)               \
     NODE(Order)            \
     NODE(Not)              \
-    NODE(Assignation)
+    NODE(Assignation)      \
+    NODE(DeclArray)        \
+    NODE(DeclFonctArray)   \
+    NODE(ArrayLR)
 
 #define GENERATE_ENUM(ENUM) ENUM,
 #define GENERATE_STRING(STRING) #STRING,
