@@ -13,6 +13,7 @@
     NODE(SuiteInstr)       \
     NODE(Instr)            \
     NODE(EmptyInstr)       \
+    NODE(EmptyArgs)        \
     NODE(LValue)           \
     NODE(Exp)              \
     NODE(Arguments)        \

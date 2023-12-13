@@ -10,6 +10,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void print_help() {
+    printf(
+        "\nTPC helper :\n\n"
+        "./bin/tpc [-t] [-h] [file]\n\n"
+        "file :\n"
+        "\t Path to the file to real and ...\n\n"
+        "-t / --tree :\n"
+        "\t Generate an abstract tree from the file.\n\n"
+        "-h / --help :\n"
+        "\t Prints this menu.\n\n");
+}
+
 char* parser(int argc, char** argv, int* flag_h, int* flag_t) {
     int option_index = 0, opt;
     char* path = NULL;
@@ -26,15 +38,7 @@ char* parser(int argc, char** argv, int* flag_h, int* flag_t) {
 
             case 'h':
                 *flag_h = 1;
-                printf(
-                    "\nTPC helper :\n\n"
-                    "./bin/tpc [-t] [-h] [file]\n\n"
-                    "file :\n"
-                    "\t Path to the file to real and ...\n\n"
-                    "-t / --tree :\n"
-                    "\t Generate an abstract tree from the file.\n\n"
-                    "-h / --help :\n"
-                    "\t Prints this menu.\n\n");
+                print_help();
                 break;
 
             default:
@@ -45,7 +49,8 @@ char* parser(int argc, char** argv, int* flag_h, int* flag_t) {
         if (optind == argc - 1) {
             path = argv[optind];
         } else {
-            printf("Too much arguments (1 for map)\n");
+            printf("Too much arguments %s (1 for path)\n", argv[optind]);
         }
     }
+    return path;
 }

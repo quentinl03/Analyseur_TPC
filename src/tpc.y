@@ -40,7 +40,8 @@ Declarateurs:
                                         Node* i = makeNode(Ident);
                                         addAttributIdent(i, $3);
                                         addSibling($$, i);};
-    |  Declarateurs ',' DeclArray       {$$ = $1;};
+    |  Declarateurs ',' DeclArray       {$$ = $1;
+                                        addSibling($$, $3);};
     |  IDENT                            {$$ = makeNode(Ident);
                                         addAttributIdent($$, $1);};
     |  DeclArray                        {$$ = $1;};
@@ -48,17 +49,23 @@ Declarateurs:
 DeclFonctArray:
     TYPE IDENT '[' ']'                  {$$ = makeNode(DeclFonctArray);
                                         Node* type = makeNode(Type);
+                                        addAttributKeyWord(type, $1);
                                         addChild($$, type);
                                         Node* ident = makeNode(Ident);
+                                        addAttributIdent(type, $2);
                                         addChild(type, ident);};
     ;
 
 DeclArray:
     IDENT '[' NUM ']'                   {$$ = makeNode(Ident);
-                                        addChild($$, makeNode(Num));};
+                                        addAttributIdent($$,$1);
+                                        Node* num = makeNode(Num);
+                                        addAttributNum(num, $3);
+                                        addChild($$, num);};
 
 ArrayLR:
     IDENT '[' Exp ']'                   {$$ = makeNode(Ident);
+                                        addAttributIdent($$,$1);
                                         addChild($$, $3);};
     ;
 DeclFoncts:
@@ -101,6 +108,8 @@ ListTypVar:
                                         addAttributIdent(j, $4);
                                         addChild(i, j);
                                         addChild($$,i);};
+    |  ListTypVar ',' DeclFonctArray    {$$ = $1;
+                                        addChild($$, $3);};
     |  TYPE IDENT                       {$$ = makeNode(ListTypVar);
                                         Node* i = makeNode(Type);
                                         addAttributKeyWord(i, $1);
@@ -143,13 +152,11 @@ Instr:
     |  ';'                              {$$ = makeNode(EmptyInstr);};
     ;
 Exp :  Exp OR TB                        {$$ = makeNode(Or);
-                                        addAttributKeyWord($$, "|| \0");
                                         addChild($$, $1);
                                         addChild($$, $3);};
     |  TB                               {$$ = $1;};
     ;
 TB  :  TB AND FB                        {$$ = makeNode(And);
-                                        addAttributKeyWord($$, "&& \0");
                                         addChild($$, $1);
                                         addChild($$, $3);};
     |  FB                               {$$ = $1;};
@@ -200,7 +207,7 @@ LValue:
     ;
 Arguments:
        ListExp                          {$$ = $1;};
-    |                                   {$$ = makeNode(EmptyInstr);};
+    |                                   {$$ = makeNode(EmptyArgs);};
     ;
 ListExp:
        ListExp ',' Exp                  {$$ = $1;
@@ -214,6 +221,7 @@ void yyerror(char* msg){
 }
 
 int main(int argc, char** argv){
+    /* int flag_h = 0, int flag_t = 0; */
     return yyparse();
     /* lire argv = yyin = fopen(file); */
 
