@@ -2,11 +2,13 @@
 #include <ctype.h>
 #include <stdio.h>
 #include "../src/tree.h"
+#include "../src/parser.h"
 
 void yyerror(char *msg);
 int yylex();
 extern unsigned int nbline;
 extern unsigned int nbchar;
+Option opt;
 %}
 %union {
     struct Node* node;
@@ -25,7 +27,11 @@ extern unsigned int nbchar;
 Prog:  DeclVars DeclFoncts              {$$ = makeNode(Prog);
                                         addChild($$,$1);
                                         addChild($$,$2);
-                                        printTree($$);};
+                                        if(opt.flag_tree){
+                                            printTree($$);
+                                        }
+                                        deleteTree($$);
+                                        };
     ;
 DeclVars:
        DeclVars TYPE Declarateurs ';'   {$$ = $1;
@@ -221,8 +227,17 @@ void yyerror(char* msg){
 }
 
 int main(int argc, char** argv){
-    /* int flag_h = 0, int flag_t = 0; */
-    return yyparse();
-    /* lire argv = yyin = fopen(file); */
+    extern FILE* yyin;
+    opt = parser(argc, argv);
+    if (opt.flag_help){ return 0; }
 
+    yyin = fopen(opt.path, "r");
+    if (!yyin){
+        perror("fopen");
+        fprintf(stderr, "End of execution.\n");
+        return 1;
+    }
+    int r_val = yyparse();
+    fclose(yyin);
+    return r_val;
 }

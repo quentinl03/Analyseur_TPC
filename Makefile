@@ -21,13 +21,14 @@ OBJS_DIR=obj
 BIN_DIR=bin
 OUT_DIRS=$(OBJS_DIR) $(BIN_DIR)
 
-MODULES=$(patsubst %.c, $(OBJS_DIR)/%.o, tree.c)
+MODULES=$(patsubst %.c, $(OBJS_DIR)/%.o, tree.c parser.c)
 OBJS=$(wildcard $(OBJS_DIR)/*.tab.* $(OBJS_DIR)/*.yy.* $(OBJS_DIR)/*.o)
 # $(info $(OBJS))
 
 all: $(BIN_DIR)/$(EXEC)
 
 obj/tree.o: src/tree.c src/tree.h
+obj/parser.o: src/parser.c src/parser.h
 obj/$(PARSER).o: obj/$(PARSER).c src/tree.h
 
 # https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html

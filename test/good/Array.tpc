@@ -1,6 +1,6 @@
 int main(void) {
-    int tab[10];
     int a;
+    int tab[10];
     int b;
     return 0;
 }

@@ -6,6 +6,8 @@
  *
  */
 
+#include "parser.h"
+
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,22 +24,28 @@ void print_help() {
         "\t Prints this menu.\n\n");
 }
 
-char* parser(int argc, char** argv, int* flag_h, int* flag_t) {
+Option init_option() {
+    return (Option){.path = NULL,
+                    .flag_help = 0,
+                    .flag_tree = 0};
+}
+
+Option parser(int argc, char** argv) {
+    Option option = init_option();
     int option_index = 0, opt;
-    char* path = NULL;
     static struct option long_options[] = {
         {"help", no_argument, 0, 'h'},
         {"tree", no_argument, 0, 't'},
         {0, 0, 0, 0}};
 
-    while ((opt = getopt_long(argc, argv, "ht:", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "ht", long_options, &option_index)) != -1) {
         switch (opt) {
             case 't':
-                *flag_t = 1;
+                option.flag_tree = 1;
                 break;
 
             case 'h':
-                *flag_h = 1;
+                option.flag_help = 1;
                 print_help();
                 break;
 
@@ -47,10 +55,11 @@ char* parser(int argc, char** argv, int* flag_h, int* flag_t) {
     }
     if (optind < argc) {
         if (optind == argc - 1) {
-            path = argv[optind];
+            option.path = argv[optind];
         } else {
-            printf("Too much arguments %s (1 for path)\n", argv[optind]);
+            printf("Too much arguments %s (1 for path) (no file are loaded)\n",
+                   argv[optind]);
         }
     }
-    return path;
+    return option;
 }
