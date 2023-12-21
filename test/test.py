@@ -61,11 +61,11 @@ class SyntaxTest(unittest.TestCase):
 
     def test_valid_inputs(self):
         logger.debug("# Test valid inputs :")
-        self._subtest_files("good/*", 0, "Input was not accepted while it should")
+        self._subtest_files("good/**/*.tpc", 0, "Input was not accepted while it should")
 
     def test_rejected_inputs(self):
         logger.debug("# Test rejected inputs :")
-        self._subtest_files("syn-err/*", 1, "Input was accepted while it should not")
+        self._subtest_files("syn-err/**/*.tpc", 1, "Input was accepted while it should not")
 
 if __name__ == '__main__':
 
