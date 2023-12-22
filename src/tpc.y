@@ -2,11 +2,13 @@
 #include <ctype.h>
 #include <stdio.h>
 #include "../src/tree.h"
+#include "../src/parser.h"
 
 void yyerror(char *msg);
 int yylex();
 extern unsigned int nbline;
 extern unsigned int nbchar;
+Option opt;
 %}
 %union {
     struct Node* node;
@@ -16,7 +18,7 @@ extern unsigned int nbchar;
     char key_word[5];
 }
 %type <node> Prog DeclVars Declarateurs DeclFoncts DeclFonct EnTeteFonct Parametres ListTypVar Corps
-%type <node> SuiteInstr Instr Exp TB FB M E T F LValue Arguments ListExp
+%type <node> SuiteInstr Instr Exp TB FB M E T F LValue Arguments ListExp DeclArray DeclFonctArray ArrayLR
 %token <byte> ADDSUB DIVSTAR CHARACTER
 %token <num> NUM
 %token <ident> IDENT VOID RETURN IF ELSE WHILE
@@ -25,7 +27,11 @@ extern unsigned int nbchar;
 Prog:  DeclVars DeclFoncts              {$$ = makeNode(Prog);
                                         addChild($$,$1);
                                         addChild($$,$2);
-                                        printTree($$);};
+                                        if(opt.flag_tree){
+                                            printTree($$);
+                                        }
+                                        deleteTree($$);
+                                        };
     ;
 DeclVars:
        DeclVars TYPE Declarateurs ';'   {$$ = $1;
@@ -40,8 +46,33 @@ Declarateurs:
                                         Node* i = makeNode(Ident);
                                         addAttributIdent(i, $3);
                                         addSibling($$, i);};
+    |  Declarateurs ',' DeclArray       {$$ = $1;
+                                        addSibling($$, $3);};
     |  IDENT                            {$$ = makeNode(Ident);
                                         addAttributIdent($$, $1);};
+    |  DeclArray                        {$$ = $1;};
+    ;
+DeclFonctArray:
+    TYPE IDENT '[' ']'                  {$$ = makeNode(DeclFonctArray);
+                                        Node* type = makeNode(Type);
+                                        addAttributKeyWord(type, $1);
+                                        addChild($$, type);
+                                        Node* ident = makeNode(Ident);
+                                        addAttributIdent(type, $2);
+                                        addChild(type, ident);};
+    ;
+
+DeclArray:
+    IDENT '[' NUM ']'                   {$$ = makeNode(Ident);
+                                        addAttributIdent($$,$1);
+                                        Node* num = makeNode(Num);
+                                        addAttributNum(num, $3);
+                                        addChild($$, num);};
+
+ArrayLR:
+    IDENT '[' Exp ']'                   {$$ = makeNode(Ident);
+                                        addAttributIdent($$,$1);
+                                        addChild($$, $3);};
     ;
 DeclFoncts:
        DeclFoncts DeclFonct             {$$ = $1;
@@ -70,6 +101,7 @@ EnTeteFonct:
                                         addChild($$, j);
                                         addChild($$, $4);};
     ;
+
 Parametres:
        VOID                             {$$ = makeNode(Void);};
     |  ListTypVar                       {$$ = $1;};
@@ -82,6 +114,8 @@ ListTypVar:
                                         addAttributIdent(j, $4);
                                         addChild(i, j);
                                         addChild($$,i);};
+    |  ListTypVar ',' DeclFonctArray    {$$ = $1;
+                                        addChild($$, $3);};
     |  TYPE IDENT                       {$$ = makeNode(ListTypVar);
                                         Node* i = makeNode(Type);
                                         addAttributKeyWord(i, $1);
@@ -89,6 +123,7 @@ ListTypVar:
                                         addAttributIdent(j, $2);
                                         addChild(i, j);
                                         addChild($$, i);};
+    |  DeclFonctArray                   {$$ = $1;}
     ;
 Corps: '{' DeclVars SuiteInstr '}'      {$$ = makeNode(Corps);
                                         addChild($$,$2);
@@ -123,13 +158,11 @@ Instr:
     |  ';'                              {$$ = makeNode(EmptyInstr);};
     ;
 Exp :  Exp OR TB                        {$$ = makeNode(Or);
-                                        addAttributKeyWord($$, "|| \0");
                                         addChild($$, $1);
                                         addChild($$, $3);};
     |  TB                               {$$ = $1;};
     ;
 TB  :  TB AND FB                        {$$ = makeNode(And);
-                                        addAttributKeyWord($$, "&& \0");
                                         addChild($$, $1);
                                         addChild($$, $3);};
     |  FB                               {$$ = $1;};
@@ -176,10 +209,11 @@ F   :  ADDSUB F                         {$$ = makeNode(Addsub);
 LValue:
        IDENT                            {$$ = makeNode(Ident);
                                         addAttributIdent($$, $1);};
+    |  ArrayLR                          {$$ = $1;}
     ;
 Arguments:
        ListExp                          {$$ = $1;};
-    |                                   {$$ = makeNode(EmptyInstr);};
+    |                                   {$$ = makeNode(EmptyArgs);};
     ;
 ListExp:
        ListExp ',' Exp                  {$$ = $1;
@@ -193,7 +227,17 @@ void yyerror(char* msg){
 }
 
 int main(int argc, char** argv){
-    return yyparse();
-    /* lire argv = yyin = fopen(file); */
+    extern FILE* yyin;
+    opt = parser(argc, argv);
+    if (opt.flag_help){ return 0; }
 
+    yyin = fopen(opt.path, "r");
+    if (!yyin){
+        perror("fopen");
+        fprintf(stderr, "End of execution.\n");
+        return 1;
+    }
+    int r_val = yyparse();
+    fclose(yyin);
+    return r_val;
 }
