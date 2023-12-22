@@ -3,6 +3,8 @@
 import unittest
 import logging
 import os
+import sys
+import argparse
 from pathlib import Path
 from subprocess import run
 
@@ -67,11 +69,31 @@ class SyntaxTest(unittest.TestCase):
         logger.debug("# Test rejected inputs :")
         self._subtest_files("syn-err/**/*.tpc", 1, "Input was accepted while it should not")
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        prog='Test syntax analyser'
+    )
+    parser.add_argument(
+        "--no-color",
+        default=False,
+        action="store_true",
+        help="Disable colored output"
+    )
+    # Unknown args are passed to unittest's argparse
+    args, unittest_args = parser.parse_known_args()
+    sys.argv = [sys.argv[0]] + unittest_args
+
+    return args
+
+
 if __name__ == '__main__':
+
+    args = parse_args()
 
     logger.setLevel(logging.DEBUG)
     sh = logging.StreamHandler()
-    sh.setFormatter(ColoredFormatter())
+    if not args.no_color:
+        sh.setFormatter(ColoredFormatter())
     logger.addHandler(sh)
 
     unittest.main(verbosity=0)
