@@ -8,8 +8,12 @@ import argparse
 from pathlib import Path
 from subprocess import run
 
-EXECUTABLE = Path("./bin/tpcas").resolve()
-os.chdir(Path(__file__).resolve().parent)
+# Get project's path
+PROJECT = Path(__file__).resolve().parents[1]
+EXECUTABLE = (PROJECT / "bin" / "tpcas").resolve()
+
+# cd to test directory to make globs easier
+os.chdir(PROJECT / "test")
 
 logger = logging.getLogger("Test")
 
