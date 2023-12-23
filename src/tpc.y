@@ -8,6 +8,7 @@ void yyerror(char *msg);
 int yylex();
 extern unsigned int nbline;
 extern unsigned int nbchar;
+Node* abr;
 Option opt;
 %}
 %union {
@@ -24,13 +25,9 @@ Option opt;
 %token <ident> IDENT VOID RETURN IF ELSE WHILE
 %token <key_word> OR AND EQ ORDER TYPE
 %%
-Prog:  DeclVars DeclFoncts              {$$ = makeNode(Prog);
+Prog:  DeclVars DeclFoncts              {abr = makeNode(Prog);
                                         addChild($$,$1);
                                         addChild($$,$2);
-                                        if(opt.flag_tree){
-                                            printTree($$);
-                                        }
-                                        deleteTree($$);
                                         };
     ;
 DeclVars:
@@ -244,5 +241,11 @@ int main(int argc, char** argv) {
 
     int r_val = yyparse();
     fclose(yyin);
+    if (!r_val && opt.flag_tree){
+        printTree(abr);
+    }
+    if (abr){
+        deleteTree(abr);
+    }
     return r_val;
 }
