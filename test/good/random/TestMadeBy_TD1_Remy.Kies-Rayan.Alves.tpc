@@ -25,7 +25,7 @@ int add(char a, char b)
 }
 
 int add(char a, char b) {
-    tab[4] = 'o' +                       'u'+ 'i'; 
+    tab[4] = '\n' +                       'u'+ 'i'; 
     return a + b;
 }
 
