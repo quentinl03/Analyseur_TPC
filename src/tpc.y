@@ -97,7 +97,7 @@ EnTeteFonct:
     |  VOID IDENT '(' Parametres ')'    {$$ = makeNode(EnTeteFonct);
                                         addChild($$, makeNode(Void));
                                         Node* j = makeNode(Ident);
-                                        addAttributIdent(j, $1);
+                                        addAttributIdent(j, $2);
                                         addChild($$, j);
                                         addChild($$, $4);};
     ;
