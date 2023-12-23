@@ -24,6 +24,7 @@ Option opt;
 %token <num> NUM
 %token <ident> IDENT VOID RETURN IF ELSE WHILE
 %token <key_word> OR AND EQ ORDER TYPE
+%expect 1
 %%
 Prog:  DeclVars DeclFoncts              {abr = makeNode(Prog);
                                         addChild($$,$1);

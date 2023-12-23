@@ -14,7 +14,7 @@ PARSER=tpc
 LEXER=tpc
 
 FLEX_FLAGS=
-BISON_FLAGS=-Wcounterexamples
+BISON_FLAGS=
 
 SRC_DIR=src
 OBJS_DIR=obj
