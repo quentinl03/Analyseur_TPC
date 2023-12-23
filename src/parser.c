@@ -15,7 +15,7 @@
 void print_help() {
     printf(
         "\nTPC helper :\n\n"
-        "./bin/tpc [-t] [-h] [file]\n\n"
+        "./bin/tpc [-t] [-h] file\n\n"
         "file :\n"
         "\t Path to the file to real and ...\n\n"
         "-t / --tree :\n"
