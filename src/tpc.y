@@ -26,8 +26,8 @@ Option opt;
 %token <key_word> OR AND EQ ORDER TYPE
 %%
 Prog:  DeclVars DeclFoncts              {abr = makeNode(Prog);
-                                        addChild($$,$1);
-                                        addChild($$,$2);
+                                        addChild(abr,$1);
+                                        addChild(abr,$2);
                                         };
     ;
 DeclVars:
