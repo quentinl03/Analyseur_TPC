@@ -1,4 +1,4 @@
-int expr (void) {
+int expr(void) {
     int a;
     return ++a;
 }

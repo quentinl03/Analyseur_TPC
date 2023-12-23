@@ -1,3 +1,0 @@
-int main(int, int, char) {
-    return EXIT_FAILURE;
-}

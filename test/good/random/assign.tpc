@@ -1,5 +1,0 @@
-int square(int a, int b) {
-    int c;
-    a = ((b + a) + 2);
-    return a;
-}

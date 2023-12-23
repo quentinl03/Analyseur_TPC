@@ -1,7 +1,11 @@
+/*
+ * Test made by Remy Kies and Rayan Alves (TD1)
+ */
+
 // final boss
 
-int tab, a, b;
-char array, c, d;
+int tab[5], a, b[50];
+char array[5], c, d[6];
 
 /*
 Test ultime
@@ -21,12 +25,13 @@ int add(char a, char b)
 }
 
 int add(char a, char b) {
-    tab = 'o' +                       'u'+ 'i'; 
+    tab[4] = 'o' +                       'u'+ 'i'; 
     return a + b;
 }
 
 int main(void) {
     int i;
+    int r;
     a = +(-1234567890);
 
     i = 10;
@@ -42,7 +47,7 @@ int main(void) {
             }
         }
     }
-    // tab[4] = tab[(2 / 0 * f(a, b)) + add(5, r)];
+    tab[4] = tab[(2 / 0 * f(a, b)) + add(5, r)];
     return;
     return 0;
     a = 0;
