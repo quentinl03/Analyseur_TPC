@@ -16,6 +16,9 @@ unsigned int nbchar = 1;
 IDENTIFIER                  [a-zA-Z_][a-zA-Z0-9_]*
 SEPARATOR                   [\t\r\n ]
 ESCAPED_ASCII               \\['0rnt]
+
+/* Allow escaped characters, and select all printable
+characters between 33 and 126 included, while excluding non-escaped single quote character*/
 LITERAL                     \'({ESCAPED_ASCII}|[ -&]|[(-~])\'
 
 %%
