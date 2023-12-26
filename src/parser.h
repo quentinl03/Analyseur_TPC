@@ -15,7 +15,7 @@ typedef struct {
     int flag_tree;
 } Option;
 
-void print_help();
+void print_help(char* path);
 
 Option init_option();
 

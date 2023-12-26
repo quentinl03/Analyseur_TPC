@@ -12,16 +12,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void print_help() {
+void print_help(char* path) {
     printf(
-        "\nTPC helper :\n\n"
-        "./bin/tpc [-t] [-h] file\n\n"
+        "\nTPCAS helper :\n\n"
+        "%s [-t] [-h] file\n\n"
         "file :\n"
-        "\t Path to the file to real and ...\n\n"
+        "\t Path to the file to read.\n\n"
         "-t / --tree :\n"
         "\t Generate an abstract tree from the file.\n\n"
         "-h / --help :\n"
-        "\t Prints this menu.\n\n");
+        "\t Prints this menu.\n\n",
+        path);
 }
 
 Option init_option() {
@@ -46,7 +47,7 @@ Option parser(int argc, char** argv) {
 
             case 'h':
                 option.flag_help = 1;
-                print_help();
+                print_help(argv[0]);
                 break;
 
             default:
