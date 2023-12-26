@@ -1,0 +1,20 @@
+title: Analyse Syntaxique
+subtitle: Rapport Projet - Analyseur TPC
+date: 2023 - 2024
+colorlinks: true
+author:
+    - Quentin LABORDE
+    - Nicolas SEBAN
+lang: fr # texlive-lang-french / texlive-babel-french
+geometry: margin=3cm
+header-includes:
+    - \usepackage{graphicx}
+    - \usepackage{fancyhdr}
+    # https://ctex.org/documents/packages/layout/fancyhdr.pdf
+    - \pagestyle{fancy}
+    - \rhead{}
+    - \lhead{}
+    - \renewcommand{\headrulewidth}{0pt}
+    - \renewcommand{\footrulewidth}{0.2pt}
+    - \lfoot{\includegraphics[height=0.8cm]{rep/logos/namedlogoUGE.png}}
+    - \rfoot{\includegraphics[height=1cm]{rep/logos/logoLIGM.png}}
