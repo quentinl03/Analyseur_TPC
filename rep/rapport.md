@@ -1,32 +1,10 @@
-# Quentin LABORDE & Nicolas SEBAN
-# Rapport Projet Analyse Syntaxique L3 2023-2024 : Analyseur TPC
+\pagebreak
 
-- [Quentin LABORDE \& Nicolas SEBAN](#quentin-laborde--nicolas-seban)
-- [Rapport Projet Analyse Syntaxique L3 2023-2024 : Analyseur TPC](#rapport-projet-analyse-syntaxique-l3-2023-2024--analyseur-tpc)
-  - [Manuel utilisateur](#manuel-utilisateur)
-    - [Compilation](#compilation)
-    - [Nettoyage](#nettoyage)
-    - [Lancer le programme](#lancer-le-programme)
-    - [Les paramètres](#les-paramètres)
-    - [Tests](#tests)
-      - [Lancement](#lancement)
-  - [Avancement du projet](#avancement-du-projet)
-    - [Langage basique / avancé](#langage-basique--avancé)
-    - [Messages d'erreur](#messages-derreur)
-    - [Arbres abstraits](#arbres-abstraits)
-    - [Test (divergence : bash-\>unitest)](#test-divergence--bash-unitest)
-    - [Difficultés rencontrées](#difficultés-rencontrées)
-  - [Conclusion](#conclusion)
-    - [Améliorations possibles](#améliorations-possibles)
-    - [Points positifs](#points-positifs)
-    - [Points négatifs](#points-négatifs)
+# Manuel utilisateur
 
+## Compilation
 
-## Manuel utilisateur
-
-### Compilation
-
-Pour lancer le projet vous devez décompresser l'archive puis vous mettre dans la racine du projet et enfin vous pouvez le compiler avec la commande `make`.
+Pour lancer le projet, vous devez décompresser l'archive puis vous déplacer dans la racine du projet pour enfin le compiler avec la commande `make`.
 
 ```bash
 tar xvf ProjetASL3_LABORDE_SEBAN.tar.gz
@@ -34,13 +12,15 @@ cd ProjetASL3_LABORDE_SEBAN
 make
 ```
 
-### Nettoyage 
+## Nettoyage 
 
-Pour nettoyer le projet une fois l'utilisation terminé vous pouvez utiliser les commandes :
+Pour nettoyer le projet une fois l'utilisation terminée vous pouvez utiliser les commandes :
+
 -  `make distclean`: pour supprimmer les fichiers objets.
+
 -  `make clean`: pour supprimmer les fichiers objets et l'exécutable.
 
-### Lancer le programme
+## Lancer le programme
 
 Pour lancer le programme une fois compilé vous devez utiliser la commande suivante suivante :
 
@@ -48,85 +28,125 @@ Pour lancer le programme une fois compilé vous devez utiliser la commande suiva
 ./bin/tpcas
 ```
 
-### Les paramètres
+## Les paramètres
 
 Prototype des paramètres de la commande.
-```
+
+```bash
 ./bin/tpcas [-t] [-h] file
 ```
 
+- `file` (Obligataire) : Chemin vers le fichier à charger avec l'analyseur syntaxique.
 
-`file` (Obligataire) :
-   - Chemin vers le fichier à charger avec l'analyseur syntaxique.
+- `-t / --tree` (facultatif) :
 
-`-t / --tree` (Facultatif) :
-   - Si le fichier est valide affiche l'arbre abstrait. 
-   - /!\ Si le ficher n'est pas value l'arbre ne s'affiche pas! /!\
+   - Si le fichier est valide, affiche l'arbre abstrait. 
 
-`-h / --help` (Facultatif) :
-   - Affiche un bref menu d'aide.
+   - Attention : si le fichier est invalide, l'arbre ne s'affiche pas !
 
+- `-h / --help` (facultatif) : Affiche un bref menu d'aide.
 
-### Tests
+\pagebreak
 
-#### Lancement 
+# Tests
+
+## Lancement
+
 Vous pouvez lancer les tests de 2 manières différentes :
-  - Via le terminal :
-    - Via la commande suivante :
-    - ```bash
-      python3 test/test.py
-      ```
+
+  - Via le terminal et la commande suivante :
+
+    ```bash
+    python3 test/test.py
+    ```
+
+    Le script peut également produire une sortie sans couleurs, idéal pour créer un récapitulatif sans les caractères d'échappement ANSI :
+
+    ```bash
+    python3 test/test.py --no-color
+    ```
+
   - Via VSCode :
-    - Cliquez sur l'onglet `Test` sur la partie gauche de votre éditeur.
-    - Puis lancer les tests avec le bouton play (sous forme de flèche).
 
+    - Depuis la palette de commandes (Ctrl+Maj+P), sélectionner *Python: configure tests*
 
-## Avancement du projet
+    - Choisir ``unittest``, puis sélectionner le répertoire ``test``, et enfin le *pattern* ``test*.py``
 
-### Langage basique / avancé
+    - Cliquez sur l'onglet `Test` sur la volet gauche de l'éditeur.
 
-Nous avons réalisé l'analyseur 'basique' la version amélioré avec la gestion des tableaux.
+    - Lancez les tests avec le bouton *play* (sous forme de flèche).
 
-### Messages d'erreur
+# Avancement du projet
 
-Les messages d'erreur affichent la ligne et la colonne de leurs localisation.
+## Langage basique / Extensions
 
-### Arbres abstraits
+Nous avons réalisé l'analyseur "basique", mais également ajouté le support des tableaux.
+Comme le sujet le requiert, ceux-cis peuvent être déclarés par une constante entière, les expressions constantes sont interdites.
 
-Les arbres arstraits ont été fait et peuvent être activé avec l'option [`-t/--tree`](#les-paramètres)
+## Messages d'erreur
 
-### Test (divergence : bash->unitest)
+Les messages d'erreur affichent le couple ligne et colonne de leurs localisation.
 
-Puis lancer les tests pensez à voir ['Test'](#tests).
+## Arbres abstraits
 
-les différences...
+Les arbres abstraits ont été implémentés et peuvent être affichés avec l'option [`-t/--tree`](#les-paramètres)
 
-### Difficultés rencontrées
+## Divergence sur l'élaboration des tests unitaires
 
-- Création des arbres avec valeurs : Lorsque nous avons voulu changer les arbres à 'noeux' en arbres à 'valeurs'. Nous avons d'abord voulu faire une seule fonction pour ajouter les attributs. Cependant nous avons eu des problèmes pour le transformer en union d'atribut. Nous avons donc fait une fonction par champs dans l'union.
+Pour lancer les tests pensez à regarder la section ['Test'](#tests).
 
-- Dépendance dans le Makefile :
+Nous avons choisi, après en avoir demandé l'autorisation, d'utiliser un script Python, et non Bash, pour exécuter les tests unitaires.
 
+En effet, l'usage de Python nous permet l'utilisation de la bibliothèque native ``unittest``.
+Elle permet de simplifier la création de tests unitaires, en les séparant par type de tests, et permet de produire automatiquement un rapport des comportements inattendus.
 
-## Conclusion 
+De plus, le module ``unittest`` est intégré dans de nombreux environnements de programmation, en particulier VSCode qui possède un menu spécifique affichant le déroulement en détail des tests exécutés.
 
-### Améliorations possibles
+Il serait également enviseagable d'automatiser l'exécution du script, par un système d'intégration coninue pouvant être fourni par les ``workflow``s de Github et Gitlab.
 
-- -tree_force
+\pagebreak
 
+## Difficultés rencontrées
 
-### Points positifs
+### Création des arbres avec valeurs
+
+Lorsque nous avons voulu passer des "arbres à nœux", en "arbres à valeurs", nous avons, dans un premier temps, pensés à créer une unique fonction pour ajouter les attributs.
+Cependant, nous avons rencontré des problèmes pour le transformer en union d'attributs. Nous avons donc créé une fonction par champ de l'union.
+
+### Dépendances dans le Makefile :
+
+La compilation d'un projet utilisant flex et bison est assez particulière, notamment car Bison crée deux fichiers en sortie : l'analyseur syntaxique, mais aussi un fichier en-tête contenant la définition des tokens et de l'union. Or ce dernier, est nécessaire à flex. Il faut donc pouvoir signifier à make, que la commande bison produit deux cibles.
+
+Après quelques recherches, et examination de la documentation, il s'avère que Make permet la définition de "cibles groupées" (*grouped targets*) à l'aide du séparateur ``&:``, nous pouvons donc utiliser cette règle :
+
+```make
+obj/tpc.tab.h obj/tpc.tab.c &: src/tpc.y $(MODULES)
+```
+
+# Conclusion 
+
+## Améliorations possibles
+
+- Nous pourrions envisager l'ajout d'un mode permettant de continuer la construction de l'arbre, malgré la détection d'une erreur syntaxique.
+
+## Points positifs
+
 - Projet innovant :
-  - Nous n'avons pas eu de projet similaire au paravant. Il a été agréable de découvrir `lex` et `bison`.
+  - Nous n'avons pas eu de projet similaire auparavant. Il a été agréable de découvrir `lex` et `bison`.
+
 - Arbres abstraits :
-  - Création et oragnisation des noeux d'arbres (noeux listes, noeux pas toujours créé (EmptyInstr))
-- Creation de tests unitaires : 
-  - Création de test règles par règles.
-  - Chercher à 'casser' le programme.  
 
-### Points négatifs
+  - Création et organisation des nœux de l'arbre (nœux listes, nœux particuliers (``EmptyInstr``))
 
-Nous n'avons pas vraiment de points négatifs nous avons aprécié le projet dans son ensemble.
+- Creation des tests unitaires : 
+
+  - Création de tests règles par règles.
+
+  - Chercher à "casser" le programme.  
+
+## Points négatifs
+
+Nous n'avons pas vraiment de points négatifs, nous avons apprécié le projet dans son ensemble.
 
 _____
 
