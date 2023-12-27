@@ -95,6 +95,10 @@ void printTree(Node *node) {
         printf(rightmost[depth] ? "\u2514\u2500\u2500 " : "\u251c\u2500\u2500 ");
     }
 
+    if (node->label == DeclArray || node->label == ArrayLR || node->label == DeclFonctArray) {
+        printf("%s : ", NODE_STRING[node->label]);
+    }
+
     switch (node->type) {
         case type_byte:
             printf("%c\n", node->att.byte);
