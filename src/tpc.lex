@@ -13,7 +13,7 @@ unsigned int nbchar = 1;
 %x COMMENT
 
 /* letter [a-zA-Z]|\xc3[\x80-\xbf]|\xC5[\x92-\x93] */
-IDENTIFIER                  [a-zA-Z_][a-zA-Z0-9_]*
+IDENTIFIER                  [a-zA-Z_][a-zA-Z0-9_]{0,63}
 SEPARATOR                   [\t\r\n ]
 ESCAPED_ASCII               \\['0rnt]
 

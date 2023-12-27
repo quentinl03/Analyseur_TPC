@@ -35,12 +35,12 @@ Node *makeNode(label_t label) {
 void addAttributIdent(Node *node, char value[64]) {
     node->type = type_ident;
     // node->att.ident = value;
-    strcpy(node->att.ident, value);
+    strncpy(node->att.ident, value, 64);
 }
 
 void addAttributKeyWord(Node *node, char value[5]) {
     node->type = type_key_word;
-    strcpy(node->att.key_word, value);
+    strncpy(node->att.key_word, value, 5);
 }
 
 void addAttributByte(Node *node, char value) {
