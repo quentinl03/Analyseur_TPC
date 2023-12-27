@@ -15,11 +15,11 @@ unsigned int nbchar = 1;
 /* letter [a-zA-Z]|\xc3[\x80-\xbf]|\xC5[\x92-\x93] */
 IDENTIFIER                  [a-zA-Z_][a-zA-Z0-9_]{0,63}
 SEPARATOR                   [\t\r\n ]
-ESCAPED_ASCII               \\['0rnt]
+ESCAPED_ASCII               \\['0rnt\\]
 
-/* Allow escaped characters, and select all printable
-characters between 33 and 126 included, while excluding non-escaped single quote character*/
-LITERAL                     \'({ESCAPED_ASCII}|[ -&]|[(-~])\'
+/* Allow escaped characters, and select all printable characters between
+ 33 and 126 included, while excluding non-escaped single quote character and backslash */
+LITERAL                     \'({ESCAPED_ASCII}|[^'\\[:cntrl:]])\'
 
 %%
 
