@@ -25,7 +25,7 @@ Option opt;
 %token <ident> IDENT VOID RETURN IF ELSE WHILE
 %token <key_word> OR AND EQ ORDER TYPE CHARACTER
 %expect 1
-/* Character in key_work not char -> in case of \n, \t, \r and \0*/
+/* Character in key_word not char -> in case of \n, \t, \r and \0*/
 %%
 Prog:  DeclVars DeclFoncts              {abr = makeNode(Prog);
                                         addChild(abr,$1);
@@ -62,14 +62,14 @@ DeclFonctArray:
     ;
 
 DeclArray:
-    IDENT '[' NUM ']'                   {$$ = makeNode(Ident);
+    IDENT '[' NUM ']'                   {$$ = makeNode(DeclArray);
                                         addAttributIdent($$,$1);
                                         Node* num = makeNode(Num);
                                         addAttributNum(num, $3);
                                         addChild($$, num);};
 
 ArrayLR:
-    IDENT '[' Exp ']'                   {$$ = makeNode(Ident);
+    IDENT '[' Exp ']'                   {$$ = makeNode(ArrayLR);
                                         addAttributIdent($$,$1);
                                         addChild($$, $3);};
     ;
