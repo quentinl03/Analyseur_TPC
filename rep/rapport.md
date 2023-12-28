@@ -4,7 +4,7 @@
 
 ## Compilation
 
-Pour lancer le projet, vous devez décompresser l'archive puis vous déplacer dans la racine du projet pour enfin le compiler avec la commande `make`.
+Pour lancer le projet, vous devez décompresser l'archive puis vous déplacer vers la racine du projet pour enfin le compiler avec la commande `make`.
 
 ```bash
 tar xvf ProjetASL3_LABORDE_SEBAN.tar.gz
@@ -12,7 +12,7 @@ cd ProjetASL3_LABORDE_SEBAN
 make
 ```
 
-## Nettoyage 
+## Nettoyage
 
 Pour nettoyer le projet une fois l'utilisation terminée vous pouvez utiliser les commandes :
 
@@ -22,7 +22,7 @@ Pour nettoyer le projet une fois l'utilisation terminée vous pouvez utiliser le
 
 ## Lancer le programme
 
-Pour lancer le programme une fois compilé vous devez utiliser la commande suivante suivante :
+Pour lancer le programme compilé vous devez utiliser la commande suivante suivante :
 
 ```bash
 ./bin/tpcas
@@ -36,13 +36,13 @@ Prototype des paramètres de la commande.
 ./bin/tpcas [-t] [-h] file
 ```
 
-- `file` (Obligataire) : Chemin vers le fichier à charger avec l'analyseur syntaxique.
+- `file` (facultatif) : Chemin vers le fichier source à charger avec l'analyseur syntaxique, par défaut, lecture de l'entrée standard.
 
 - `-t / --tree` (facultatif) :
 
-   - Si le fichier est valide, affiche l'arbre abstrait. 
+   - Si le code source est valide, affiche l'arbre abstrait.
 
-   - Attention : si le fichier est invalide, l'arbre ne s'affiche pas !
+      - Attention : si le code possède une erreur syntaxique, l'arbre ne s'affiche pas !
 
 - `-h / --help` (facultatif) : Affiche un bref menu d'aide.
 
@@ -52,7 +52,7 @@ Prototype des paramètres de la commande.
 
 ## Lancement
 
-Vous pouvez lancer les tests de 2 manières différentes :
+Vous pouvez lancer les tests par deux manières différentes :
 
   - Via le terminal et la commande suivante :
 
@@ -72,7 +72,7 @@ Vous pouvez lancer les tests de 2 manières différentes :
 
     - Choisir ``unittest``, puis sélectionner le répertoire ``test``, et enfin le *pattern* ``test*.py``
 
-    - Cliquez sur l'onglet `Test` sur la volet gauche de l'éditeur.
+    - Cliquez sur l'onglet `Test` sur le volet gauche de l'éditeur.
 
     - Lancez les tests avec le bouton *play* (sous forme de flèche).
 
@@ -110,12 +110,12 @@ Il serait également enviseagable d'automatiser l'exécution du script, par un s
 
 ### Création des arbres avec valeurs
 
-Lorsque nous avons voulu passer des "arbres à nœux", en "arbres à valeurs", nous avons, dans un premier temps, pensés à créer une unique fonction pour ajouter les attributs.
+Lorsque nous avons voulu produire les "arbres à valeurs", nous avons, dans un premier temps, pensés à créer une unique fonction pour ajouter les attributs.
 Cependant, nous avons rencontré des problèmes pour le transformer en union d'attributs. Nous avons donc créé une fonction par champ de l'union.
 
 ### Dépendances dans le Makefile :
 
-La compilation d'un projet utilisant flex et bison est assez particulière, notamment car Bison crée deux fichiers en sortie : l'analyseur syntaxique, mais aussi un fichier en-tête contenant la définition des tokens et de l'union. Or ce dernier, est nécessaire à flex. Il faut donc pouvoir signifier à make, que la commande bison produit deux cibles.
+La compilation d'un projet utilisant flex et bison est assez particulière, notamment car Bison crée deux fichiers en sortie : l'analyseur syntaxique, et un fichier en-tête contenant la définition des tokens et de l'union. Or ce dernier, est nécessaire à flex. Il faut donc pouvoir signifier à make, que la commande bison produit deux cibles. Cependant, nous n'avions pas encore rencontré un tel cas dans nos précédents projets de C.
 
 Après quelques recherches, et examination de la documentation, il s'avère que Make permet la définition de "cibles groupées" (*grouped targets*) à l'aide du séparateur ``&:``, nous pouvons donc utiliser cette règle :
 
@@ -123,7 +123,7 @@ Après quelques recherches, et examination de la documentation, il s'avère que 
 obj/tpc.tab.h obj/tpc.tab.c &: src/tpc.y $(MODULES)
 ```
 
-# Conclusion 
+# Conclusion
 
 ## Améliorations possibles
 
@@ -132,17 +132,17 @@ obj/tpc.tab.h obj/tpc.tab.c &: src/tpc.y $(MODULES)
 ## Points positifs
 
 - Projet innovant :
-  - Nous n'avons pas eu de projet similaire auparavant. Il a été agréable de découvrir `lex` et `bison`.
+  - Nous n'avions pas eu de projets similaires auparavant. Il a été agréable de découvrir `flex` et `bison`.
 
 - Arbres abstraits :
 
-  - Création et organisation des nœux de l'arbre (nœux listes, nœux particuliers (``EmptyInstr``))
+  - Création et organisation des nœuds de l'arbre (nœuds listes, nœuds particuliers (``EmptyInstr``))
 
-- Creation des tests unitaires : 
+- Creation des tests unitaires :
 
   - Création de tests règles par règles.
 
-  - Chercher à "casser" le programme.  
+  - Chercher à "casser" le programme.
 
 ## Points négatifs
 
