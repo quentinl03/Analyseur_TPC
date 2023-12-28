@@ -22,7 +22,7 @@ Pour nettoyer le projet une fois l'utilisation terminée vous pouvez utiliser le
 
 ## Lancer le programme
 
-Pour lancer le programme compilé vous devez utiliser la commande suivante suivante :
+Pour lancer le programme compilé vous devez utiliser la commande suivante :
 
 ```bash
 ./bin/tpcas
@@ -42,15 +42,13 @@ Prototype des paramètres de la commande.
 
    - Si le code source est valide, affiche l'arbre abstrait.
 
-      - Attention : si le code possède une erreur syntaxique, l'arbre ne s'affiche pas !
+   - Attention : si le code possède une erreur syntaxique, l'arbre ne s'affiche pas !
 
 - `-h / --help` (facultatif) : Affiche un bref menu d'aide.
 
 \pagebreak
 
-# Tests
-
-## Lancement
+## Tests (lancement)
 
 Vous pouvez lancer les tests par deux manières différentes :
 
@@ -115,7 +113,7 @@ Cependant, nous avons rencontré des problèmes pour le transformer en union d'a
 
 ### Dépendances dans le Makefile :
 
-La compilation d'un projet utilisant flex et bison est assez particulière, notamment car Bison crée deux fichiers en sortie : l'analyseur syntaxique, et un fichier en-tête contenant la définition des tokens et de l'union. Or ce dernier, est nécessaire à flex. Il faut donc pouvoir signifier à make, que la commande bison produit deux cibles. Cependant, nous n'avions pas encore rencontré un tel cas dans nos précédents projets de C.
+La compilation d'un projet utilisant flex et bison est assez particulière, notamment car Bison crée deux fichiers en sortie : l'analyseur syntaxique, et un fichier en-tête contenant la définition des tokens et de l'union. Or ce dernier, est nécessaire à flex. Il faut donc pouvoir signifier à Make, que la commande bison produit deux cibles. Cependant, nous n'avions pas encore rencontré un tel cas dans nos précédents projets de C.
 
 Après quelques recherches, et examination de la documentation, il s'avère que Make permet la définition de "cibles groupées" (*grouped targets*) à l'aide du séparateur ``&:``, nous pouvons donc utiliser cette règle :
 

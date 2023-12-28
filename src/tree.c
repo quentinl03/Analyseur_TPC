@@ -86,6 +86,40 @@ void deleteTree(Node *node) {
 }
 
 void printTree(Node *node) {
+    static char *unprintable_char[32] = {
+        [0] = "Null character",
+        [1] = "Start of Heading",
+        [2] = "Start of Text",
+        [3] = "End of Text",
+        [4] = "End of Transmission",
+        [5] = "Enquiry",
+        [6] = "Acknowledge",
+        [7] = "Bell, Alert",
+        [8] = "Backspace",
+        [9] = "Horizontal Tab",
+        [10] = "Line Feed",
+        [11] = "Vertical Tabulation",
+        [12] = "Form Feed",
+        [13] = "Carriage Return",
+        [14] = "Shift Out",
+        [15] = "Shift In",
+        [16] = "Data Link Escape",
+        [17] = "Device Control One (XON)",
+        [18] = "Device Control Two",
+        [19] = "Device Control Three (XOFF)",
+        [20] = "Device Control Four",
+        [21] = "Negative Acknowledge",
+        [22] = "Synchronous Idle",
+        [23] = "End of Transmission Block",
+        [24] = "Cancel",
+        [25] = "End of medium",
+        [26] = "Substitute",
+        [27] = "Escape",
+        [28] = "File Separator",
+        [29] = "Group Separator",
+        [30] = "Record Separator",
+        [31] = "Unit Separator",
+    };
     static bool rightmost[128];        // tells if node is rightmost sibling
     static int depth = 0;              // depth of current node
     for (int i = 1; i < depth; i++) {  // 2502 = vertical line
@@ -101,7 +135,9 @@ void printTree(Node *node) {
 
     switch (node->type) {
         case type_byte:
-            if (node->att.byte < 32 || node->att.byte > 126) {
+            if (node->att.byte < 32) {
+                printf("%s\n", unprintable_char[(int)node->att.byte]);
+            } else if (node->att.byte > 126) {
                 printf("%d\n", node->att.byte);
             } else {
                 printf("'%c'\n", node->att.byte);
