@@ -19,10 +19,16 @@ BISON_FLAGS=
 SRC_DIR=src
 OBJS_DIR=obj
 BIN_DIR=bin
+TESTS_DIR=test
+REPORT_DIR=rep
 OUT_DIRS=$(OBJS_DIR) $(BIN_DIR)
 
 MODULES=$(patsubst %.c, $(OBJS_DIR)/%.o, tree.c parser.c)
 OBJS=$(wildcard $(OBJS_DIR)/*.tab.* $(OBJS_DIR)/*.yy.* $(OBJS_DIR)/*.o)
+
+TAR_CONTENT=$(SRC_DIR)/ $(TESTS_DIR)/ $(REPORT_DIR)/ $(OBJS_DIR)/ $(BIN_DIR) Makefile README.md
+TAR_NAME=ProjetASL3_LABORDE_SEBAN
+
 # $(info $(OBJS))
 
 all: $(BIN_DIR)/$(EXEC)
@@ -60,6 +66,11 @@ rep/rapport.pdf: rep/rapport.md
 
 distclean:
 	rm -f $(OBJS)
+	rm -rf .pytest_cache/
+	rm -rf $(TESTS_DIR)/__pycache__/
 
 clean: distclean
 	rm -f $(BIN_DIR)/$(EXEC)
+
+rendu: clean
+	tar -cvzf $(TAR_NAME).tar.gz --transform 's,^,$(TAR_NAME)/,' $(TAR_CONTENT)
