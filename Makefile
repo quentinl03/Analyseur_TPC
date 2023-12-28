@@ -54,10 +54,10 @@ $(OBJS_DIR)/$(PARSER).tab.h $(OBJS_DIR)/$(PARSER).tab.c &: $(SRC_DIR)/$(PARSER).
 $(BIN_DIR)/$(EXEC): $(OBJS_DIR)/$(LEXER).yy.o $(OBJS_DIR)/$(PARSER).tab.o $(MODULES) | $(OUT_DIRS)
 	$(CC) $^ -o $@ $(LDFLAGS)
 
-rapport: rep/rapport.pdf
+rapport: $(REPORT_DIR)/rapport.pdf
 
-rep/rapport.pdf: rep/rapport.md
-	@mkdir --parents rep/logos
+rep/rapport.pdf: $(REPORT_DIR)/rapport.md
+	@mkdir --parents $(REPORT_DIR)/logos
 	@wget --quiet --show-progress --no-clobber -O rep/logos/LogoLIGM.png "https://drive.google.com/uc?export=download&confirm=yes&id=1cZjxS6Rwp8LU4Eyahqz0eUS8aH0_VrVB" || true
 	@wget --quiet --show-progress --no-clobber -O rep/logos/namedlogoUGE.png "https://drive.google.com/uc?export=download&confirm=yes&id=1YGm1N7griuDbJhC6rSgBHrrcOsHKM5xg" || true
 	pandoc --toc $^ -o $@ --metadata-file=rep/metadata.yaml 
@@ -72,5 +72,13 @@ distclean:
 clean: distclean
 	rm -f $(BIN_DIR)/$(EXEC)
 
-rendu: clean
-	tar -cvzf $(TAR_NAME).tar.gz --transform 's,^,$(TAR_NAME)/,' $(TAR_CONTENT)
+rendu: clean rapport
+	tar -czf $(TAR_NAME).tar.gz --transform 's,^,$(TAR_NAME)/,' $(TAR_CONTENT)
+
+test: $(BIN_DIR)/$(EXEC)
+	python3 test/test.py
+
+safe_rendu:
+	@$(MAKE) --no-print-directory clean
+	@$(MAKE) --no-print-directory test
+	@$(MAKE) --no-print-directory rendu
