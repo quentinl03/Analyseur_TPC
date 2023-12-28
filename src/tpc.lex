@@ -6,6 +6,23 @@ unsigned int nbchar = 1;
 #define CHAR_INC (nbchar += yyleng)
 #define CHAR_RST (nbchar = 0)
 
+static inline char litteral_to_char(char litteral[]) {
+    static const char charmap[128] = {
+        ['0'] = '\0',
+        ['r'] = '\r',
+        ['n'] = '\n',
+        ['t'] = '\t',
+        ['\\'] = '\\',
+        ['\''] = '\'',
+    };
+
+    if (litteral[1] == '\\') {
+        return charmap[(int) litteral[2]];
+    } else {
+        return litteral[1];
+    }
+}
+
 %}
 
 %option nounput
@@ -52,7 +69,7 @@ return                      {CHAR_INC; return RETURN;};
                             CHAR_INC; return NUM;};
 ({IDENTIFIER})              {strcpy(yylval.key_word, yytext);
                             CHAR_INC; return IDENT;};
-({LITERAL})                 {strcpy(yylval.key_word, yytext);
+({LITERAL})                 {yylval.byte = litteral_to_char(yytext);
                             CHAR_INC; return CHARACTER;}; 
 
 \n                          {nbline++; CHAR_RST;};

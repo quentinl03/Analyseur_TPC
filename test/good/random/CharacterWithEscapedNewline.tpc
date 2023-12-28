@@ -1,4 +1,4 @@
 int main(void) {
-    char tab;
-    tab = '\n';
+    char c;
+    c = '\n';
 }

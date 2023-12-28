@@ -1,4 +1,4 @@
 int main(void) {
-    char tab;
-    tab = '\\';
+    char c;
+    c = '\\';
 }

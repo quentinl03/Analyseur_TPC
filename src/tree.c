@@ -101,7 +101,11 @@ void printTree(Node *node) {
 
     switch (node->type) {
         case type_byte:
-            printf("%c\n", node->att.byte);
+            if (node->att.byte < 32 || node->att.byte > 126) {
+                printf("%d\n", node->att.byte);
+            } else {
+                printf("'%c'\n", node->att.byte);
+            }
             break;
         case type_num:
             printf("%d\n", node->att.num);

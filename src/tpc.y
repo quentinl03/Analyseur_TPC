@@ -20,10 +20,10 @@ Option opt;
 }
 %type <node> Prog DeclVars Declarateurs DeclFoncts DeclFonct EnTeteFonct Parametres ListTypVar Corps
 %type <node> SuiteInstr Instr Exp TB FB M E T F LValue Arguments ListExp DeclArray DeclFonctArray ArrayLR
-%token <byte> ADDSUB DIVSTAR
+%token <byte> ADDSUB DIVSTAR CHARACTER
 %token <num> NUM
 %token <ident> IDENT VOID RETURN IF ELSE WHILE
-%token <key_word> OR AND EQ ORDER TYPE CHARACTER
+%token <key_word> OR AND EQ ORDER TYPE
 %expect 1
 /* Character in key_word not char -> in case of \n, \t, \r and \0*/
 %%
@@ -199,7 +199,7 @@ F   :  ADDSUB F                         {$$ = makeNode(Addsub);
     |  NUM                              {$$ = makeNode(Num);
                                         addAttributNum($$, $1);};
     |  CHARACTER                        {$$ = makeNode(Character);
-                                        addAttributKeyWord($$, $1);};
+                                        addAttributByte($$, $1);};
     |  LValue                           {$$ = $1;};
     |  IDENT '(' Arguments  ')'         {$$ = makeNode(Ident);
                                         addAttributIdent($$, $1);
