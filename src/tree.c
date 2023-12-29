@@ -135,12 +135,16 @@ void printTree(Node *node) {
 
     switch (node->type) {
         case type_byte:
-            if (node->att.byte < 32) {
-                printf("%s\n", unprintable_char[(int)node->att.byte]);
-            } else if (node->att.byte > 126) {
-                printf("%d\n", node->att.byte);
+            if (node->label == Character) {
+                if (node->att.byte < 32) {
+                    printf("'%s'\n", unprintable_char[(int)node->att.byte]);
+                } else if (node->att.byte > 126) {
+                    printf("%d\n", node->att.byte);
+                } else {
+                    printf("'%c'\n", node->att.byte);
+                }
             } else {
-                printf("'%c'\n", node->att.byte);
+                printf("%c\n", node->att.byte);
             }
             break;
         case type_num:
