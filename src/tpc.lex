@@ -1,4 +1,5 @@
 %{
+#include "../src/tree.h"
 #include "tpc.tab.h"
 unsigned int nbline = 1;
 unsigned int nbchar = 1;

@@ -25,7 +25,7 @@ void print_help(char* path) {
         path);
 }
 
-Option init_option() {
+Option init_option(void) {
     return (Option){.path = NULL,
                     .flag_help = 0,
                     .flag_tree = 0};

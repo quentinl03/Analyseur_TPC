@@ -4,13 +4,12 @@
 #include "../src/tree.h"
 #include "../src/parser.h"
 
-void yyerror(char *msg);
+void yyerror(Node** abr, char *msg);
 int yylex();
 extern unsigned int nbline;
 extern unsigned int nbchar;
-Node* abr;
-Option opt;
 %}
+%parse-param {Node ** abr}
 %union {
     struct Node* node;
     char byte;
@@ -27,9 +26,9 @@ Option opt;
 %expect 1
 /* Character in key_word not char -> in case of \n, \t, \r and \0*/
 %%
-Prog:  DeclVars DeclFoncts              {abr = makeNode(Prog);
-                                        addChild(abr,$1);
-                                        addChild(abr,$2);
+Prog:  DeclVars DeclFoncts              {*abr = makeNode(Prog);
+                                        addChild(*abr,$1);
+                                        addChild(*abr,$2);
                                         };
     ;
 DeclVars:
@@ -57,7 +56,7 @@ DeclFonctArray:
                                         addAttributKeyWord(type, $1);
                                         addChild($$, type);
                                         Node* ident = makeNode(Ident);
-                                        addAttributIdent(type, $2);
+                                        addAttributIdent(ident, $2);
                                         addChild(type, ident);};
     ;
 
@@ -221,33 +220,12 @@ ListExp:
                                         addChild($$,$1);};
     ;
 %%
-void yyerror(char* msg){
+void yyerror(Node** abr, char* msg){
     fprintf(stderr, "%s: line %u column %u\n", msg, nbline, nbchar);
 }
 
-int main(int argc, char** argv) {
+int parser_bison(FILE* f, Node** abr) {
     extern FILE* yyin;
-    opt = parser(argc, argv);
-    if (opt.flag_help) {
-        return 0;
-    }
-
-    if (opt.path) {
-        yyin = fopen(opt.path, "r");
-        if (!yyin){
-            perror("fopen");
-            fprintf(stderr, "End of execution.\n");
-            return 1;
-        }
-    }
-
-    int r_val = yyparse();
-    fclose(yyin);
-    if (!r_val && opt.flag_tree){
-        printTree(abr);
-    }
-    if (abr){
-        deleteTree(abr);
-    }
-    return r_val;
+    yyin = f;
+    return yyparse(abr);
 }

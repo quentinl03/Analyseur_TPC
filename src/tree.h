@@ -1,5 +1,8 @@
 /* tree.h */
 
+#ifndef TREE_H
+#define TREE_H
+
 #define FOREACH_NODE(NODE) \
     NODE(Prog)             \
     NODE(DeclVars)         \
@@ -101,3 +104,5 @@ void printTree(Node *node);
 #define FIRSTCHILD(node) node->firstChild
 #define SECONDCHILD(node) node->firstChild->nextSibling
 #define THIRDCHILD(node) node->firstChild->nextSibling->nextSibling
+
+#endif
