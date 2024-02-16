@@ -10,11 +10,12 @@
 #include <stdlib.h>
 
 #include "parser.h"
-#include "table.h"
 #include "tpc_bison.h"
 #include "tree.h"
 
-int main(int argc, char** argv) {
+#include "symboltable.h"
+
+int main(int argc, char* argv[]) {
     extern FILE* yyin;
     Node* abr;
     Option opt;
@@ -32,13 +33,24 @@ int main(int argc, char** argv) {
         }
     }
 
-    int r_val = parser_bison(yyin, &abr);
+    Error err = parser_bison(yyin, &abr);
     fclose(yyin);
-    if (!r_val && opt.flag_tree) {
+
+    if (err < 0) {
+        return -err;
+    }
+
+    SymbolTable global_vars;
+    SymbolTable_init(&global_vars);
+    SymbolTable_from_DeclVar(&global_vars, abr->firstChild);
+
+    if (opt.flag_tree) {
         printTree(abr);
+        SymbolTable_print(&global_vars);
     }
     if (abr) {
         deleteTree(abr);
     }
-    return r_val;
+
+    return EXIT_SUCCESS;
 }

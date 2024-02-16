@@ -86,7 +86,7 @@ typedef struct Node {
     Attribut att;
     type_t type;
     int lineno;
-} Node;
+} Node, *Tree;
 
 Node *makeNode(label_t label);
 void addAttribut(Node *node, Attribut att, type_t type);
