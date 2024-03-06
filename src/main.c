@@ -15,7 +15,13 @@
 #include "tpc_bison.h"
 #include "tree.h"
 
-static void _types(Node *node, Symbol_Table *table) {
+static const char *NODE_STRING[] = {
+    FOREACH_NODE(GENERATE_STRING)};
+
+static void _vars(Node *node, Symbol_Table *table) {
+    if (!node) {
+        return;
+    }
     Symbol_Type type = node->att.key_word[0] == 'i' ? INT : CHAR;
     int size = 1;
     for (Node *child = node->firstChild; child != NULL; child = child->nextSibling) {
@@ -26,18 +32,46 @@ static void _types(Node *node, Symbol_Table *table) {
     }
 }
 
+static void _func(Node *node, Symbol_Table *table) {
+    // Symbol_Type type = node->att.key_word[0] == 'i' ? INT : CHAR;
+    // int size = 1;
+    for (Node *child = node->firstChild; child != NULL; child = child->nextSibling) {
+        if (child->label == DeclFonctArray) {  // un cran de plus en profondeur
+            STable_add(table,
+                       child->firstChild->firstChild->att.ident,
+                       node->att.key_word[0] == 'i' ? INT : CHAR,
+                       0);
+        }
+        if (child->label == Type) {
+            STable_add(table,
+                       child->firstChild->att.ident,
+                       node->att.key_word[0] == 'i' ? INT : CHAR,
+                       1);
+            // printf("child->label: %s\n", NODE_STRING[child->label]);
+            // printf("child->label: %s\n", NODE_STRING[child->firstChild->label]);
+            // printf("%s", child->att.ident);
+        }
+    }
+}
+
 static void _print_vars(Node *node, Symbol_Table *table) {
-    bool is_decl = node->label == DeclVars;
+    bool is_decl_vars = node->label == DeclVars;
+    bool is_decl_func = node->label == ListTypVar;
+    // printf("node->label: %s\n", NODE_STRING[node->label]);
+
+    if (is_decl_vars) {
+        for (Node *child = node->firstChild; child != NULL; child = child->nextSibling) {
+            _vars(child, table);
+        }
+    } else if (is_decl_func) {
+        STable_print(table);
+        printf("\n");
+        STable_set_empty(table);
+        _func(node, table);
+    }
 
     for (Node *child = node->firstChild; child != NULL; child = child->nextSibling) {
-        if (is_decl) {
-            STable_set_empty(table);
-            _types(child, table);
-            STable_print(table);
-            printf("\n");
-        } else {
-            _print_vars(child, table);
-        }
+        _print_vars(child, table);
     }
 }
 

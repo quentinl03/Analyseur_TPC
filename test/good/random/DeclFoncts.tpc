@@ -1,7 +1,6 @@
 int add(int a, int b, int c) {
-    int a;
-    int b;
-    int c;
+    int a_in, b_in, c_in;
+    int d_in[5];
     
     return a + b + c;
 }
@@ -17,3 +16,8 @@ int mul(int a, int b, int c) {
 int div(int a, int b, int c) {
     return a / b / c;
 }
+
+int div(int a[], int b[], int c[]) {
+    return a / b / c;
+}
+

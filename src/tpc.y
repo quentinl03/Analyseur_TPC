@@ -121,7 +121,8 @@ ListTypVar:
                                         addAttributIdent(j, $2);
                                         addChild(i, j);
                                         addChild($$, i);};
-    |  DeclFonctArray                   {$$ = $1;}
+    |  DeclFonctArray                   {$$ = makeNode(ListTypVar);
+                                        addChild($$, $1);}
     ;
 Corps: '{' DeclVars SuiteInstr '}'      {$$ = makeNode(Corps);
                                         addChild($$,$2);
