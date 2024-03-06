@@ -17,7 +17,7 @@ typedef struct {
 
 void print_help(char* path);
 
-Option init_option();
+Option init_option(void);
 
 Option parser(int argc, char** argv);
 

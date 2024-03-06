@@ -169,3 +169,65 @@ void printTree(Node *node) {
     }
     depth--;
 }
+
+// void printTree2(Node *node) {
+//     static bool rightmost[128];        // tells if node is rightmost sibling
+//     static int depth = 0;              // depth of current node
+//     for (int i = 1; i < depth; i++) {  // 2502 = vertical line
+//         printf(rightmost[i] ? "    " : "\u2502   ");
+//     }
+//     if (depth > 0) {  // 2514 = L form; 2500 = horizontal line; 251c = vertical line and right horiz
+//         printf(rightmost[depth] ? "\u2514\u2500\u2500 " : "\u251c\u2500\u2500 ");
+//     }
+
+//     printf("%s : ", NODE_STRING[node->label]);
+
+//     printf("\n");
+//     depth++;
+//     for (Node *child = node->firstChild; child != NULL; child = child->nextSibling) {
+//         rightmost[depth] = (child->nextSibling) ? false : true;
+//         printTree(child);
+//     }
+//     depth--;
+// }
+
+// void _types(Node *node) {
+//     for (Node *child = node->firstChild; child != NULL; child = child->nextSibling) {
+//         printf(" ss_func %s\t", NODE_STRING[child->label]);
+//         printf("%s\n", child->att.ident);
+//     }
+// }
+
+// void printTree2(Node *node) {
+//     static bool rightmost[128];  // tells if node is rightmost sibling
+//     static int depth = 0;        // depth of current node
+//     bool is_decl = false;
+//     for (int i = 1; i < depth; i++) {  // 2502 = vertical line
+//         printf(rightmost[i] ? "    " : "\u2502   ");
+//     }
+//     if (depth > 0) {  // 2514 = L form; 2500 = horizontal line; 251c = vertical line and right horiz
+//         printf(rightmost[depth] ? "\u2514\u2500\u2500 " : "\u251c\u2500\u2500 ");
+//     }
+//     if (node->label == DeclVars) {
+//         is_decl = true;
+//         printf("/!\\ start ");
+//     }
+
+//     printf("%s", NODE_STRING[node->label]);
+//     printf("\n");
+//     depth++;
+//     for (Node *child = node->firstChild; child != NULL; child = child->nextSibling) {
+//         rightmost[depth] = (child->nextSibling) ? false : true;
+//         printTree2(child);
+//     }
+//     if (is_decl) {
+//         for (Node *child = node->firstChild; child != NULL; child = child->nextSibling) {
+//             printf("/!\\ %s ", NODE_STRING[child->label]);
+//             printf("%s\n", child->att.key_word);
+//             _types(child);
+//         }
+//     }
+//     if (is_decl)
+//         printf("/!\\ end\n");
+//     depth--;
+// }
