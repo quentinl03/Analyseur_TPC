@@ -1,6 +1,6 @@
 int add(int a, int b, int c) {
     int a_in, b_in, c_in;
-    int d_in[5];
+    int d_in[5],f_in[5];
     
     return a + b + c;
 }
@@ -17,7 +17,8 @@ int div(int a, int b, int c) {
     return a / b / c;
 }
 
-int div(int a[], int b[], int c[]) {
-    return a / b / c;
+int main(int a[], int b[], int c[]) {
+    a = 60 - 10 - 5 - 4;
+    return;
 }
 
