@@ -10,13 +10,12 @@
 #include <stdlib.h>
 
 #include "parser.h"
-#include "table.h"
 #include "tpc_bison.h"
 #include "tree.h"
 
 int main(int argc, char** argv) {
     extern FILE* yyin;
-    Node* abr;
+    Node* abr = NULL;
     Option opt;
     opt = parser(argc, argv);
     if (opt.flag_help) {
