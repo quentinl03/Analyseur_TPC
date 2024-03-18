@@ -9,15 +9,12 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-typedef struct {
+typedef struct Option {
     char* path;
-    int flag_help;
+    char* output;
     int flag_tree;
+    int flag_symtabs;
 } Option;
-
-void print_help(char* path);
-
-Option init_option();
 
 Option parser(int argc, char** argv);
 

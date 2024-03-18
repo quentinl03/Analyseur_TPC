@@ -18,9 +18,6 @@ int main(int argc, char** argv) {
     Node* abr = NULL;
     Option opt;
     opt = parser(argc, argv);
-    if (opt.flag_help) {
-        return 0;
-    }
 
     if (opt.path) {
         yyin = fopen(opt.path, "r");

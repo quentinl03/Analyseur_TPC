@@ -5,9 +5,9 @@
 # $< : the first current prerequisite
 
 CC=gcc
-CFLAGS=-Wall
+CFLAGS=-Wall -g -O0
 LDFLAGS=-Wall -lfl -Werror -Wfatal-errors
-EXEC=tpcas
+EXEC=tpcc
 
 # Filenames
 PARSER=tpc
@@ -27,7 +27,7 @@ MODULES=$(patsubst %.c, $(OBJS_DIR)/%.o, tree.c parser.c main.c)
 OBJS=$(wildcard $(OBJS_DIR)/*.tab.* $(OBJS_DIR)/*.yy.* $(OBJS_DIR)/*.o)
 
 TAR_CONTENT=$(SRC_DIR)/ $(TESTS_DIR)/ $(REPORT_DIR)/ $(OBJS_DIR)/ $(BIN_DIR) Makefile README.md
-TAR_NAME=ProjetASL3_LABORDE_SEBAN
+TAR_NAME=ProjetCompilationL3_LABORDE_SEBAN
 
 # $(info $(OBJS))
 
@@ -72,7 +72,7 @@ distclean:
 clean: distclean
 	rm -f $(BIN_DIR)/$(EXEC)
 
-# The top three tar args assure that files don't have usernames, groups, and no executable bit on files
+# The top three tar args assure that files don't have usernames, groups, and no executable bit
 rendu: clean rapport
 	tar --owner=0 --group=0 --mode='a=r,u+rw,a+X' -czf $(TAR_NAME).tar.gz --transform 's,^,$(TAR_NAME)/,' $(TAR_CONTENT)
 
