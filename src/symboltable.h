@@ -22,21 +22,13 @@ typedef struct ProgramSymbolTable {
 } ProgramSymbolTable;
 
 /**
- * @brief Initialize a symbol table
- * 
- * @param table 
- * @return int 
- */
-int SymbolTable_init(SymbolTable* table);
-
-/**
  * @brief Add a symbol to the table
  * 
  * @param table SymbolTable object
  * @param symbol Symbol to add
  * @return int 
  */
-int SymbolTable_add(SymbolTable* table, Symbol symbol);
+int _SymbolTable_add(SymbolTable* table, Symbol symbol);
 
 /**
  * @brief Get a symbol from the table
@@ -46,15 +38,6 @@ int SymbolTable_add(SymbolTable* table, Symbol symbol);
  * @return Symbol A pointer to the symbol, or NULL if the symbol is not found
  */
 Symbol* SymbolTable_get(SymbolTable* table, char* identifier);
-
-/**
- * @brief Create symbol table from a DeclVar tree
- * 
- * @param self SymbolTable object
- * @param tree Tree of DeclVars containing variables
- * @return int 
- */
-int SymbolTable_from_DeclVar(SymbolTable* self, Tree tree);
 
 /**
  * @brief Create symbol table of program's global variables
