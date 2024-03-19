@@ -10,7 +10,7 @@ from subprocess import run
 
 # Get project's path
 PROJECT = Path(__file__).resolve().parents[1]
-EXECUTABLE = (PROJECT / "bin" / "tpcas").resolve()
+EXECUTABLE = (PROJECT / "bin" / "tpcc").resolve()
 
 # cd to test directory to make globs easier
 os.chdir(PROJECT / "test")
