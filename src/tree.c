@@ -129,9 +129,11 @@ void printTree(Node *node) {
         printf(rightmost[depth] ? "\u2514\u2500\u2500 " : "\u251c\u2500\u2500 ");
     }
 
-    if (node->label == DeclArray || node->label == ArrayLR) {
-        printf("%s : ", NODE_STRING[node->label]);
-    }
+    printf("%s : ", NODE_STRING[node->label]);
+
+    // if (node->label == DeclArray || node->label == ArrayLR) {
+    //     printf("%s : ", NODE_STRING[node->label]);
+    // }
 
     switch (node->type) {
         case type_byte:
@@ -158,10 +160,10 @@ void printTree(Node *node) {
             break;
         case type_void:
         default:
-            printf("%s\n", NODE_STRING[node->label]);
+            // printf("%s\n", NODE_STRING[node->label]);
+            printf("\n");
             break;
     }
-    // printf("\n");
     depth++;
     for (Node *child = node->firstChild; child != NULL; child = child->nextSibling) {
         rightmost[depth] = (child->nextSibling) ? false : true;
