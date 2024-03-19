@@ -20,6 +20,7 @@ static const char* _Symbol_get_type_str(type_t type) {
     static const char* types[] = {
         [type_byte] = "char",
         [type_num] = "int",
+        [type_void] = "void",
     };
 
     return types[type];

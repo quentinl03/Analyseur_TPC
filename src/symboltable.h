@@ -6,18 +6,19 @@
 #include "tree.h"
 
 typedef struct SymbolTable {
-    ArrayList symbols;
+    ArrayList symbols; // [Symbol]
     size_t next_addr;
 } SymbolTable;
 
 typedef struct FunctionSymbolTable {
+    char* identifier;
     SymbolTable parameters;
     SymbolTable locals;
 } FunctionSymbolTable;
 
 typedef struct ProgramSymbolTable {
     SymbolTable globals;
-    ArrayList functions; // FunctionSymbolTable
+    ArrayList functions; // [FunctionSymbolTable]
 } ProgramSymbolTable;
 
 /**
@@ -71,5 +72,19 @@ int ProgramSymbolTable_from_Prog(ProgramSymbolTable* self, Tree tree);
  * @param self SymbolTable object
  */
 void SymbolTable_print(const SymbolTable* self);
+
+/**
+ * @brief Print the function symbol table
+ * 
+ * @param self 
+ */
+void FunctionSymbolTable_print(const FunctionSymbolTable* self);
+
+/**
+ * @brief Print the program symbol table
+ * 
+ * @param self 
+ */
+void ProgramSymbolTable_print(const ProgramSymbolTable* self);
 
 #endif

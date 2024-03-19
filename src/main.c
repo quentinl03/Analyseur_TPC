@@ -37,13 +37,14 @@ int main(int argc, char* argv[]) {
         return -err;
     }
 
-    SymbolTable global_vars;
-    SymbolTable_init(&global_vars);
-    SymbolTable_from_DeclVar(&global_vars, abr->firstChild);
+    ProgramSymbolTable symtable;
+    ProgramSymbolTable_from_Prog(&symtable, abr);
 
+    if (opt.flag_symtabs) {
+        ProgramSymbolTable_print(&symtable);
+    }
     if (opt.flag_tree) {
         printTree(abr);
-        SymbolTable_print(&global_vars);
     }
     if (abr) {
         deleteTree(abr);
