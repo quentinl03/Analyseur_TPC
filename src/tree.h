@@ -68,8 +68,8 @@ typedef enum {
 typedef union {
     char byte;
     int num;
-    char ident[64];
-    char key_word[5];
+    char ident[65];
+    char key_word[6];
 } Attribut;
 
 typedef enum {
