@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "../src/tree.h"
 #include "../src/parser.h"
+#include "../src/error.h"
 
 void yyerror(Node** abr, char *msg);
 int yylex();
@@ -227,5 +228,5 @@ void yyerror(Node** abr, char* msg){
 int parser_bison(FILE* f, Node** abr) {
     extern FILE* yyin;
     yyin = f;
-    return yyparse(abr);
+    return -yyparse(abr);
 }

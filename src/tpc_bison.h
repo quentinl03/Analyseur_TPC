@@ -4,7 +4,8 @@
 #include <stdio.h>
 
 #include "tree.h"
+#include "error.h"
 
-int parser_bison(FILE* f, Node** abr);
+Error parser_bison(FILE* f, Node** abr);
 
 #endif
