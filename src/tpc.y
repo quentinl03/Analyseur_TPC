@@ -53,12 +53,10 @@ Declarateurs:
     ;
 DeclFonctArray:
     TYPE IDENT '[' ']'                  {$$ = makeNode(DeclFonctArray);
-                                        Node* type = makeNode(Type);
-                                        addAttributKeyWord(type, $1);
-                                        addChild($$, type);
+                                        addAttributKeyWord($$, $1);
                                         Node* ident = makeNode(Ident);
                                         addAttributIdent(ident, $2);
-                                        addChild(type, ident);};
+                                        addChild($$, ident);};
     ;
 
 DeclArray:
