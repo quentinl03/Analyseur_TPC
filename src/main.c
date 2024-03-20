@@ -37,15 +37,24 @@ int main(int argc, char* argv[]) {
         return -err;
     }
 
+    if (opt.flag_show_tree) {
+        printTree(abr);
+    }
+
+    if (opt.flag_only_tree) {
+        if (abr) {
+            deleteTree(abr);
+        }
+        return EXIT_SUCCESS;
+    }
+
     ProgramSymbolTable symtable;
     ProgramSymbolTable_from_Prog(&symtable, abr);
 
     if (opt.flag_symtabs) {
         ProgramSymbolTable_print(&symtable);
     }
-    if (opt.flag_tree) {
-        printTree(abr);
-    }
+
     if (abr) {
         deleteTree(abr);
     }
