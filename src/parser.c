@@ -26,16 +26,19 @@ static void print_help(char* path, int exitcode) {
         "-h / --help :\n"
         "\t Prints this menu.\n\n"
         "-s / --symtabs :\n"
-        "\t Prints symbol tables.\n\n",
+        "\t Prints symbol tables.\n\n"
+        "-a / --only-tree :\n"
+        "\t Only generate the syntax tree, and stop the execution.\n\n",
         path
     );
     exit(exitcode);
 }
 
 static Option init_option(void) {
-    return (Option){
+    return (Option) {
         .path = NULL,
-        .flag_tree = false,
+        .flag_show_tree = false,
+        .flag_only_tree = false,
         .flag_symtabs = false,
         .output = "_anonymous.asm",
     };
@@ -44,6 +47,7 @@ static Option init_option(void) {
 /**
  * @brief Names output file with the same name as the input file,
  * but with a .asm extension.
+ * if the input file has no extension, we add ".asm" at the end.
  * 
  * @param path Path to the input file.
  * @return char* Statcally allocated string containing the output file name.
@@ -70,13 +74,14 @@ Option parser(int argc, char** argv) {
         {"help", no_argument, 0, 'h'},
         {"tree", no_argument, 0, 't'},
         {"symtabs", no_argument, 0, 's'},
+        {"only-tree", no_argument, 0, 'a'},
         {0, 0, 0, 0}
     };
 
-    while ((opt = getopt_long(argc, argv, "sht", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "asht", long_options, &option_index)) != -1) {
         switch (opt) {
             case 't':
-                option.flag_tree = true;
+                option.flag_show_tree = true;
                 break;
 
             case 's':
@@ -85,6 +90,10 @@ Option parser(int argc, char** argv) {
 
             case 'h':
                 print_help(argv[0], EXIT_SUCCESS);
+                break;
+
+            case 'a':
+                option.flag_only_tree = true;
                 break;
 
             case '?':

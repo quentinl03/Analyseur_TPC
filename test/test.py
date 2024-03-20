@@ -37,7 +37,7 @@ def test_input(file: Path, expected_retcode: int) -> int:
     with open(file, "r", encoding="utf-8") as f:
         logger.debug(f"Test with {file} ...")
         process = run(
-            [EXECUTABLE],
+            [EXECUTABLE, "--only-tree"],
             capture_output=True, text=True,
             input=f.read(), check=False
         )
@@ -65,11 +65,11 @@ class SyntaxTest(unittest.TestCase):
         log_level = logging.INFO if count == len(files) else logging.WARNING
         logger.log(log_level, f"{count}/{len(files)} of {path_glob} are ok\n")
 
-    def test_valid_inputs(self):
+    def test_valid_syntax_inputs(self):
         logger.debug("# Test valid inputs :")
-        self._subtest_files("good/**/*.tpc", 0, "Input was not accepted while it should")
+        self._subtest_files("syn-good/**/*.tpc", 0, "Input was not accepted while it should")
 
-    def test_rejected_inputs(self):
+    def test_rejected_syntax_inputs(self):
         logger.debug("# Test rejected inputs :")
         self._subtest_files("syn-err/**/*.tpc", 1, "Input was accepted while it should not")
 
