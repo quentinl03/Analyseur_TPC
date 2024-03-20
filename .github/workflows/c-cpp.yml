@@ -13,6 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Prepare environement
+      run: apt install flex bison
     - name: Build compiler
       run: make
     - name: Units tests
