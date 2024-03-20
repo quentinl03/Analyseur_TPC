@@ -1,0 +1,21 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "workflow_ci" ]
+  pull_request:
+    branches: [ "workflow_ci" ]
+  workflow_dispatch:
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build compiler
+      run: make
+    - name: Units tests
+      run: make test
+    - name: Check assignment production
+      run: make safe_rendu
