@@ -2,8 +2,13 @@
 - Tests
     - Revoir la structure
     - Erreurs sématiques
+    - Faire des tests pour vérifier les tables de symboles, et arbres produits
     - Vérifier la validité du code nasm produit
         - Lier le code avec gcc, et exécuter en comparant à une sortie attendue ?
             - Trouver une structure d'organisation des tests
         - Comparer le nasm produit à un nasm fait à la main
             - lourd et pas pratique
+
+- Table des symboles
+    - Gérer les erreurs (redéclaration, etc...)
+    - Alignement

@@ -5,8 +5,15 @@
 #include "arraylist.h"
 #include "tree.h"
 
+typedef enum SymbolTableType {
+    SYMBOL_TABLE_GLOBAL = 1,
+    SYMBOL_TABLE_LOCAL,
+    SYMBOL_TABLE_PARAM
+} SymbolTableType;
+
 typedef struct SymbolTable {
     ArrayList symbols; // [Symbol]
+    SymbolTableType type;
     size_t next_addr;
 } SymbolTable;
 

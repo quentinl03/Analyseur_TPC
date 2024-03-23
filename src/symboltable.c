@@ -29,8 +29,12 @@ static void _FunctionSymbolTable_init(FunctionSymbolTable* self, char* identifie
     *self = (FunctionSymbolTable) {
         .identifier = identifier,
     };
+
     _SymbolTable_init(&self->parameters);
+    self->parameters.type = SYMBOL_TABLE_PARAM;
+
     _SymbolTable_init(&self->locals);
+    self->locals.type = SYMBOL_TABLE_LOCAL;
 }
 
 /**
@@ -38,7 +42,10 @@ static void _FunctionSymbolTable_init(FunctionSymbolTable* self, char* identifie
  * 
  * @param self SymbolTable object
  * @param symbol Symbol to add
- * @return int 
+ * @return int
+ *  - 1 if the symbol is already in the table
+ *  - 0 if the symbol was added
+ *  - -1 if an error occured
  */
 int _SymbolTable_add(SymbolTable* self, Symbol symbol) {
     if (ArrayList_contains(&self->symbols, &symbol))
@@ -46,12 +53,19 @@ int _SymbolTable_add(SymbolTable* self, Symbol symbol) {
 
     ArrayListError err = 0;
 
-    symbol.addr = self->next_addr;
+    if (self->type == SYMBOL_TABLE_PARAM && ArrayList_get_length(&self->symbols) < 6) {
+        symbol.on_register = true;
+        symbol.reg = Register_param_to_reg(ArrayList_get_length(&self->symbols));
+    }
+    else {
+        symbol.on_register = false;
+        symbol.addr = self->next_addr;
+        self->next_addr += symbol.total_size;
+    }
+
     if ((err = ArrayList_sorted_insert(&self->symbols, &symbol)) < -1) {
         return -1;
     }
-
-    self->next_addr += symbol.size;
 
     return 0;
 
@@ -77,6 +91,7 @@ static size_t get_type_size(type_t type) {
         [type_num] = sizeof(int),
         [type_void] = 0,
     };
+    assert(type >= 0 && type < 5);
 
     return sizes[type];
 }
@@ -122,8 +137,12 @@ static int _SymbolTable_create_from_DeclVar(SymbolTable* self, Tree tree, type_t
             self,
             (Symbol) {
                 .identifier = tree->att.ident,
-                .size = tree->firstChild->att.num * get_type_size(type),
+                .is_static = self->type == SYMBOL_TABLE_GLOBAL,
                 .type = type,
+                .type_size = get_type_size(type),
+                .symbol_type = SYMBOL_ARRAY,
+                .array.length = tree->firstChild->att.num,
+                .total_size = tree->firstChild->att.num * get_type_size(type),
             }
         );
     }
@@ -133,8 +152,11 @@ static int _SymbolTable_create_from_DeclVar(SymbolTable* self, Tree tree, type_t
             self,
             (Symbol) {
                 .identifier = tree->att.ident,
-                .size = 1 * get_type_size(type),
+                .is_static = self->type == SYMBOL_TABLE_GLOBAL,
                 .type = type,
+                .type_size = get_type_size(type),
+                .symbol_type = SYMBOL_VALUE,
+                .total_size = 1 * get_type_size(type),
             }
         );
     }
@@ -148,10 +170,13 @@ static int _SymbolTable_create_from_DeclVar(SymbolTable* self, Tree tree, type_t
  * @brief Create symbol table from a DeclVar tree
  * 
  * @param self SymbolTable object
+ * @param offset Offset to start adding variables 
+ * (functions parameters could be stored on the stack if they are more than 6)
  * @param tree Tree of DeclVars containing variables
  * @return int 
  */
-static int SymbolTable_create_from_DeclVar(SymbolTable* self, Tree tree) {
+static int SymbolTable_create_from_DeclVar(SymbolTable* self, int offset, Tree tree) {
+    self->next_addr = offset;
     return _SymbolTable_create_from_DeclVar(self, tree->firstChild, -1);
 }
 
@@ -177,13 +202,18 @@ static int _FunctionSymbolTable_create_from_EnTeteFonct(FunctionSymbolTable* fun
     }
 
     else if (tree->label == DeclFonctArray) {
+        type_t type = get_type_from_string(&tree->att);
         _SymbolTable_add(
             &func->parameters,
             (Symbol) {
                 .identifier = tree->firstChild->att.ident,
-                .type = get_type_from_string(&tree->att),
-                // ? TODO
-                .size = 8, // An array is decayed to a pointer in C (8 bytes on x86_64 systems)
+                .type = type,
+                .type_size = get_type_size(type),
+                .symbol_type = SYMBOL_POINTER_TO_ARRAY,
+                .is_static = false,
+
+                // TODO: Is this ok?
+                .total_size = 8, // An array is decayed to a pointer in C (8 bytes on x86_64 systems)
             }
         );
     }
@@ -192,7 +222,7 @@ static int _FunctionSymbolTable_create_from_EnTeteFonct(FunctionSymbolTable* fun
 }
 
 /**
- * @brief Create a symbol table from a DeclFonct tree
+ * @brief Create a FunctionSymbolTable from a DeclFonct tree
  * Adds the function to the program's global symbol table
  * and creates a symbol table for the function's parameters and local variables
  * 
@@ -212,15 +242,22 @@ static int _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Function
     assert(tree->label == DeclFonct);
     bool is_void = header->firstChild->type == type_void;
 
+    _FunctionSymbolTable_init(func, header->firstChild->nextSibling->att.ident);
+
+    type_t return_type = is_void ? type_void : get_type_from_string(&header->firstChild->att);
+
     // * Add the function to the program's symbol table
     _SymbolTable_add(
         &prog->globals,
         (Symbol) {
             // function name
             .identifier = header->firstChild->nextSibling->att.ident,
+            .symbol_type = SYMBOL_FUNCTION,
             // return type
-            .type = is_void ? type_void : get_type_from_string(&header->firstChild->att),
-            .size = is_void ? 0 : get_type_size(get_type_from_string(&header->firstChild->att)),
+            .is_static = true,
+            .type = return_type,
+            .type_size = get_type_size(return_type),
+            .total_size = 0,
         }
     );
 
@@ -228,8 +265,9 @@ static int _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Function
     _FunctionSymbolTable_create_from_EnTeteFonct(func, header->firstChild->nextSibling->nextSibling);
     
     // * Add the function's local variables to the function's symbol table
+    int offset = func->parameters.next_addr; // Parameters could be stored on the stack
     // DeclFonct->EnTeteFonct->Corps->DeclVars
-    SymbolTable_create_from_DeclVar(&func->locals, tree->firstChild->nextSibling->firstChild);
+    SymbolTable_create_from_DeclVar(&func->locals, offset, tree->firstChild->nextSibling->firstChild);
 
     return 0;
 }
@@ -287,7 +325,8 @@ int ProgramSymbolTable_from_Prog(ProgramSymbolTable* self, Tree tree) {
     ArrayList_init(&self->functions, sizeof(FunctionSymbolTable), 10, NULL);
 
     // tree->firstChild is the a DeclVars tree of globals variables
-    SymbolTable_create_from_DeclVar(&self->globals, tree->firstChild);
+    self->globals.type = SYMBOL_TABLE_GLOBAL;
+    SymbolTable_create_from_DeclVar(&self->globals, 0, tree->firstChild);
 
     // tree->firstChild->nextSibling is the first function to process
     _ProgramSymbolTable_from_DeclFoncts(self, tree->firstChild->nextSibling);
@@ -296,7 +335,7 @@ int ProgramSymbolTable_from_Prog(ProgramSymbolTable* self, Tree tree) {
 }
 
 void SymbolTable_print(const SymbolTable* self) {
-    for (size_t i = 0; i < ArrayList_get_length(&self->symbols); i++) {
+    for (int i = 0; i < ArrayList_get_length(&self->symbols); i++) {
         Symbol* symbol = ArrayList_get(&self->symbols, i);
         Symbol_print(symbol);
     }
@@ -312,7 +351,7 @@ void FunctionSymbolTable_print(const FunctionSymbolTable* self) {
 
 void ProgramSymbolTable_print(const ProgramSymbolTable* self) {
     printf(BOLD UNDERLINE "ProgramSymbolTable:\n" RESET);
-    printf(UNDERLINE "Globals:\n\n" RESET);
+    printf(UNDERLINE "Globals:\n" RESET);
     SymbolTable_print(&self->globals);
     printf(UNDERLINE "Functions:\n\n" RESET);
     for (int i = 0; i < ArrayList_get_length(&self->functions); i++) {
