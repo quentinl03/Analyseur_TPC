@@ -73,8 +73,11 @@ clean: distclean
 	rm -f $(BIN_DIR)/$(EXEC)
 
 # The top three tar args assure that files don't have usernames, groups, and no executable bit
-rendu: clean rapport
+tar_assignment:
 	tar --owner=0 --group=0 --mode='a=r,u+rw,a+X' -czf $(TAR_NAME).tar.gz --transform 's,^,$(TAR_NAME)/,' $(TAR_CONTENT)
+
+assignment: clean rapport
+	@$(MAKE) --no-print-directory tar_assignment
 
 test: $(BIN_DIR)/$(EXEC)
 	python3 test/test.py
@@ -82,4 +85,4 @@ test: $(BIN_DIR)/$(EXEC)
 safe_rendu:
 	@$(MAKE) --no-print-directory clean
 	@$(MAKE) --no-print-directory test
-	@$(MAKE) --no-print-directory rendu
+	@$(MAKE) --no-print-directory assignment

@@ -1,0 +1,23 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "workflow_ci" ]
+  pull_request:
+    branches: [ "workflow_ci" ]
+  workflow_dispatch:
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Prepare environement
+      run: sudo apt install flex bison libfl-dev
+    - name: Build compiler
+      run: make
+    - name: Units tests
+      run: make test
+    - name: Check tar production
+      run: make tar_assignment
