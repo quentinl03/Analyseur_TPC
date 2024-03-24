@@ -51,6 +51,8 @@
 #define GENERATE_ENUM(ENUM) ENUM,
 #define GENERATE_STRING(STRING) #STRING,
 
+#define IS_EMPTY_TREE(tree) ((tree) == NULL)
+
 typedef enum {
     FOREACH_NODE(GENERATE_ENUM)
 } label_t;

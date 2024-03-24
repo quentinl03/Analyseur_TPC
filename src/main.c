@@ -12,6 +12,7 @@
 #include "parser.h"
 #include "tpc_bison.h"
 #include "tree.h"
+#include "codegen.h"
 
 #include "symboltable.h"
 
@@ -54,6 +55,8 @@ int main(int argc, char* argv[]) {
     if (opt.flag_symtabs) {
         ProgramSymbolTable_print(&symtable);
     }
+
+    CodeGen_parse(opt.output, abr, &symtable);
 
     if (abr) {
         deleteTree(abr);
