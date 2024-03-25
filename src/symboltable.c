@@ -156,6 +156,7 @@ static int _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
 
                         // TODO: Is this ok?
                         .total_size = 8, // An array is decayed to a pointer in C (8 bytes on x86_64 systems)
+                        .lineno = identNode->lineno,
                     }
                 );
             }
@@ -171,6 +172,7 @@ static int _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                         .symbol_type = SYMBOL_ARRAY,
                         .array.length = identNode->firstChild->att.num,
                         .total_size = identNode->firstChild->att.num * get_type_size(type),
+                        .lineno = identNode->lineno,
                     }
                 );
             }
@@ -180,11 +182,12 @@ static int _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                     self,
                     (Symbol) {
                         .identifier = identNode->att.ident,
-                        .is_static = self->type == SYMBOL_TABLE_GLOBAL,
                         .type = type,
                         .type_size = get_type_size(type),
+                        .is_static = self->type == SYMBOL_TABLE_GLOBAL,
                         .symbol_type = SYMBOL_VALUE,
                         .total_size = 1 * get_type_size(type),
+                        .lineno = identNode->lineno,
                     }
                 );
             }
@@ -258,7 +261,8 @@ static int _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Function
     assert(tree->label == DeclFonct);
     bool is_void = header->firstChild->type == type_void;
 
-    _FunctionSymbolTable_init(func, header->firstChild->nextSibling->att.ident);
+    Node* identNode = header->firstChild->nextSibling;
+    _FunctionSymbolTable_init(func, identNode->att.ident);
 
     type_t return_type = is_void ? type_void : get_type_from_string(&header->firstChild->att);
 
@@ -267,13 +271,14 @@ static int _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Function
         &prog->globals,
         (Symbol) {
             // function name
-            .identifier = header->firstChild->nextSibling->att.ident,
+            .identifier = identNode->att.ident,
             .symbol_type = SYMBOL_FUNCTION,
             // return type
             .is_static = true,
             .type = return_type,
             .type_size = get_type_size(return_type),
             .total_size = 0,
+            .lineno = identNode->lineno,
         }
     );
 

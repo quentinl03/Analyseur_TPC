@@ -18,6 +18,7 @@ typedef struct Symbol {
     char* identifier;
     type_t type;
     int type_size;
+    int lineno;
 
     SymbolType symbol_type;
     union {
