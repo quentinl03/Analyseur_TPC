@@ -51,9 +51,15 @@
 #define GENERATE_ENUM(ENUM) ENUM,
 #define GENERATE_STRING(STRING) #STRING,
 
+#define IS_EMPTY_TREE(tree) ((tree) == NULL)
+
+#define FOREACH_SIBLING(node) for (; (node); (node) = (node)->nextSibling)
+
 typedef enum {
     FOREACH_NODE(GENERATE_ENUM)
 } label_t;
+
+extern const char *NODE_STRING[];
 
 // typedef enum {
 //     E,

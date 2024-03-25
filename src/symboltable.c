@@ -53,10 +53,17 @@ int _SymbolTable_add(SymbolTable* self, Symbol symbol) {
 
     ArrayListError err = 0;
 
+    /**
+     * If the symbol is a parameter and there are less than 6 parameters
+     * on this function symbol table, we put parameters on registers
+     */
     if (self->type == SYMBOL_TABLE_PARAM && ArrayList_get_length(&self->symbols) < 6) {
         symbol.on_register = true;
         symbol.reg = Register_param_to_reg(ArrayList_get_length(&self->symbols));
     }
+    /**
+     * Else, we used all registers, and parameters are stored on the stack.
+     */
     else {
         symbol.on_register = false;
         symbol.addr = self->next_addr;
@@ -114,60 +121,81 @@ static type_t get_type_from_string(const Attribut* att) {
 }
 
 /**
- * @brief Create a symbol table from a DeclVar tree
- * (used for global variables and function parameters)
- * Shouldn't be called directly, use SymbolTable_create_from_DeclVar instead
+ * @brief Create a SymbolTable from a Type or DeclFonctArray
+ * Iterate over all its siblings
  * 
- * @param self SymbolTable object to fill
- * @param tree DeclVar tree
- * @param type Type of the variables 
+ * @param self SymbolTable to populate
+ * @param tree Type/DeclFonctArray tree
  * @return int 
  */
-static int _SymbolTable_create_from_DeclVar(SymbolTable* self, Tree tree, type_t type) {
-    if (!tree) {
-        return -1;
-    }
+static int _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
 
-    if (tree->label == Type) {
-        _SymbolTable_create_from_DeclVar(self, tree->firstChild, get_type_from_string(&tree->att));
-    }
+    assert(tree != NULL);
+    assert(tree->label == Type || tree->label == DeclFonctArray);
 
-    else if (tree->label == DeclArray) {
-        _SymbolTable_add(
-            self,
-            (Symbol) {
-                .identifier = tree->att.ident,
-                .is_static = self->type == SYMBOL_TABLE_GLOBAL,
-                .type = type,
-                .type_size = get_type_size(type),
-                .symbol_type = SYMBOL_ARRAY,
-                .array.length = tree->firstChild->att.num,
-                .total_size = tree->firstChild->att.num * get_type_size(type),
+    type_t type = get_type_from_string(&tree->att);
+
+    Tree typeNode = tree;
+    FOREACH_SIBLING(typeNode) {
+        Tree identNode = typeNode->firstChild;
+
+        /**
+         * We need to iterate a second time, for one-line declarations
+         * (ex: int a, tab[10], b;)
+         */
+        FOREACH_SIBLING(identNode) {
+            if (typeNode->label == DeclFonctArray) {
+                _SymbolTable_add(
+                    self,
+                    (Symbol) {
+                        .identifier = identNode->att.ident,
+                        .type = type,
+                        .type_size = get_type_size(type),
+                        .symbol_type = SYMBOL_POINTER_TO_ARRAY,
+                        .is_static = false,
+
+                        // TODO: Is this ok?
+                        .total_size = 8, // An array is decayed to a pointer in C (8 bytes on x86_64 systems)
+                    }
+                );
             }
-        );
-    }
 
-    else if (tree->label == Ident) {
-        _SymbolTable_add(
-            self,
-            (Symbol) {
-                .identifier = tree->att.ident,
-                .is_static = self->type == SYMBOL_TABLE_GLOBAL,
-                .type = type,
-                .type_size = get_type_size(type),
-                .symbol_type = SYMBOL_VALUE,
-                .total_size = 1 * get_type_size(type),
+            else if (identNode->label == DeclArray) {
+                _SymbolTable_add(
+                    self,
+                    (Symbol) {
+                        .identifier = identNode->att.ident,
+                        .is_static = self->type == SYMBOL_TABLE_GLOBAL,
+                        .type = type,
+                        .type_size = get_type_size(type),
+                        .symbol_type = SYMBOL_ARRAY,
+                        .array.length = identNode->firstChild->att.num,
+                        .total_size = identNode->firstChild->att.num * get_type_size(type),
+                    }
+                );
             }
-        );
-    }
 
-    _SymbolTable_create_from_DeclVar(self, tree->nextSibling, type);
+            else if (identNode->label == Ident) {
+                _SymbolTable_add(
+                    self,
+                    (Symbol) {
+                        .identifier = identNode->att.ident,
+                        .is_static = self->type == SYMBOL_TABLE_GLOBAL,
+                        .type = type,
+                        .type_size = get_type_size(type),
+                        .symbol_type = SYMBOL_VALUE,
+                        .total_size = 1 * get_type_size(type),
+                    }
+                );
+            }
+        }
+    }
 
     return 1;
 }
 
 /**
- * @brief Create symbol table from a DeclVar tree
+ * @brief Create a symbol table from a DeclVars tree
  * 
  * @param self SymbolTable object
  * @param offset Offset to start adding variables 
@@ -175,9 +203,17 @@ static int _SymbolTable_create_from_DeclVar(SymbolTable* self, Tree tree, type_t
  * @param tree Tree of DeclVars containing variables
  * @return int 
  */
-static int SymbolTable_create_from_DeclVar(SymbolTable* self, int offset, Tree tree) {
+static int SymbolTable_create_from_DeclVars(SymbolTable* self, int offset, Tree tree) {
+    assert(tree->label == DeclVars);
     self->next_addr = offset;
-    return _SymbolTable_create_from_DeclVar(self, tree->firstChild, -1);
+
+    Node* node = tree->firstChild;
+    // Empty DeclVars
+    if (node == NULL) {
+        return 0;
+    }
+
+    return _SymbolTable_create_from_Type(self, node);
 }
 
 /**
@@ -188,37 +224,17 @@ static int SymbolTable_create_from_DeclVar(SymbolTable* self, int offset, Tree t
  * @param tree Tree ListTypVar tree
  * @return int 
  */
-static int _FunctionSymbolTable_create_from_EnTeteFonct(FunctionSymbolTable* func, Tree tree) {
-    if (!tree) {
+static int _FunctionSymbolTable_create_from_ListTypVar(FunctionSymbolTable* func, Tree tree) {
+    if (tree->label == Void) {
         return 0;
     }
+    assert(tree->label == ListTypVar);
+    // We go to the the first Type/DeclFontArray
+    tree = tree->firstChild;
 
-    if (tree->label == ListTypVar) {
-        _FunctionSymbolTable_create_from_EnTeteFonct(func, tree->firstChild);
-    }
+    _SymbolTable_create_from_Type(&func->parameters, tree);
 
-    else if (tree->label == Type) {
-        _SymbolTable_create_from_DeclVar(&func->parameters, tree->firstChild, get_type_from_string(&tree->att));
-    }
-
-    else if (tree->label == DeclFonctArray) {
-        type_t type = get_type_from_string(&tree->att);
-        _SymbolTable_add(
-            &func->parameters,
-            (Symbol) {
-                .identifier = tree->firstChild->att.ident,
-                .type = type,
-                .type_size = get_type_size(type),
-                .symbol_type = SYMBOL_POINTER_TO_ARRAY,
-                .is_static = false,
-
-                // TODO: Is this ok?
-                .total_size = 8, // An array is decayed to a pointer in C (8 bytes on x86_64 systems)
-            }
-        );
-    }
-
-    return _FunctionSymbolTable_create_from_EnTeteFonct(func, tree->nextSibling);
+    return 0;
 }
 
 /**
@@ -246,7 +262,7 @@ static int _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Function
 
     type_t return_type = is_void ? type_void : get_type_from_string(&header->firstChild->att);
 
-    // * Add the function to the program's symbol table
+    // * Add the function to the program's global symbol table
     _SymbolTable_add(
         &prog->globals,
         (Symbol) {
@@ -261,44 +277,39 @@ static int _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Function
         }
     );
 
-    // * Add the function's parameters to the function's symbol table
-    _FunctionSymbolTable_create_from_EnTeteFonct(func, header->firstChild->nextSibling->nextSibling);
+    // * Add the function's parameters to the function's symbol table, if any
+    Node* listParams = header->firstChild->nextSibling->nextSibling;
+    _FunctionSymbolTable_create_from_ListTypVar(func, listParams);
     
     // * Add the function's local variables to the function's symbol table
     int offset = func->parameters.next_addr; // Parameters could be stored on the stack
     // DeclFonct->EnTeteFonct->Corps->DeclVars
-    SymbolTable_create_from_DeclVar(&func->locals, offset, tree->firstChild->nextSibling->firstChild);
+    Node* listLocals = tree->firstChild->nextSibling->firstChild;
+    SymbolTable_create_from_DeclVars(&func->locals, offset, listLocals);
 
     return 0;
 }
 
 /**
- * @brief Starts tree exploration from a DeclFoncts or a DeclFonct
+ * @brief Starts tree exploration from a DeclFoncts
  * and creates a symbol table for each function
  * 
  * @param self ProgramSymbolTable object to fill
- * @param tree Tree to explore, should be a DeclFoncts or a DeclFonct
+ * @param tree DeclFoncts tree to explore
  * @return int 
  */
 static int _ProgramSymbolTable_from_DeclFoncts(ProgramSymbolTable* self, Tree tree) {
-    if (!tree) {
-        return -1;
-    }
 
-    if (tree->label == DeclFoncts) {
-        _ProgramSymbolTable_from_DeclFoncts(self, tree->firstChild);
-    } 
+    assert(tree->label == DeclFoncts);
 
-    else if (tree->label == DeclFonct) {
+    Node* funcNode = tree->firstChild;
+    FOREACH_SIBLING(funcNode) {
         FunctionSymbolTable function;
-        _FunctionSymbolTable_init(&function, tree->firstChild->firstChild->nextSibling->att.ident);
 
-        _SymbolTable_create_from_DeclFonct(self, &function, tree);
+        _SymbolTable_create_from_DeclFonct(self, &function, funcNode);
 
         ArrayList_append(&self->functions, &function);
     }
-
-    _ProgramSymbolTable_from_DeclFoncts(self, tree->nextSibling);
 
     return 1;
 
@@ -326,7 +337,7 @@ int ProgramSymbolTable_from_Prog(ProgramSymbolTable* self, Tree tree) {
 
     // tree->firstChild is the a DeclVars tree of globals variables
     self->globals.type = SYMBOL_TABLE_GLOBAL;
-    SymbolTable_create_from_DeclVar(&self->globals, 0, tree->firstChild);
+    SymbolTable_create_from_DeclVars(&self->globals, 0, tree->firstChild);
 
     // tree->firstChild->nextSibling is the first function to process
     _ProgramSymbolTable_from_DeclFoncts(self, tree->firstChild->nextSibling);

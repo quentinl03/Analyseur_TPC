@@ -16,8 +16,9 @@ extern int nbline; /* from lexer */
 //     /* To avoid listing them twice, see https://stackoverflow.com/a/10966395 */
 // };
 
-static const char *NODE_STRING[] = {
-    FOREACH_NODE(GENERATE_STRING)};
+const char *NODE_STRING[] = {
+    FOREACH_NODE(GENERATE_STRING)
+};
 
 Node *makeNode(label_t label) {
     Node *node = malloc(sizeof(Node));

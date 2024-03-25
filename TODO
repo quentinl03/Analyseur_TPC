@@ -12,3 +12,10 @@
 - Table des symboles
     - Gérer les erreurs (redéclaration, etc...)
     - Alignement
+
+- CI
+    - Valgrind
+        - Conditionnal jumps
+        - Memory leaks ?
+- CD
+    - Rapport avec Pandoc
