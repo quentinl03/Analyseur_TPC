@@ -1,4 +1,6 @@
-int add(int a, int b, int c) {
+int bonsoir_michel[4];
+
+int add(int a, int b, int c, char bop[]) {
     return a + b + c;
 }
 

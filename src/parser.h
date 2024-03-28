@@ -13,7 +13,7 @@ typedef struct Option {
     char* path;
     char* output;
     int flag_show_tree;
-    int flag_only_tree; // If true, we stop execution after parsing the source code.
+    int flag_only_tree;  // If true, we stop execution after parsing the source code.
     int flag_symtabs;
 } Option;
 

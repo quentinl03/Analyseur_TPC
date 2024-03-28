@@ -19,12 +19,10 @@ const char* Register_to_str(Register reg) {
         [R12] = "r12",
         [R13] = "r13",
         [R14] = "r14",
-        [R15] = "r15"
-    };
+        [R15] = "r15"};
 
     return registers[reg];
 }
-
 
 Register Register_param_to_reg(int param) {
     Register registers[] = {
@@ -33,8 +31,7 @@ Register Register_param_to_reg(int param) {
         [2] = RDX,
         [3] = RCX,
         [4] = R8,
-        [5] = R9
-    };
+        [5] = R9};
 
     assert(param >= 0 && param < 6);
 

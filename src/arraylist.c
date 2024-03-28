@@ -1,13 +1,11 @@
 #include "arraylist.h"
+
 #include <assert.h>
 #include <string.h>
-
-static ArrayListError _ArrayList_realloc(ArrayList *self, size_t new_capacity);
 
 ArrayListError ArrayList_init(ArrayList *self, size_t element_size,
                               size_t initial_capacity,
                               int (*cmp)(const void *, const void *)) {
-
     *self = (ArrayList){
         .capacity = initial_capacity,
         .element_size = element_size,
@@ -67,7 +65,7 @@ ArrayListError ArrayList_append(ArrayList *self, void *elem) {
  * @param elem
  * @return int64_t
  */
-static int64_t ArrayList_bsearch_index(const ArrayList *self, void *elem) {
+static int64_t _ArrayList_bsearch_index(const ArrayList *self, void *elem) {
     assert(self->cmp);
     assert(elem);
 
@@ -101,7 +99,7 @@ ArrayListError ArrayList_sorted_insert(ArrayList *self, void *elem) {
     if (err < 0)
         return err;
 
-    int64_t index = ArrayList_bsearch_index(self, elem);
+    int64_t index = _ArrayList_bsearch_index(self, elem);
 
     memmove(self->arr + (index + 1) * self->element_size,
             self->arr + index * self->element_size,
@@ -115,7 +113,6 @@ ArrayListError ArrayList_sorted_insert(ArrayList *self, void *elem) {
 }
 
 void *ArrayList_get(const ArrayList *self, int64_t i) {
-
     if (i < 0)
         i = self->len + i;
 

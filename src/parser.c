@@ -9,10 +9,10 @@
 #include "parser.h"
 
 #include <getopt.h>
+#include <linux/limits.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <linux/limits.h>
 #include <string.h>
 
 static void print_help(char* path, int exitcode) {
@@ -29,13 +29,12 @@ static void print_help(char* path, int exitcode) {
         "\t Prints symbol tables.\n\n"
         "-a / --only-tree :\n"
         "\t Only generate the syntax tree, and stop the execution.\n\n",
-        path
-    );
+        path);
     exit(exitcode);
 }
 
 static Option init_option(void) {
-    return (Option) {
+    return (Option){
         .path = NULL,
         .flag_show_tree = false,
         .flag_only_tree = false,
@@ -48,19 +47,19 @@ static Option init_option(void) {
  * @brief Names output file with the same name as the input file,
  * but with a .asm extension.
  * if the input file has no extension, we add ".asm" at the end.
- * 
+ *
  * @param path Path to the input file.
  * @return char* Statcally allocated string containing the output file name.
  */
 static char* default_output_name(char* path) {
     static char result[PATH_MAX];
+    // dernier indice de .
     char* extension = strrchr(path, '.');
 
     if (extension) {
         // We replace the extension by ".asm"
-        snprintf(result, PATH_MAX, "%.*s.asm", (int) (extension - path), path);
-    }
-    else { // File have no extension
+        snprintf(result, PATH_MAX, "%.*s.asm", (int)(extension - path), path);
+    } else {  // File have no extension
         snprintf(result, PATH_MAX, "%s.asm", path);
     }
 
@@ -75,8 +74,7 @@ Option parser(int argc, char** argv) {
         {"tree", no_argument, 0, 't'},
         {"symtabs", no_argument, 0, 's'},
         {"only-tree", no_argument, 0, 'a'},
-        {0, 0, 0, 0}
-    };
+        {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "asht", long_options, &option_index)) != -1) {
         switch (opt) {
@@ -109,8 +107,7 @@ Option parser(int argc, char** argv) {
         } else {
             printf(
                 "Too much arguments %s (1 for path) (no file loaded)\n",
-                argv[optind]
-            );
+                argv[optind]);
         }
     }
 

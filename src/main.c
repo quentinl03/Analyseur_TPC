@@ -10,10 +10,10 @@
 #include <stdlib.h>
 
 #include "parser.h"
+#include "symboltable.h"
 #include "tpc_bison.h"
 #include "tree.h"
-
-#include "symboltable.h"
+#include "treeReader.h"
 
 int main(int argc, char* argv[]) {
     extern FILE* yyin;
@@ -54,6 +54,14 @@ int main(int argc, char* argv[]) {
     if (opt.flag_symtabs) {
         ProgramSymbolTable_print(&symtable);
     }
+
+    FILE* file = fopen(opt.output, "w");
+    if (!file) {
+        perror("fopen");
+        return EXIT_FAILURE;
+    }
+
+    TreeReader_Prog(&symtable, abr, file);
 
     if (abr) {
         deleteTree(abr);
