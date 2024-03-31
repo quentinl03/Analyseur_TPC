@@ -49,18 +49,22 @@ static Option init_option(void) {
  * if the input file has no extension, we add ".asm" at the end.
  *
  * @param path Path to the input file.
- * @return char* Statcally allocated string containing the output file name.
+ * @return char* Statically allocated string containing the output file name.
  */
 static char* default_output_name(char* path) {
     static char result[PATH_MAX];
-    // dernier indice de .
+    // last index of '.' and return NULL when the character is not found
     char* extension = strrchr(path, '.');
+    char* last_slash = strrchr(path, '/');
+
+    // We want the name of the file, not the path
+    last_slash = last_slash ? last_slash + 1 : path;
 
     if (extension) {
         // We replace the extension by ".asm"
-        snprintf(result, PATH_MAX, "%.*s.asm", (int)(extension - path), path);
-    } else {  // File have no extension
-        snprintf(result, PATH_MAX, "%s.asm", path);
+        snprintf(result, PATH_MAX, "%.*s.asm", (int)(extension - last_slash), last_slash);
+    } else { // File have no extension
+        snprintf(result, PATH_MAX, "%s.asm", last_slash);
     }
 
     return result;

@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
         ProgramSymbolTable_print(&symtable);
     }
 
-    FILE* file = fopen("_anonymous.asm", "w");
+    FILE* file = fopen(opt.output, "w");
     if (!file) {
         perror("fopen");
         return EXIT_FAILURE;
