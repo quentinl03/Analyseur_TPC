@@ -52,27 +52,27 @@ static const char* _CodeWriter_Node_To_Ope(const Node* node) {
 int CodeWriter_Ope(FILE* nasm, const Node* node) {
     const char* ope = _CodeWriter_Node_To_Ope(node);
     fprintf(nasm,
-            "\n\n;Operation basique sur les 2 dernieres valeurs de la pile\n"
+            "; Operation basique sur les 2 dernieres valeurs de la pile\n"
             "pop rcx\n"
             "pop rax\n"
             "%s rax, rcx\n"
-            "push rax\n",
+            "push rax\n\n",
             ope);
     return 0;
 }
 
 int CodeWriter_ConstantNumber(FILE* nasm, const Node* node) {
     fprintf(nasm,
-            "\n\n; Ajout constant numérique sur la pile\n"
-            "push %d\n",
+            "; Ajout constant numérique sur la pile\n"
+            "push %d\n\n",
             node->att.num);
     return 0;
 }
 
 int CodeWriter_ConstantCharacter(FILE* nasm, const Node* node) {
     fprintf(nasm,
-            "\n\n; Ajout constant character sur la pile\n"
-            "push %d\n",
+            "; Ajout constant character sur la pile\n"
+            "push %d\n\n",
             node->att.byte);
     return 0;
 }
