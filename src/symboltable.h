@@ -44,7 +44,7 @@ int _SymbolTable_add(SymbolTable* table, Symbol symbol);
  * @param identifier Identifier of the symbol to get
  * @return Symbol A pointer to the symbol, or NULL if the symbol is not found
  */
-Symbol* SymbolTable_get(SymbolTable* table, char* identifier);
+Symbol* SymbolTable_get(const SymbolTable* table, char* identifier);
 
 /**
  * @brief Create symbol table of program's global variables
@@ -55,6 +55,16 @@ Symbol* SymbolTable_get(SymbolTable* table, char* identifier);
  * @return int
  */
 int ProgramSymbolTable_from_Prog(ProgramSymbolTable* self, Tree tree);
+
+/**
+ * @brief Get a FunctionSymbolTable from the function name. If the function is not found, return NULL
+ *
+ * @param self
+ * @param func_name
+ * @return FunctionSymbolTable*
+ */
+FunctionSymbolTable* SymbolTable_get_from_func_name(const ProgramSymbolTable* self,
+                                                    const char* func_name);
 
 /**
  * @brief Print the symbol table

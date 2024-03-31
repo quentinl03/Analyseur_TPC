@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 
+#include "symboltable.h"
 #include "tree.h"
 
 void CodeWriter_Init_File(FILE* nasm);
@@ -21,3 +22,9 @@ int CodeWriter_Ope(FILE* nasm, const Node* node);
 int CodeWriter_ConstantNumber(FILE* nasm, const Node* node);
 
 int CodeWriter_ConstantCharacter(FILE* nasm, const Node* node);
+
+int CodeWriter_LoadVar(FILE* nasm, Node* node,
+                       const ProgramSymbolTable* symtable, char* func_name);
+
+int CodeWriter_WriteVar(FILE* nasm, Node* node,
+                        const ProgramSymbolTable* symtable, char* func_name);
