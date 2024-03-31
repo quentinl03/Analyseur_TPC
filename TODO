@@ -22,3 +22,4 @@
 
 - Betises
     - CHEMIN de sortie du nasm
+    - realloc ArrayList en mult et pas add

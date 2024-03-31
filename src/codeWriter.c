@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include "symbol.h"
 #include "symboltable.h"
 #include "tree.h"
 
@@ -27,7 +28,7 @@ void CodeWriter_Init_File(FILE* nasm) {
 
 void CodeWriter_End_File(FILE* nasm) {
     fprintf(nasm,
-            "pop rbx\n"
+            "\npop rbx\n"
             "call show_registers\n"
             "mov rax, 60\n"
             "mov rdi, 0\n"
@@ -74,5 +75,57 @@ int CodeWriter_ConstantCharacter(FILE* nasm, const Node* node) {
             "; Ajout constant character sur la pile\n"
             "push %d\n\n",
             node->att.byte);
+    return 0;
+}
+
+int CodeWriter_LoadVar(FILE* nasm, Node* node,
+                       const ProgramSymbolTable* symtable, char* func_name) {
+    // TODO : Verif si la fucntion marche
+    // Get in global variables
+    Symbol* symbol = SymbolTable_get(&symtable->globals, node->att.ident);
+
+    // Get in local variables (overwrites global variable)
+    FunctionSymbolTable* func_table = SymbolTable_get_from_func_name(symtable, func_name);
+
+    Symbol* tmp;
+    if ((tmp = SymbolTable_get(&func_table->parameters, node->att.ident))) {
+        symbol = tmp;
+    } else if ((tmp = SymbolTable_get(&func_table->locals, node->att.ident))) {
+        symbol = tmp;
+    }
+
+    assert(symbol && "Variable not found");
+
+    fprintf(nasm,
+            "\n\n; Ajout d'un contenu de variable sur la pile\n"
+            "mov rax, [rsp + %d]\n"
+            "push rax\n",
+            symbol->addr);
+    return 0;
+}
+
+int CodeWriter_WriteVar(FILE* nasm, Node* node,
+                        const ProgramSymbolTable* symtable, char* func_name) {
+    // TODO : Verif si la fucntion marche
+    // Get in global variables
+    Symbol* symbol = SymbolTable_get(&symtable->globals, node->att.ident);
+
+    // Get in local variables (overwrites global variable)
+    FunctionSymbolTable* func_table = SymbolTable_get_from_func_name(symtable, func_name);
+
+    Symbol* tmp;
+    if ((tmp = SymbolTable_get(&func_table->parameters, node->att.ident))) {
+        symbol = tmp;
+    } else if ((tmp = SymbolTable_get(&func_table->locals, node->att.ident))) {
+        symbol = tmp;
+    }
+
+    assert(symbol && "Variable not found");
+
+    fprintf(nasm,
+            "\n\n; Assignation de la derniere valuer de la pile dans une variable\n"
+            "pop rax\n"
+            "mov [rsp + %d], rax\n",
+            symbol->addr);
     return 0;
 }

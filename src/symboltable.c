@@ -79,7 +79,7 @@ int _SymbolTable_add(SymbolTable* self, Symbol symbol) {
     return 0;
 }
 
-Symbol* SymbolTable_get(SymbolTable* self, char* identifier) {
+Symbol* SymbolTable_get(const SymbolTable* self, char* identifier) {
     /* Returns a symbol associated to an identifier */
 
     Symbol symbol = (Symbol){
@@ -345,8 +345,19 @@ int ProgramSymbolTable_from_Prog(ProgramSymbolTable* self, Tree tree) {
     return 0;
 }
 
+FunctionSymbolTable* SymbolTable_get_from_func_name(const ProgramSymbolTable* self,
+                                                    const char* func_name) {
+    for (int i = 0; i < ArrayList_get_length(&self->functions); ++i) {
+        FunctionSymbolTable* function = ArrayList_get(&self->functions, i);
+        if (!strcmp(function->identifier, func_name)) {
+            return function;
+        }
+    }
+    return NULL;
+}
+
 void SymbolTable_print(const SymbolTable* self) {
-    for (int i = 0; i < ArrayList_get_length(&self->symbols); i++) {
+    for (int i = 0; i < ArrayList_get_length(&self->symbols); ++i) {
         Symbol* symbol = ArrayList_get(&self->symbols, i);
         Symbol_print(symbol);
     }
