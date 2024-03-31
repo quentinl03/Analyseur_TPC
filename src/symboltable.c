@@ -80,6 +80,8 @@ int _SymbolTable_add(SymbolTable* self, Symbol symbol) {
 }
 
 Symbol* SymbolTable_get(SymbolTable* self, char* identifier) {
+    /* Returns a symbol associated to an identifier */
+
     Symbol symbol = (Symbol){
         .identifier = identifier,
     };
@@ -93,7 +95,7 @@ Symbol* SymbolTable_get(SymbolTable* self, char* identifier) {
  * @param type Type
  * @return size_t Type size in bytes
  */
-static size_t get_type_size(type_t type) {
+static size_t _get_type_size(type_t type) {
     static const size_t sizes[] = {
         [type_byte] = sizeof(char),
         [type_num] = sizeof(int),
@@ -110,7 +112,7 @@ static size_t get_type_size(type_t type) {
  * @param att Attribut object
  * @return type_t Type if found, -1 otherwise
  */
-static type_t get_type_from_string(const Attribut* att) {
+static type_t _get_type_from_string(const Attribut* att) {
     if (strcmp(att->key_word, "char") == 0) {
         return type_byte;
     } else if (strcmp(att->key_word, "int") == 0) {
@@ -132,7 +134,7 @@ static int _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
     assert(tree != NULL);
     assert(tree->label == Type || tree->label == DeclFonctArray);
 
-    type_t type = get_type_from_string(&tree->att);
+    type_t type = _get_type_from_string(&tree->att);
 
     Tree typeNode = tree;
     FOREACH_SIBLING(typeNode) {
@@ -149,7 +151,7 @@ static int _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                     (Symbol){
                         .identifier = identNode->att.ident,
                         .type = type,
-                        .type_size = get_type_size(type),
+                        .type_size = _get_type_size(type),
                         .symbol_type = SYMBOL_POINTER_TO_ARRAY,
                         .is_static = false,
 
@@ -166,10 +168,10 @@ static int _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                         .identifier = identNode->att.ident,
                         .is_static = self->type == SYMBOL_TABLE_GLOBAL,
                         .type = type,
-                        .type_size = get_type_size(type),
+                        .type_size = _get_type_size(type),
                         .symbol_type = SYMBOL_ARRAY,
                         .array.length = identNode->firstChild->att.num,
-                        .total_size = identNode->firstChild->att.num * get_type_size(type),
+                        .total_size = identNode->firstChild->att.num * _get_type_size(type),
                         .lineno = identNode->lineno,
                     });
             }
@@ -180,10 +182,10 @@ static int _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                     (Symbol){
                         .identifier = identNode->att.ident,
                         .type = type,
-                        .type_size = get_type_size(type),
+                        .type_size = _get_type_size(type),
                         .is_static = self->type == SYMBOL_TABLE_GLOBAL,
                         .symbol_type = SYMBOL_VALUE,
-                        .total_size = 1 * get_type_size(type),
+                        .total_size = 1 * _get_type_size(type),
                         .lineno = identNode->lineno,
                     });
             }
@@ -260,7 +262,7 @@ static int _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Function
     Node* identNode = header->firstChild->nextSibling;
     _FunctionSymbolTable_init(func, identNode->att.ident);
 
-    type_t return_type = is_void ? type_void : get_type_from_string(&header->firstChild->att);
+    type_t return_type = is_void ? type_void : _get_type_from_string(&header->firstChild->att);
 
     // * Add the function to the program's global symbol table
     _SymbolTable_add(
@@ -272,7 +274,7 @@ static int _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Function
             // return type
             .is_static = true,
             .type = return_type,
-            .type_size = get_type_size(return_type),
+            .type_size = _get_type_size(return_type),
             .total_size = 0,
             .lineno = identNode->lineno,
         });

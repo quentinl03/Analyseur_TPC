@@ -1,17 +1,17 @@
 int bonsoir_michel[4];
 
 int add(int a, int b, int c, char bop[]) {
-    return a + b + c;
+    // return a + b + c;
 }
 
 int sub(int a, int b, int c) {
-    return a - b - c;
+    // return a - b - c;
 }
 
 int mul(int a, int b, int c) {
-    return a * b * c;
+    // return a * b * c;
 }
 
 int div(int a, int b, int c) {
-    return a / b / c;
+    return 4 * 5  + 'a';
 }

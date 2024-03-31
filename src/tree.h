@@ -59,7 +59,7 @@ typedef enum {
     FOREACH_NODE(GENERATE_ENUM)
 } label_t;
 
-extern const char *NODE_STRING[];
+// extern const char *NODE_STRING[];
 
 // typedef enum {
 //     E,

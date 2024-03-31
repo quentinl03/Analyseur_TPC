@@ -25,9 +25,9 @@ typedef struct Symbol {
         int length;
     } array;
 
-    int total_size;
+    int total_size;  // Total size of the object variable or array
 
-    bool is_static;
+    bool is_static;  // Static variables are stored in the bss section
     bool on_register;
     union {  // First 6 parameters are stored in registers, rest are stored in stack
         Register reg;

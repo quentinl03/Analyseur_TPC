@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "codeWriter.h"
 #include "parser.h"
 #include "symboltable.h"
 #include "tpc_bison.h"
@@ -55,13 +56,15 @@ int main(int argc, char* argv[]) {
         ProgramSymbolTable_print(&symtable);
     }
 
-    FILE* file = fopen(opt.output, "w");
+    FILE* file = fopen("_anonymous.asm", "w");
     if (!file) {
         perror("fopen");
         return EXIT_FAILURE;
     }
 
+    CodeWriter_Init_File(file);
     TreeReader_Prog(&symtable, abr, file);
+    CodeWriter_End_File(file);
 
     if (abr) {
         deleteTree(abr);

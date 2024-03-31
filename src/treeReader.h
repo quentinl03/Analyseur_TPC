@@ -13,8 +13,8 @@
 #include "symboltable.h"
 #include "tree.h"
 
-int TreeReader_Prog(ProgramSymbolTable* prog_st, Tree tree, FILE* nasm);
+int TreeReader_Prog(ProgramSymbolTable* table, Tree tree, FILE* nasm);
 
-int TreeReader_DeclFoncts(ProgramSymbolTable* prog_st, Tree tree, FILE* nasm);
+int TreeReader_DeclFoncts(ProgramSymbolTable* table, Tree tree, FILE* nasm);
 
-int TreeReader_SuiteInst(ProgramSymbolTable* prog_st, Tree tree, char* func_name, FILE* nasm);
+int TreeReader_SuiteInst(ProgramSymbolTable* table, Tree tree, char* func_name, FILE* nasm);
