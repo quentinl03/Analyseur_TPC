@@ -1,6 +1,5 @@
 obj/
 bin/
-*.pdf
 __pycache__/
 .vscode/
 .pytest_cache/
@@ -8,6 +7,8 @@ tmp/
 *.zip
 *.tar.gz
 logos/
+_anonymous.asm
+rep/*.pdf
 
 # Prerequisites
 *.d
