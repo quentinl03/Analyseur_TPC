@@ -54,6 +54,15 @@ $(OBJS_DIR)/$(PARSER).tab.h $(OBJS_DIR)/$(PARSER).tab.c &: $(SRC_DIR)/$(PARSER).
 $(BIN_DIR)/$(EXEC): $(OBJS_DIR)/$(LEXER).yy.o $(OBJS_DIR)/$(PARSER).tab.o $(MODULES) | $(OUT_DIRS)
 	$(CC) $^ -o $@ $(LDFLAGS)
 
+# TODO : Faire un sous dossier pour les programmes compilés par le compilateur
+ASMFLAGS=-F dwarf -f elf64 -g
+$(BIN_DIR)/utils.o: $(SRC_DIR)/utils.asm
+	nasm $(ASMFLAGS) -o $@ $<
+
+produced_asm: $(BIN_DIR)/utils.o
+	nasm $(ASMFLAGS) -o $(BIN_DIR)/_anonymous.o _anonymous.asm
+	$(CC) $(BIN_DIR)/utils.o $(BIN_DIR)/_anonymous.o -o $(BIN_DIR)/_anonymous -nostartfiles -no-pie -m64 -g
+
 rapport: $(REPORT_DIR)/rapport.pdf
 
 rep/rapport.pdf: $(REPORT_DIR)/rapport.md
@@ -62,7 +71,7 @@ rep/rapport.pdf: $(REPORT_DIR)/rapport.md
 	@wget --quiet --show-progress --no-clobber -O rep/logos/namedlogoUGE.png "https://drive.google.com/uc?export=download&confirm=yes&id=1YGm1N7griuDbJhC6rSgBHrrcOsHKM5xg" || true
 	pandoc --toc $^ -o $@ --metadata-file=rep/metadata.yaml 
 
-.PHONY: clean distclean dir
+.PHONY: clean distclean dir test
 
 distclean:
 	rm -f $(OBJS)
