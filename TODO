@@ -24,10 +24,15 @@
     - realloc ArrayList en mult et pas add
 
 - Sémantique
+  - Table des symboles
     - Cas autorisés
-        - On peut redéclarer une variable en local, si elle était globale
+      - [X] On peut redéclarer une variable en local, si elle était globale
     - Cas interdits
-        - [X] Redéclarer une variable globale déjà déclaré en global 
-        - [X] Redéclarer une variable locale, déjà déclaré en local
-        - [X] Redéclarer un paramètre, dans une liste de paramètres
-        - [ ] Redéclarer une variable locale, alors qu'elle existe en paramètre
+      - [X] Redéclarer une variable globale déjà déclaré en global 
+      - [X] Redéclarer une variable locale, déjà déclaré en local
+      - [X] Redéclarer un paramètre, dans une liste de paramètres
+      - [X] Redéclarer une variable locale, alors qu'elle existe en paramètre
+  
+  - [ ] Vérifier que l'on appelle pas une variable
+  - [ ] Vérifier l'existence d'un main
+  - [ ] Vérifier l'ordre de déclaration des fonctions

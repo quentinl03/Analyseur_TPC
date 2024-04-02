@@ -240,6 +240,35 @@ static ErrorType _FunctionSymbolTable_create_from_ListTypVar(FunctionSymbolTable
 }
 
 /**
+ * @brief Check if a local variable is redeclared in the parameters list
+ * 
+ * @param func FunctionSymbolTable object to check
+ * @return ErrorType ERR_SEM_REDECLARED_SYMBOL if a symbol was already in the table
+ */
+static ErrorType _SymbolTable_check_redeclared_params_in_locals(FunctionSymbolTable* func) {
+    ErrorType err = ERR_NONE;
+
+    for (int i = 0; i < ArrayList_get_length(&func->locals.symbols); ++i) {
+        Symbol* local = ArrayList_get(&func->locals.symbols, i);
+        Symbol* param = SymbolTable_get(&func->parameters, local->identifier);
+        if (param) {
+            CodeError_print(
+                (CodeError) {
+                    .err = ERR_SEM_REDECLARED_SYMBOL,
+                    .line = local->lineno,
+                    .column = 0,
+                },
+                "redeclaration of variable '%s' already declared in parameters list",
+                local->identifier
+            );
+            err |= ERR_SEM_REDECLARED_SYMBOL;
+        }
+    }
+
+    return err;
+}
+
+/**
  * @brief Create a FunctionSymbolTable from a DeclFonct tree
  * Adds the function to the program's global symbol table
  * and creates a symbol table for the function's parameters and local variables
@@ -292,6 +321,8 @@ static ErrorType _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Fu
     // DeclFonct->EnTeteFonct->Corps->DeclVars
     Node* listLocals = tree->firstChild->nextSibling->firstChild;
     err |= SymbolTable_create_from_DeclVars(&func->locals, offset, listLocals);
+
+    err |= _SymbolTable_check_redeclared_params_in_locals(func);
 
     return err;
 }
