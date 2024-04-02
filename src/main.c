@@ -27,15 +27,15 @@ int main(int argc, char* argv[]) {
         if (!yyin) {
             perror("fopen");
             fprintf(stderr, "End of execution.\n");
-            return 1;
+            return EXIT_CODE(ERR_FILE_OPEN);
         }
     }
 
-    Error err = parser_bison(yyin, &abr);
+    ErrorType err = parser_bison(yyin, &abr);
     fclose(yyin);
 
-    if (err < 0) {
-        return -err;
+    if (IS_PARSE_ERROR(err)) {
+        return EXIT_CODE(err);;
     }
 
     if (opt.flag_show_tree) {
@@ -50,7 +50,10 @@ int main(int argc, char* argv[]) {
     }
 
     ProgramSymbolTable symtable;
-    ProgramSymbolTable_from_Prog(&symtable, abr);
+    err = ProgramSymbolTable_from_Prog(&symtable, abr);
+    if (IS_SEMANTIC(err) || IS_CRITICAL(err)) {
+        return EXIT_CODE(err);
+    }
 
     if (opt.flag_symtabs) {
         ProgramSymbolTable_print(&symtable);
@@ -59,7 +62,7 @@ int main(int argc, char* argv[]) {
     FILE* file = fopen(opt.output, "w");
     if (!file) {
         perror("fopen");
-        return EXIT_FAILURE;
+        return EXIT_CODE(ERR_FILE_OPEN);
     }
 
     CodeWriter_Init_File(file);

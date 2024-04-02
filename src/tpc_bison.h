@@ -6,6 +6,6 @@
 #include "tree.h"
 #include "error.h"
 
-Error parser_bison(FILE* f, Node** abr);
+ErrorType parser_bison(FILE* f, Node** abr);
 
 #endif

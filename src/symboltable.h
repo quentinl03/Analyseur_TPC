@@ -4,6 +4,7 @@
 #include "arraylist.h"
 #include "symbol.h"
 #include "tree.h"
+#include "error.h"
 
 typedef enum SymbolTableType {
     SYMBOL_TABLE_GLOBAL = 1,
@@ -29,15 +30,6 @@ typedef struct ProgramSymbolTable {
 } ProgramSymbolTable;
 
 /**
- * @brief Add a symbol to the table
- *
- * @param table SymbolTable object
- * @param symbol Symbol to add
- * @return int
- */
-int _SymbolTable_add(SymbolTable* table, Symbol symbol);
-
-/**
  * @brief Get a symbol from the table
  *
  * @param table SymbolTable object
@@ -52,9 +44,10 @@ Symbol* SymbolTable_get(const SymbolTable* table, char* identifier);
  *
  * @param self
  * @param tree
- * @return int
+ * @return ErrorType ERR_NONE if no error, otherwise the error
+ * 
  */
-int ProgramSymbolTable_from_Prog(ProgramSymbolTable* self, Tree tree);
+ErrorType ProgramSymbolTable_from_Prog(ProgramSymbolTable* self, Tree tree);
 
 /**
  * @brief Get a FunctionSymbolTable from the function name. If the function is not found, return NULL

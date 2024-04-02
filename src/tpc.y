@@ -219,12 +219,17 @@ ListExp:
                                         addChild($$,$1);};
     ;
 %%
-void yyerror(Node** abr, char* msg){
+void yyerror(Node** abr, char* msg) {
     fprintf(stderr, "%s: line %u column %u\n", msg, nbline, nbchar);
 }
 
-int parser_bison(FILE* f, Node** abr) {
+ErrorType parser_bison(FILE* f, Node** abr) {
     extern FILE* yyin;
     yyin = f;
-    return -yyparse(abr);
+    int retcode = yyparse(abr);
+    return (
+        retcode == 1 ? ERR_PARSE_SYNTAX
+        : retcode == 2 ? ERR_NO_MEMORY
+        : ERR_NONE
+    );
 }
