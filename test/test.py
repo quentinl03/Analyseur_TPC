@@ -32,12 +32,12 @@ class ColoredFormatter(logging.Formatter):
         string = self.colors.get(record.levelno) + self.formatted + self.color_reset
         return logging.Formatter(string).format(record)
 
-def test_input(file: Path, expected_retcode: int) -> int:
+def test_input(file: Path, expected_retcode: int, prefix_exec=[], args=[]) -> int:
     """Open a file and compares its output to expected_retcode"""
     with open(file, "r", encoding="utf-8") as f:
         logger.debug(f"Test with {file} ...")
         process = run(
-            [EXECUTABLE, "--only-tree"],
+            [*prefix_exec, EXECUTABLE, *args],
             capture_output=True, text=True,
             input=f.read(), check=False
         )
@@ -58,7 +58,7 @@ class SyntaxTest(unittest.TestCase):
 
         for filename in files:
             with self.subTest(str(filename)):
-                retcode = test_input(filename, expected_retcode)
+                retcode = test_input(filename, expected_retcode, args=["--only-tree"])
                 count += retcode == expected_retcode
                 self.assertEqual(retcode, expected_retcode, err_msg)
 
@@ -72,6 +72,20 @@ class SyntaxTest(unittest.TestCase):
     def test_rejected_syntax_inputs(self):
         logger.debug("# Test rejected inputs :")
         self._subtest_files("syn-err/**/*.tpc", 1, "Input was accepted while it should not")
+    
+    def _valgrind_conditionnal_jumps(self, path_glob: str, expected_retcode: int):
+        """Use valgrind against inputs, to check for conditionnal jumps"""
+        files = list(Path(".").glob(path_glob))
+
+        for filename in files:
+            with self.subTest(str(filename)):
+                retcode = test_input(filename, expected_retcode, ["valgrind", "--error-exitcode=10", "--leak-check=no", "--track-origins=yes"])
+                self.assertEqual(retcode, expected_retcode, "Valgrind detected conditionnl jumps")
+    
+    def test_valid_valgrind_conditionnal_jumps(self):
+        logger.debug("# Test valgrind for conditionnal jumps :")
+        self._valgrind_conditionnal_jumps("good/random/*.tpc", 0)
+        self._valgrind_conditionnal_jumps("syn-err/random/*.tpc", 1)
 
 def parse_args():
     parser = argparse.ArgumentParser(

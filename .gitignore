@@ -9,6 +9,7 @@ tmp/
 logos/
 _anonymous.asm
 rep/*.pdf
+/*.asm
 
 # Prerequisites
 *.d

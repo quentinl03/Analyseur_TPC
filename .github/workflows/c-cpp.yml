@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Prepare environement
-      run: sudo apt install flex bison libfl-dev
+      run: sudo apt install flex bison libfl-dev valgrind
     - name: Build compiler
       run: make
     - name: Units tests
