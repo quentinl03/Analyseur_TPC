@@ -103,7 +103,7 @@ Symbol* SymbolTable_get(const SymbolTable* self, char* identifier) {
  */
 static size_t _get_type_size(type_t type) {
     static const size_t sizes[] = {
-        [type_byte] = sizeof(char),
+        [type_byte] = sizeof(int),
         [type_num] = sizeof(int),
         [type_void] = 0,
     };
@@ -352,6 +352,66 @@ static ErrorType _ProgramSymbolTable_from_DeclFoncts(ProgramSymbolTable* self, T
 }
 
 /**
+ * @brief Add default functions to the global symbol table :
+ * - putchar
+ * - putint
+ * - getchar
+ * - getint
+ * 
+ * @param globals SymbolTable object to fill
+ */
+static void _SymbolTable_add_default_functions(SymbolTable* globals) {
+    assert(globals->type == SYMBOL_TABLE_GLOBAL);
+    _SymbolTable_add(
+        globals,
+        (Symbol) {
+            .identifier = "putchar",
+            .symbol_type = SYMBOL_FUNCTION,
+            .is_static = true,
+            .type = type_num,
+            .type_size = _get_type_size(type_num),
+            .total_size = 1 * _get_type_size(type_num),
+        }
+    );
+
+    _SymbolTable_add(
+        globals,
+        (Symbol) {
+            .identifier = "putint",
+            .symbol_type = SYMBOL_FUNCTION,
+            .is_static = true,
+            .type = type_num,
+            .type_size = _get_type_size(type_num),
+            .total_size = 1 * _get_type_size(type_num),
+        }
+    );
+
+    _SymbolTable_add(
+        globals,
+        (Symbol) {
+            .identifier = "getchar",
+            .symbol_type = SYMBOL_FUNCTION,
+            .is_static = true,
+            .type = type_byte,
+            .type_size = _get_type_size(type_byte),
+            .total_size = 1 * _get_type_size(type_byte),
+        }
+    );
+
+    _SymbolTable_add(
+        globals,
+        (Symbol) {
+            .identifier = "getint",
+            .symbol_type = SYMBOL_FUNCTION,
+            .is_static = true,
+            .type = type_num,
+            .type_size = _get_type_size(type_num),
+            .total_size = 1 * _get_type_size(type_num),
+        }
+    );
+}
+
+/**
  * @brief Create a symbol table from a Prog tree
  * - globals field contains:
  *  - global variables
@@ -371,10 +431,11 @@ ErrorType ProgramSymbolTable_from_Prog(ProgramSymbolTable* self, Tree tree) {
 
     *self = (ProgramSymbolTable){0};
     _SymbolTable_init(&self->globals);
+    self->globals.type = SYMBOL_TABLE_GLOBAL;
+    _SymbolTable_add_default_functions(&self->globals);
     ArrayList_init(&self->functions, sizeof(FunctionSymbolTable), 10, NULL);
 
     // tree->firstChild is the a DeclVars tree of globals variables
-    self->globals.type = SYMBOL_TABLE_GLOBAL;
     err |= SymbolTable_create_from_DeclVars(&self->globals, 0, tree->firstChild);
 
     // tree->firstChild->nextSibling is the first function to process

@@ -17,13 +17,19 @@
 #include "symboltable.h"
 #include "tree.h"
 
-void CodeWriter_Init_File(FILE* nasm) {
-    fprintf(nasm,
-            "section .text\n"
-            "global _start\n"
-            "extern show_registers\n"
-            "extern show_stack\n"
-            "_start:\n");
+void CodeWriter_Init_File(FILE* nasm, const SymbolTable* globals) {
+    assert(globals->type == SYMBOL_TABLE_GLOBAL && "SymbolTable should be the program's global");
+    fprintf(
+        nasm,
+        "section .bss\n"
+        "global_vars resb %ld\n"
+        "global _start\n"
+        "section .text\n"
+        "extern show_registers\n"
+        "extern show_stack\n"
+        "_start:\n",
+        globals->next_addr
+    );
 }
 
 void CodeWriter_End_File(FILE* nasm) {
@@ -43,7 +49,7 @@ static const char* _CodeWriter_Node_To_Ope(const Node* node) {
             return "sub";
         case '*':
             return "imul";
-        case '/':
+        case '/': // ! TODO : A revoir (car idiv c de la merde)
             return "idiv";
         default:
             assert(0 && "We shoudn't be there");
@@ -123,9 +129,8 @@ int CodeWriter_WriteVar(FILE* nasm, Node* node,
     assert(symbol && "Variable not found");
 
     fprintf(nasm,
-            "\n\n; Assignation de la derniere valuer de la pile dans une variable\n"
-            "pop rax\n"
-            "mov [rsp + %d], rax\n",
+            "\n\n; Assignation de la dernière valeur de la pile dans une variable\n"
+            "mov [global_vars + %d], rax\n",
             symbol->addr);
     return 0;
 }

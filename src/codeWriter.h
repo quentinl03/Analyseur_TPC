@@ -13,7 +13,15 @@
 #include "symboltable.h"
 #include "tree.h"
 
-void CodeWriter_Init_File(FILE* nasm);
+/**
+ * @brief Write the header of the nasm file,
+ * including the BSS section and the extern declaration
+ * of utils.asm functions.
+ * 
+ * @param nasm File to write to
+ * @param globals Symbol table of the global variables
+ */
+void CodeWriter_Init_File(FILE* nasm, const SymbolTable* globals);
 
 void CodeWriter_End_File(FILE* nasm);
 
