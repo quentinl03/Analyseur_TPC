@@ -1,5 +1,6 @@
 int global_a;
 int global_tab1[10];
+int global_b;
 
 int main(void) {
 

@@ -54,10 +54,9 @@ static void _Symbol_print_Array(const Symbol* self) {
         _Symbol_get_type_str(self->type),
         self->array.length,
         self->total_size);
-    if (!self->is_static)
-        printf(
-            "addr=%s",
-            _Symbol_get_location_str(self));
+    printf(
+        "addr=%s",
+        _Symbol_get_location_str(self));
     putchar('\n');
 }
 
@@ -68,10 +67,9 @@ static void _Symbol_print_Value(const Symbol* self) {
         SymbolType_to_str(self->symbol_type),
         _Symbol_get_type_str(self->type),
         self->total_size);
-    if (!self->is_static)
-        printf(
-            "addr=%s",
-            _Symbol_get_location_str(self));
+    printf(
+        "addr=%s",
+        _Symbol_get_location_str(self));
     putchar('\n');
 }
 
