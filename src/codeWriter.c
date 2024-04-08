@@ -24,6 +24,10 @@ void CodeWriter_Init_File(FILE* nasm, const SymbolTable* globals) {
         "global _start\n"
         "extern show_registers\n"
         "extern show_stack\n"
+        "extern putchar\n"
+        "extern getchar\n"
+        "extern putint\n"
+        "extern getint\n"
         "section .bss\n"
         "    global_vars resb %ld\n\n"
         "section .text\n"
@@ -49,7 +53,7 @@ static const char* _CodeWriter_Node_To_Ope(const Node* node) {
             return "sub";
         case '*':
             return "imul";
-        case '/': // ! TODO : A revoir (car idiv c de la merde)
+        case '/':  // ! TODO : A revoir (car idiv c de la merde)
             return "idiv";
         default:
             assert(0 && "We shoudn't be there");
