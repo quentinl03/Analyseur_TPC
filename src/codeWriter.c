@@ -88,19 +88,21 @@ int CodeWriter_ConstantCharacter(FILE* nasm, const Node* node) {
     return 0;
 }
 
-int CodeWriter_LoadVar(FILE* nasm, Node* node,
-                       const ProgramSymbolTable* symtable, char* func_name) {
+int CodeWriter_LoadVar(
+    FILE* nasm, Node* node,
+    const ProgramSymbolTable* symtable,
+    const FunctionSymbolTable* func
+) {
     // TODO : Verif si la fucntion marche
     // Get in global variables
     Symbol* symbol = SymbolTable_get(&symtable->globals, node->att.ident);
 
     // Get in local variables (overwrites global variable)
-    FunctionSymbolTable* func_table = SymbolTable_get_from_func_name(symtable, func_name);
 
     Symbol* tmp;
-    if ((tmp = SymbolTable_get(&func_table->parameters, node->att.ident))) {
+    if ((tmp = SymbolTable_get(&func->parameters, node->att.ident))) {
         symbol = tmp;
-    } else if ((tmp = SymbolTable_get(&func_table->locals, node->att.ident))) {
+    } else if ((tmp = SymbolTable_get(&func->locals, node->att.ident))) {
         symbol = tmp;
     }
 
@@ -114,27 +116,38 @@ int CodeWriter_LoadVar(FILE* nasm, Node* node,
     return 0;
 }
 
-int CodeWriter_WriteVar(FILE* nasm, Node* node,
-                        const ProgramSymbolTable* symtable, char* func_name) {
+int CodeWriter_WriteVar(
+    FILE* nasm, Node* node,
+    const ProgramSymbolTable* symtable,
+    const FunctionSymbolTable* func
+) {
     // TODO : Verif si la fucntion marche
     // Get in global variables
     Symbol* symbol = SymbolTable_get(&symtable->globals, node->att.ident);
 
     // Get in local variables (overwrites global variable)
-    FunctionSymbolTable* func_table = SymbolTable_get_from_func_name(symtable, func_name);
 
     Symbol* tmp;
-    if ((tmp = SymbolTable_get(&func_table->parameters, node->att.ident))) {
+    if ((tmp = SymbolTable_get(&func->parameters, node->att.ident))) {
         symbol = tmp;
-    } else if ((tmp = SymbolTable_get(&func_table->locals, node->att.ident))) {
+    } else if ((tmp = SymbolTable_get(&func->locals, node->att.ident))) {
         symbol = tmp;
     }
 
     assert(symbol && "Variable not found");
 
-    fprintf(nasm,
+    if (symbol->is_static) {
+        fprintf(
+            nasm,
             "; Assignation de la dernière valeur de la pile dans une variable\n"
-            "mov [global_vars + %d], rax\n\n",
-            symbol->addr);
+            "mov [global_vars + %d], rsp\n\n",
+            symbol->addr
+        );
+    }
+
+    else {
+        assert(0 && "Variable is not global / Not implemented"); // TODO : Implement assigment on locals
+    }
+
     return 0;
 }

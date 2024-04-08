@@ -21,11 +21,11 @@
 // static const char* NODE_STRING[] = {
 //     FOREACH_NODE(GENERATE_STRING)};
 
-static int _Instr_Expr(ProgramSymbolTable* table, Tree tree, FILE* nasm, char* func_name);
-static int _Instr_Return(ProgramSymbolTable* table, Tree tree, FILE* nasm, char* func_name);
-static int _Instr_Assignation(ProgramSymbolTable* table, Tree tree, FILE* nasm, char* func_name);
+static int _Instr_Expr(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func);
+static int _Instr_Return(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func);
+static int _Instr_Assignation(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func);
 
-int TreeReader_Prog(ProgramSymbolTable* table, Tree tree, FILE* nasm) {
+int TreeReader_Prog(const ProgramSymbolTable* table, Tree tree, FILE* nasm) {
     // Si est pas dans le noeux c'est grave car la suite du parcours est foutu.
     assert(tree->label == Prog);
 
@@ -34,7 +34,21 @@ int TreeReader_Prog(ProgramSymbolTable* table, Tree tree, FILE* nasm) {
     return 0;
 }
 
-int TreeReader_DeclFoncts(ProgramSymbolTable* table, Tree tree, FILE* nasm) {
+static int _TreeReader_Corps(
+    const ProgramSymbolTable* prog,
+    const FunctionSymbolTable* func,
+    Tree tree, FILE* nasm
+) {
+    assert(tree->label == Corps);
+    // Implement stack frame
+    // CodeWriter_stackFrame_start(func, nasm);
+    TreeReader_SuiteInst(prog, SECONDCHILD(tree), func, nasm);
+    // CodeWriter_stackFrame_end(table, nasm);
+    return 0;
+}
+
+
+int TreeReader_DeclFoncts(const ProgramSymbolTable* table, Tree tree, FILE* nasm) {
     // Si est pas dans le noeux c'est grave car la suite du parcours est foutu.
     assert(tree->label == DeclFoncts);
 
@@ -43,22 +57,22 @@ int TreeReader_DeclFoncts(ProgramSymbolTable* table, Tree tree, FILE* nasm) {
          child != NULL;
          child = child->nextSibling) {
         // On passe de DeclFonct à SuiteInstr
-        TreeReader_SuiteInst(table, SECONDCHILD(SECONDCHILD(child)),
-                             SECONDCHILD(FIRSTCHILD(child))->att.ident, nasm);
+        FunctionSymbolTable* func = SymbolTable_get_from_func_name(table, FIRSTCHILD(child)->firstChild->nextSibling->att.ident);
+        _TreeReader_Corps(table, func, SECONDCHILD(child), nasm);
     }
 
     return 0;
 }
 
-int TreeReader_SuiteInst(ProgramSymbolTable* table, Tree tree,
-                         char* func_name, FILE* nasm) {
+int TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
+                         const FunctionSymbolTable* func, FILE* nasm) {
     // printf("SuiteInst \t");
     // printf("func_name: %s\n", func_name);
 
     for (Node* child = tree->firstChild; child != NULL; child = child->nextSibling) {
         switch (child->label) {
             case Return:
-                _Instr_Return(table, child, nasm, func_name);
+                _Instr_Return(table, child, nasm, func);
                 break;
             case Addsub:
             case Divstar:
@@ -66,11 +80,11 @@ int TreeReader_SuiteInst(ProgramSymbolTable* table, Tree tree,
             case Num:
             case Ident:
                 // TODO ajouter les autre case d'expression
-                _Instr_Expr(table, child, nasm, func_name);
+                _Instr_Expr(table, child, nasm, func);
                 break;
             case Assignation:
                 // TODO WIP
-                _Instr_Assignation(table, child, nasm, func_name);
+                _Instr_Assignation(table, child, nasm, func);
                 break;
             default:
                 break;
@@ -85,19 +99,19 @@ int TreeReader_SuiteInst(ProgramSymbolTable* table, Tree tree,
 /* Instr Unitaire */
 /******************/
 
-static int _Instr_Expr(ProgramSymbolTable* table, Tree tree, FILE* nasm, char* func_name) {
+static int _Instr_Expr(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func) {
     // printf("Instr_Expr\n");
     switch (tree->label) {
         case Addsub:
         case Divstar:
             // printf("Addsub or divstar\n");
-            _Instr_Expr(table, FIRSTCHILD(tree), nasm, func_name);
-            _Instr_Expr(table, SECONDCHILD(tree), nasm, func_name);
+            _Instr_Expr(table, FIRSTCHILD(tree), nasm, func);
+            _Instr_Expr(table, SECONDCHILD(tree), nasm, func);
             CodeWriter_Ope(nasm, tree);
             break;
         case Ident:
             // printf("Ident\n");
-            CodeWriter_LoadVar(nasm, tree, table, func_name);
+            CodeWriter_LoadVar(nasm, tree, table, func);
             break;
         case Num:
             // printf("Num\n");
@@ -115,16 +129,16 @@ static int _Instr_Expr(ProgramSymbolTable* table, Tree tree, FILE* nasm, char* f
     return 0;
 }
 
-static int _Instr_Return(ProgramSymbolTable* table, Tree tree, FILE* nasm, char* func_name) {
+static int _Instr_Return(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func) {
     // printf("Instr_Return\n");
-    _Instr_Expr(table, FIRSTCHILD(tree), nasm, func_name);
+    _Instr_Expr(table, FIRSTCHILD(tree), nasm, func);
     return 0;
 }
 
-static int _Instr_Assignation(ProgramSymbolTable* table, Tree tree, FILE* nasm, char* func_name) {
+static int _Instr_Assignation(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func) {
     // TODO : Verif si la fucntion marche
     // printf("Instr_Assignation\n");
-    _Instr_Expr(table, SECONDCHILD(tree), nasm, func_name);
-    CodeWriter_WriteVar(nasm, FIRSTCHILD(tree), table, func_name);
+    _Instr_Expr(table, SECONDCHILD(tree), nasm, func);
+    CodeWriter_WriteVar(nasm, FIRSTCHILD(tree), table, func);
     return 0;
 }
