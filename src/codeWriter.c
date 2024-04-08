@@ -21,24 +21,24 @@ void CodeWriter_Init_File(FILE* nasm, const SymbolTable* globals) {
     assert(globals->type == SYMBOL_TABLE_GLOBAL && "SymbolTable should be the program's global");
     fprintf(
         nasm,
-        "section .bss\n"
-        "global_vars resb %ld\n"
         "global _start\n"
-        "section .text\n"
         "extern show_registers\n"
         "extern show_stack\n"
-        "_start:\n",
+        "section .bss\n"
+        "    global_vars resb %ld\n\n"
+        "section .text\n"
+        "_start:\n\n",
         globals->next_addr
     );
 }
 
 void CodeWriter_End_File(FILE* nasm) {
     fprintf(nasm,
-            "\npop rbx\n"
+            "pop rbx\n"
             "call show_registers\n"
             "mov rax, 60\n"
             "mov rdi, 0\n"
-            "syscall\n");
+            "syscall\n\n");
 }
 
 static const char* _CodeWriter_Node_To_Ope(const Node* node) {
@@ -103,9 +103,9 @@ int CodeWriter_LoadVar(FILE* nasm, Node* node,
     assert(symbol && "Variable not found");
 
     fprintf(nasm,
-            "\n\n; Ajout d'un contenu de variable sur la pile\n"
-            "mov rax, [rsp + %d]\n"
-            "push rax\n",
+            "; Ajout d'un contenu de variable sur la pile\n"
+            "mov rax, [rsp + %d]\n" // TODO rbp ?
+            "push rax\n\n",
             symbol->addr);
     return 0;
 }
@@ -129,8 +129,8 @@ int CodeWriter_WriteVar(FILE* nasm, Node* node,
     assert(symbol && "Variable not found");
 
     fprintf(nasm,
-            "\n\n; Assignation de la dernière valeur de la pile dans une variable\n"
-            "mov [global_vars + %d], rax\n",
+            "; Assignation de la dernière valeur de la pile dans une variable\n"
+            "mov [global_vars + %d], rax\n\n",
             symbol->addr);
     return 0;
 }
