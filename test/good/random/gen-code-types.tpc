@@ -6,6 +6,8 @@ char letter, digit, punct;
 int uppercase;
 
 int main(void) {
+    int local_a;
+    local_a = 2;
     somme = 12;
     produit = 24;
     // quotient=24/12;

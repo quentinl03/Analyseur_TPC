@@ -41,9 +41,9 @@ static int _TreeReader_Corps(
 ) {
     assert(tree->label == Corps);
     // Implement stack frame
-    // CodeWriter_stackFrame_start(func, nasm);
+    CodeWriter_stackFrame_start(nasm, func);
     TreeReader_SuiteInst(prog, SECONDCHILD(tree), func, nasm);
-    // CodeWriter_stackFrame_end(table, nasm);
+    CodeWriter_stackFrame_end(nasm, func);
     return 0;
 }
 

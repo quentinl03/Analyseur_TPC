@@ -36,3 +36,21 @@ int CodeWriter_LoadVar(FILE* nasm, Node* node,
 
 int CodeWriter_WriteVar(FILE* nasm, Node* node,
                         const ProgramSymbolTable* symtable, const FunctionSymbolTable* func);
+
+/**
+ * @brief Write the start of a stack frame.
+ * 
+ * @param nasm FILE* to write to
+ * @param func Function symbol table of the function that is being
+ * @return int 
+ */
+int CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func);
+
+/**
+ * @brief Write the end of a stack frame.
+ * 
+ * @param nasm 
+ * @param func 
+ * @return int 
+ */
+int CodeWriter_stackFrame_end(FILE* nasm, const FunctionSymbolTable* func);

@@ -38,7 +38,6 @@ void CodeWriter_Init_File(FILE* nasm, const SymbolTable* globals) {
 
 void CodeWriter_End_File(FILE* nasm) {
     fprintf(nasm,
-            "pop rbx\n"
             "call show_registers\n"
             "mov rax, 60\n"
             "mov rdi, 0\n"
@@ -83,7 +82,7 @@ int CodeWriter_ConstantNumber(FILE* nasm, const Node* node) {
 int CodeWriter_ConstantCharacter(FILE* nasm, const Node* node) {
     fprintf(nasm,
             "; Ajout constant character sur la pile\n"
-            "push %d\n\n",
+            "push '%c'\n\n",
             node->att.byte);
     return 0;
 }
@@ -110,7 +109,7 @@ int CodeWriter_LoadVar(
 
     fprintf(nasm,
             "; Ajout d'un contenu de variable sur la pile\n"
-            "mov rax, [rsp + %d]\n" // TODO rbp ?
+            "mov rax, [rbp + %d]\n" // TODO rbp ?
             "push rax\n\n",
             symbol->addr);
     return 0;
@@ -139,15 +138,55 @@ int CodeWriter_WriteVar(
     if (symbol->is_static) {
         fprintf(
             nasm,
-            "; Assignation de la dernière valeur de la pile dans une variable\n"
-            "mov [global_vars + %d], rsp\n\n",
+            "; Assignation de la dernière valeur de la pile dans la variable globale '%s'\n"
+            "mov [global_vars + %d], rsp\n",
+            symbol->identifier,
             symbol->addr
         );
     }
 
     else {
-        assert(0 && "Variable is not global / Not implemented"); // TODO : Implement assigment on locals
+        fprintf(
+            nasm,
+            "; Assignation de la dernière valeur de la pile dans la variable locale '%s'\n"
+            "mov [rbp + %d], rsp\n",
+            symbol->identifier,
+            symbol->addr
+        );
     }
+
+    // Pop last value
+    fprintf(
+        nasm,
+        "; Pop la dernière valeur de la pile après son assignation\n"
+        "add rsp, %d\n\n",
+        symbol->total_size
+    );
+
+    return 0;
+}
+
+
+int CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func) {
+    // TODO : Implement > 6 functions paramters (compute sum of size of paramters from index 6)
+    fprintf(
+        nasm,
+        "push rbp\n"
+        "mov rbp, rsp\n"
+        "sub rsp, %ld\n\n",
+        func->locals.next_addr
+    );
+
+    return 0;
+}
+
+
+int CodeWriter_stackFrame_end(FILE* nasm, const FunctionSymbolTable* func) {
+    fprintf(
+        nasm,
+        "mov rsp, rbp\n"
+        "pop rbp\n\n"
+    );
 
     return 0;
 }
