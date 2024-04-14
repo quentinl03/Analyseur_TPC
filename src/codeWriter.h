@@ -23,8 +23,6 @@
  */
 void CodeWriter_Init_File(FILE* nasm, const SymbolTable* globals);
 
-void CodeWriter_End_File(FILE* nasm);
-
 int CodeWriter_Ope(FILE* nasm, const Node* node);
 
 int CodeWriter_ConstantNumber(FILE* nasm, const Node* node);
@@ -41,7 +39,7 @@ int CodeWriter_WriteVar(FILE* nasm, Node* node,
  * @brief Write the start of a stack frame.
  * 
  * @param nasm FILE* to write to
- * @param func Function symbol table of the function that is being
+ * @param func Function's symbol table
  * @return int 
  */
 int CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func);
@@ -54,3 +52,20 @@ int CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func);
  * @return int 
  */
 int CodeWriter_stackFrame_end(FILE* nasm, const FunctionSymbolTable* func);
+
+/**
+ * @brief Write the label of a function.
+ * 
+ * @param nasm FILE* to write to
+ * @param func Function symbol table of the function
+ * @return int 
+ */
+int CodeWriter_FunctionLabel(FILE* nasm, const FunctionSymbolTable* func);
+
+/**
+ * @brief Write `ret` instruction.
+ * 
+ * @param nasm 
+ * @return int 
+ */
+int CodeWriter_Return(FILE* nasm);

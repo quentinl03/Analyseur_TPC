@@ -29,6 +29,7 @@ int TreeReader_Prog(const ProgramSymbolTable* table, Tree tree, FILE* nasm) {
     // Si est pas dans le noeux c'est grave car la suite du parcours est foutu.
     assert(tree->label == Prog);
 
+    CodeWriter_Init_File(nasm, &table->globals);
     TreeReader_DeclFoncts(table, SECONDCHILD(tree), nasm);
 
     return 0;
@@ -44,6 +45,32 @@ static int _TreeReader_Corps(
     CodeWriter_stackFrame_start(nasm, func);
     TreeReader_SuiteInst(prog, SECONDCHILD(tree), func, nasm);
     CodeWriter_stackFrame_end(nasm, func);
+    CodeWriter_Return(nasm);
+    return 0;
+}
+
+/**
+ * @brief Generate code for a function.
+ * Writes function's label, and its body (Corps).
+ * 
+ * @param prog
+ * @param tree Tree DeclFonct node 
+ * @param nasm 
+ * @return int 
+ */
+static int _TreeReader_DeclFonct(
+    const ProgramSymbolTable* prog,
+    Tree tree, FILE* nasm
+) {
+    assert(tree->label == DeclFonct);
+    FunctionSymbolTable* func = SymbolTable_get_from_func_name(
+        prog,
+        // On passe de DeclFonct à SuiteInstr
+        FIRSTCHILD(tree)->firstChild->nextSibling->att.ident
+    );
+    CodeWriter_FunctionLabel(nasm, func);
+    _TreeReader_Corps(prog, func, SECONDCHILD(tree), nasm);
+
     return 0;
 }
 
@@ -52,13 +79,12 @@ int TreeReader_DeclFoncts(const ProgramSymbolTable* table, Tree tree, FILE* nasm
     // Si est pas dans le noeux c'est grave car la suite du parcours est foutu.
     assert(tree->label == DeclFoncts);
 
-    // On parcours les noeux DeclFonct
+    // On parcourt les noeux DeclFonct
     for (Node* child = tree->firstChild;
          child != NULL;
-         child = child->nextSibling) {
-        // On passe de DeclFonct à SuiteInstr
-        FunctionSymbolTable* func = SymbolTable_get_from_func_name(table, FIRSTCHILD(child)->firstChild->nextSibling->att.ident);
-        _TreeReader_Corps(table, func, SECONDCHILD(child), nasm);
+         child = child->nextSibling
+    ) {
+        _TreeReader_DeclFonct(table, child, nasm);
     }
 
     return 0;
@@ -71,7 +97,7 @@ int TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
 
     for (Node* child = tree->firstChild; child != NULL; child = child->nextSibling) {
         switch (child->label) {
-            case Return:
+            case Return: // TODO : Attentions aux returns surnuméraires !
                 _Instr_Return(table, child, nasm, func);
                 break;
             case Addsub:
@@ -129,14 +155,29 @@ static int _Instr_Expr(const ProgramSymbolTable* table, Tree tree, FILE* nasm, c
     return 0;
 }
 
+/**
+ * @brief If the function is non-void (returns a value) move computed
+ * expression to rax register (result of the expression).
+ * If the function returns void, do nothing.
+ * 
+ * @param table 
+ * @param tree 
+ * @param nasm 
+ * @param func 
+ * @return int 
+ */
 static int _Instr_Return(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func) {
     // printf("Instr_Return\n");
-    _Instr_Expr(table, FIRSTCHILD(tree), nasm, func);
+    const Symbol* sym = SymbolTable_get(&table->globals, func->identifier);
+    if (sym->type != type_void) /* Non void */ {
+        _Instr_Expr(table, FIRSTCHILD(tree), nasm, func);
+        // TODO : Write code to pop stack's value to rax
+    }
     return 0;
 }
 
 static int _Instr_Assignation(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func) {
-    // TODO : Verif si la fucntion marche
+    // TODO : Verif si la fonction marche
     // printf("Instr_Assignation\n");
     _Instr_Expr(table, SECONDCHILD(tree), nasm, func);
     CodeWriter_WriteVar(nasm, FIRSTCHILD(tree), table, func);

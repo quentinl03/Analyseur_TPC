@@ -17,6 +17,18 @@
 #include "symboltable.h"
 #include "tree.h"
 
+static void CodeWriter_entrypoint(FILE* nasm) {
+    fprintf(
+        nasm,
+        "_start:\n"
+        "call main\n"
+        "call show_registers\n"
+        "mov rax, 60\n" /* _exit() */
+        "mov rdi, 0\n" /*Exit code*/ // TODO : Return main()'s exit code
+        "syscall\n\n"
+    );
+}
+
 void CodeWriter_Init_File(FILE* nasm, const SymbolTable* globals) {
     assert(globals->type == SYMBOL_TABLE_GLOBAL && "SymbolTable should be the program's global");
     fprintf(
@@ -30,18 +42,10 @@ void CodeWriter_Init_File(FILE* nasm, const SymbolTable* globals) {
         "extern getint\n"
         "section .bss\n"
         "    global_vars resb %ld\n\n"
-        "section .text\n"
-        "_start:\n\n",
+        "section .text\n\n",
         globals->next_addr
     );
-}
-
-void CodeWriter_End_File(FILE* nasm) {
-    fprintf(nasm,
-            "call show_registers\n"
-            "mov rax, 60\n"
-            "mov rdi, 0\n"
-            "syscall\n\n");
+    CodeWriter_entrypoint(nasm);
 }
 
 static const char* _CodeWriter_Node_To_Ope(const Node* node) {
@@ -171,9 +175,12 @@ int CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func) {
     // TODO : Implement > 6 functions paramters (compute sum of size of paramters from index 6)
     fprintf(
         nasm,
+        "; Init stack frame (save base pointer)\n"
         "push rbp\n"
         "mov rbp, rsp\n"
+        "; Allocates %ld bytes on the the stack\n"
         "sub rsp, %ld\n\n",
+        func->locals.next_addr,
         func->locals.next_addr
     );
 
@@ -184,8 +191,28 @@ int CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func) {
 int CodeWriter_stackFrame_end(FILE* nasm, const FunctionSymbolTable* func) {
     fprintf(
         nasm,
+        "; Frees stack frame, (reset stack pointer to caller's state)\n"
         "mov rsp, rbp\n"
         "pop rbp\n\n"
+    );
+
+    return 0;
+}
+
+int CodeWriter_FunctionLabel(FILE* nasm, const FunctionSymbolTable* func) {
+    fprintf(
+        nasm,
+        "%s:\n\n",
+        func->identifier
+    );
+
+    return 0;
+}
+
+int CodeWriter_Return(FILE* nasm) {
+    fprintf(
+        nasm,
+        "ret\n\n"
     );
 
     return 0;

@@ -65,9 +65,7 @@ int main(int argc, char* argv[]) {
         return EXIT_CODE(ERR_FILE_OPEN);
     }
 
-    CodeWriter_Init_File(file, &symtable.globals);
     TreeReader_Prog(&symtable, abr, file);
-    CodeWriter_End_File(file);
 
     if (abr) {
         deleteTree(abr);
