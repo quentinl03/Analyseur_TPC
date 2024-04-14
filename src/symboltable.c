@@ -6,6 +6,7 @@
 
 #include "symbol.h"
 #include "error.h"
+#include <stdint.h>
 
 #define BOLD "\x1b[1m"
 #define UNDERLINE "\x1b[4m"
@@ -103,8 +104,8 @@ Symbol* SymbolTable_get(const SymbolTable* self, char* identifier) {
  */
 static size_t _get_type_size(type_t type) {
     static const size_t sizes[] = {
-        [type_byte] = sizeof(int),
-        [type_num] = sizeof(int),
+        [type_byte] = sizeof(uint64_t),
+        [type_num] = sizeof(uint64_t),
         [type_void] = 0,
     };
     assert(type >= 0 && type < 5);
