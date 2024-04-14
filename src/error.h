@@ -3,7 +3,7 @@
 
 typedef enum ErrorType {
     // 4 bits
-    ERR_NONE = 0,
+    ERR_NONE = 0ULL,
     ERR_PARSE_FLAG = 1ULL << 0,
     ERR_SEMANTIC_FLAG = 1ULL << 1,
     ERR_CRITIAL_FLAG = 1ULL << 2,
@@ -22,6 +22,7 @@ typedef enum ErrorType {
 
     // 15 bits Warn (49 à 63)
     WARN_IMPLICIT_INT_TO_CHAR = ERR_WARN_FLAG | 1ULL << 48,
+    WARN_RETURN_WITHOUT_VALUE = ERR_WARN_FLAG | 1ULL << 49,
 
 } ErrorType;
 

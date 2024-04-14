@@ -17,36 +17,43 @@
 #include "symboltable.h"
 #include "tree.h"
 
+#include "error.h"
+
 // ! à retirer avant rendu debug parcours arbre laisser pour le moment
 // static const char* NODE_STRING[] = {
 //     FOREACH_NODE(GENERATE_STRING)};
 
-static int _Instr_Expr(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func);
-static int _Instr_Return(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func);
-static int _Instr_Assignation(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func);
+static ErrorType _Instr_Expr(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func);
+static ErrorType _Instr_Return(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func);
+static ErrorType _Instr_Assignation(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func);
+static ErrorType _TreeReader_DeclFoncts(const ProgramSymbolTable* table, Tree tree, FILE* nasm);
+static ErrorType TreeReader_SuiteInst(
+    const ProgramSymbolTable* table, Tree tree,
+    const FunctionSymbolTable* func, FILE* nasm
+);
 
-int TreeReader_Prog(const ProgramSymbolTable* table, Tree tree, FILE* nasm) {
+ErrorType TreeReader_Prog(const ProgramSymbolTable* table, Tree tree, FILE* nasm) {
     // Si est pas dans le noeux c'est grave car la suite du parcours est foutu.
     assert(tree->label == Prog);
 
     CodeWriter_Init_File(nasm, &table->globals);
-    TreeReader_DeclFoncts(table, SECONDCHILD(tree), nasm);
-
-    return 0;
+    return _TreeReader_DeclFoncts(table, SECONDCHILD(tree), nasm);
 }
 
-static int _TreeReader_Corps(
+static ErrorType _TreeReader_Corps(
     const ProgramSymbolTable* prog,
     const FunctionSymbolTable* func,
     Tree tree, FILE* nasm
 ) {
     assert(tree->label == Corps);
+    ErrorType err = ERR_NONE;
     // Implement stack frame
     CodeWriter_stackFrame_start(nasm, func);
-    TreeReader_SuiteInst(prog, SECONDCHILD(tree), func, nasm);
+    err |= TreeReader_SuiteInst(prog, SECONDCHILD(tree), func, nasm);
     CodeWriter_stackFrame_end(nasm, func);
     CodeWriter_Return(nasm);
-    return 0;
+
+    return err;
 }
 
 /**
@@ -58,7 +65,7 @@ static int _TreeReader_Corps(
  * @param nasm 
  * @return int 
  */
-static int _TreeReader_DeclFonct(
+static ErrorType _TreeReader_DeclFonct(
     const ProgramSymbolTable* prog,
     Tree tree, FILE* nasm
 ) {
@@ -69,36 +76,36 @@ static int _TreeReader_DeclFonct(
         FIRSTCHILD(tree)->firstChild->nextSibling->att.ident
     );
     CodeWriter_FunctionLabel(nasm, func);
-    _TreeReader_Corps(prog, func, SECONDCHILD(tree), nasm);
-
-    return 0;
+    return _TreeReader_Corps(prog, func, SECONDCHILD(tree), nasm);
 }
 
 
-int TreeReader_DeclFoncts(const ProgramSymbolTable* table, Tree tree, FILE* nasm) {
+static ErrorType _TreeReader_DeclFoncts(const ProgramSymbolTable* table, Tree tree, FILE* nasm) {
     // Si est pas dans le noeux c'est grave car la suite du parcours est foutu.
     assert(tree->label == DeclFoncts);
+    ErrorType err = ERR_NONE;
 
     // On parcourt les noeux DeclFonct
     for (Node* child = tree->firstChild;
          child != NULL;
          child = child->nextSibling
     ) {
-        _TreeReader_DeclFonct(table, child, nasm);
+        err |= _TreeReader_DeclFonct(table, child, nasm);
     }
 
-    return 0;
+    return ERR_NONE;
 }
 
-int TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
+static ErrorType TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
                          const FunctionSymbolTable* func, FILE* nasm) {
     // printf("SuiteInst \t");
     // printf("func_name: %s\n", func_name);
+    ErrorType err = ERR_NONE;
 
     for (Node* child = tree->firstChild; child != NULL; child = child->nextSibling) {
         switch (child->label) {
             case Return: // TODO : Attentions aux returns surnuméraires !
-                _Instr_Return(table, child, nasm, func);
+                err |= _Instr_Return(table, child, nasm, func);
                 break;
             case Addsub:
             case Divstar:
@@ -106,11 +113,11 @@ int TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
             case Num:
             case Ident:
                 // TODO ajouter les autre case d'expression
-                _Instr_Expr(table, child, nasm, func);
+                err |= _Instr_Expr(table, child, nasm, func);
                 break;
             case Assignation:
                 // TODO WIP
-                _Instr_Assignation(table, child, nasm, func);
+                err |= _Instr_Assignation(table, child, nasm, func);
                 break;
             default:
                 break;
@@ -118,15 +125,16 @@ int TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
         // printf("child->label: %s\n", NODE_STRING[child->label]);
     }
 
-    return 0;
+    return ERR_NONE;
 }
 
 /******************/
 /* Instr Unitaire */
 /******************/
 
-static int _Instr_Expr(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func) {
+static ErrorType _Instr_Expr(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func) {
     // printf("Instr_Expr\n");
+    ErrorType err = ERR_NONE;
     switch (tree->label) {
         case Addsub:
         case Divstar:
@@ -152,7 +160,7 @@ static int _Instr_Expr(const ProgramSymbolTable* table, Tree tree, FILE* nasm, c
             assert(0 && "We shoudn't be there");
             break;
     }
-    return 0;
+    return err;
 }
 
 /**
@@ -166,25 +174,35 @@ static int _Instr_Expr(const ProgramSymbolTable* table, Tree tree, FILE* nasm, c
  * @param func 
  * @return int 
  */
-static int _Instr_Return(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func) {
+static ErrorType _Instr_Return(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func) {
     // printf("Instr_Return\n");
+    ErrorType err = ERR_NONE;
     const Symbol* sym = SymbolTable_get(&table->globals, func->identifier);
+
     if (sym->type != type_void) /* Non void */ {
         if (FIRSTCHILD(tree)) {
-            _Instr_Expr(table, FIRSTCHILD(tree), nasm, func);
+            err |= _Instr_Expr(table, FIRSTCHILD(tree), nasm, func);
             CodeWriter_Return_Expr(nasm);
         }
         else {
-            // TODO : Warning : 'return' with no value, in function returning non-void
+            CodeError_print(
+                (CodeError) {
+                    .err = WARN_RETURN_WITHOUT_VALUE,
+                    .line = tree->lineno,
+                    .column = 0,
+                },
+                "'return' with no value, in function returning non-void"
+            );
         }
     }
-    return 0;
+    return err;
 }
 
-static int _Instr_Assignation(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func) {
+static ErrorType _Instr_Assignation(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func) {
     // TODO : Verif si la fonction marche
     // printf("Instr_Assignation\n");
-    _Instr_Expr(table, SECONDCHILD(tree), nasm, func);
+    ErrorType err = ERR_NONE;
+    err |= _Instr_Expr(table, SECONDCHILD(tree), nasm, func);
     CodeWriter_WriteVar(nasm, FIRSTCHILD(tree), table, func);
-    return 0;
+    return err;
 }

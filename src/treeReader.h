@@ -12,9 +12,6 @@
 
 #include "symboltable.h"
 #include "tree.h"
+#include "error.h"
 
-int TreeReader_Prog(const ProgramSymbolTable* table, Tree tree, FILE* nasm);
-
-int TreeReader_DeclFoncts(const ProgramSymbolTable* table, Tree tree, FILE* nasm);
-
-int TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree, const FunctionSymbolTable* func, FILE* nasm);
+ErrorType TreeReader_Prog(const ProgramSymbolTable* table, Tree tree, FILE* nasm);
