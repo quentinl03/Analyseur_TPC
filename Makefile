@@ -17,16 +17,16 @@ FLEX_FLAGS=
 BISON_FLAGS=
 
 SRC_DIR=src
-OBJS_DIR=obj
+OBJ_DIR=obj
 BIN_DIR=bin
 TESTS_DIR=test
 REPORT_DIR=rep
-OUT_DIRS=$(OBJS_DIR) $(BIN_DIR)
+OUT_DIRS=$(OBJ_DIR) $(BIN_DIR)
 
-MODULES=$(patsubst %.c, $(OBJS_DIR)/%.o, tree.c parser.c main.c symbol.c symboltable.c arraylist.c registers.c treeReader.c codeWriter.c error.c)
-OBJS=$(wildcard $(OBJS_DIR)/*.tab.* $(OBJS_DIR)/*.yy.* $(OBJS_DIR)/*.o)
+MODULES=$(patsubst %.c, $(OBJ_DIR)/%.o, tree.c parser.c main.c symbol.c symboltable.c arraylist.c registers.c treeReader.c codeWriter.c error.c)
+OBJS=$(wildcard $(OBJ_DIR)/*.tab.* $(OBJ_DIR)/*.yy.* $(OBJ_DIR)/*.o)
 
-TAR_CONTENT=$(SRC_DIR)/ $(TESTS_DIR)/ $(REPORT_DIR)/ $(OBJS_DIR)/ $(BIN_DIR) Makefile README.md
+TAR_CONTENT=$(SRC_DIR)/ $(TESTS_DIR)/ $(REPORT_DIR)/ $(OBJ_DIR)/ $(BIN_DIR) Makefile README.md
 TAR_NAME=ProjetCompilationL3_LABORDE_SEBAN
 
 # $(info $(OBJS))
@@ -42,26 +42,26 @@ obj/$(PARSER).o: obj/$(PARSER).c src/tree.h
 $(OUT_DIRS):
 	@mkdir -p $@
 
-$(OBJS_DIR)/%.o: $(SRC_DIR)/%.c | $(OUT_DIRS)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OUT_DIRS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJS_DIR)/$(LEXER).yy.c: $(SRC_DIR)/$(LEXER).lex $(OBJS_DIR)/$(PARSER).tab.h | $(OUT_DIRS)
+$(OBJ_DIR)/$(LEXER).yy.c: $(SRC_DIR)/$(LEXER).lex $(OBJ_DIR)/$(PARSER).tab.h | $(OUT_DIRS)
 	flex $(FLEX_FLAGS) --outfile=$@ $<
 
-$(OBJS_DIR)/$(PARSER).tab.h $(OBJS_DIR)/$(PARSER).tab.c &: $(SRC_DIR)/$(PARSER).y $(MODULES) | $(OUT_DIRS)
-	bison $(BISON_FLAGS) -d $< --output=$(OBJS_DIR)/$(PARSER).tab.c
+$(OBJ_DIR)/$(PARSER).tab.h $(OBJ_DIR)/$(PARSER).tab.c &: $(SRC_DIR)/$(PARSER).y $(MODULES) | $(OUT_DIRS)
+	bison $(BISON_FLAGS) -d $< --output=$(OBJ_DIR)/$(PARSER).tab.c
 
-$(BIN_DIR)/$(EXEC): $(OBJS_DIR)/$(LEXER).yy.o $(OBJS_DIR)/$(PARSER).tab.o $(MODULES) | $(OUT_DIRS)
+$(BIN_DIR)/$(EXEC): $(OBJ_DIR)/$(LEXER).yy.o $(OBJ_DIR)/$(PARSER).tab.o $(MODULES) | $(OUT_DIRS)
 	$(CC) $^ -o $@ $(LDFLAGS)
 
 # TODO : Faire un sous dossier pour les programmes compilés par le compilateur
 ASMFLAGS=-g -F dwarf -f elf64
-$(BIN_DIR)/builtins.o: $(SRC_DIR)/builtins.asm
+$(OBJ_DIR)/builtins.o: $(SRC_DIR)/builtins.asm
 	nasm $(ASMFLAGS) -o $@ $<
 
-produced_asm: $(BIN_DIR)/builtins.o
-	nasm $(ASMFLAGS) -o $(BIN_DIR)/_anonymous.o _anonymous.asm
-	$(CC) $(BIN_DIR)/builtins.o $(BIN_DIR)/_anonymous.o -o $(BIN_DIR)/_anonymous -nostartfiles -no-pie -m64 -g3
+produced_asm: $(OBJ_DIR)/builtins.o
+	nasm $(ASMFLAGS) -o $(OBJ_DIR)/_anonymous.o _anonymous.asm
+	$(CC) $(OBJ_DIR)/builtins.o $(OBJ_DIR)/_anonymous.o -o $(OBJ_DIR)/_anonymous -nostartfiles -no-pie -m64 -g3
 
 rapport: $(REPORT_DIR)/rapport.pdf
 

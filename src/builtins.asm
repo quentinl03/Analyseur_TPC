@@ -1,5 +1,5 @@
 section .data
-    format_registers db "rbx:%ld r12:0x%lx r13:%ld r14:%ld", 10, 0
+    format_registers db "rbx:%ld r12:0x%lx r13:%ld r14:%ld r15:%ld", 10, 0
     format_stack db "sommet (rsp): 0x%lx, base du bloc (rbp): 0x%lx", 10, 0
 
 section .text
@@ -16,6 +16,7 @@ show_registers:
     push rbp
     mov rbp, rsp
     
+    mov r9,  r15
     mov r8,  r14
     mov rcx, r13
     mov rdx, r12
@@ -75,8 +76,17 @@ getchar:
     mov rdx, 1
     syscall
 
-    pop rax
-        
+
+    mov rcx, rax ; to keep len of what we read
+
+    pop rax ; get read 
+
+    cmp rcx, 0 ; case of ctrl D
+    jne my_get_char_end
+    mov rax, -1
+
+    my_get_char_end:    
+    
     pop rbp
     ret
 
@@ -126,9 +136,21 @@ getint:
 
     mov r12, 20  ; i    
     mov r13, 0   ; number
+    mov r15, 0   ; is minus
 
     my_getint_reader_loop:
         call getchar
+
+        cmp r12, 20
+        jne my_getint_end_check_minus ; si pas le premier que je lit on passe
+        cmp rax, '-'
+        jne my_getint_end_check_minus ; si pas '-' on passe
+        cmp r15, 0
+        jne my_getint_end_check_minus ; si on a deja lu un autre - avant on passe
+        mov r15, 1
+        jmp my_getint_reader_loop ; on a lu le moins 
+        
+        my_getint_end_check_minus:
 
         cmp rax, '0' ; on compare à 0 -> si inf alors goto exit
         jl my_getint_end_reader_loop
@@ -165,6 +187,13 @@ getint:
 
 
     my_getint_end_writer_loop:
+
+    cmp r15, 1
+    jne my_getint_end_sign_change ; si pas de de signe moins on passe
+    imul r13, -1
+
+    my_getint_end_sign_change:
+
     mov rax, r13
 
     pop rbp
