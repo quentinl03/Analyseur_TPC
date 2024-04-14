@@ -5,7 +5,7 @@
 # $< : the first current prerequisite
 
 CC=gcc
-CFLAGS=-Wall -g -O0
+CFLAGS=-Wall -g3 -O0
 LDFLAGS=-Wall -lfl -Werror -Wfatal-errors
 EXEC=tpcc
 
@@ -55,13 +55,13 @@ $(BIN_DIR)/$(EXEC): $(OBJS_DIR)/$(LEXER).yy.o $(OBJS_DIR)/$(PARSER).tab.o $(MODU
 	$(CC) $^ -o $@ $(LDFLAGS)
 
 # TODO : Faire un sous dossier pour les programmes compilés par le compilateur
-ASMFLAGS=-F dwarf -f elf64 -g
-$(BIN_DIR)/utils.o: $(SRC_DIR)/utils.asm
+ASMFLAGS=-g -F dwarf -f elf64
+$(BIN_DIR)/builtins.o: $(SRC_DIR)/builtins.asm
 	nasm $(ASMFLAGS) -o $@ $<
 
-produced_asm: $(BIN_DIR)/utils.o
+produced_asm: $(BIN_DIR)/builtins.o
 	nasm $(ASMFLAGS) -o $(BIN_DIR)/_anonymous.o _anonymous.asm
-	$(CC) $(BIN_DIR)/utils.o $(BIN_DIR)/_anonymous.o -o $(BIN_DIR)/_anonymous -nostartfiles -no-pie -m64 -g
+	$(CC) $(BIN_DIR)/builtins.o $(BIN_DIR)/_anonymous.o -o $(BIN_DIR)/_anonymous -nostartfiles -no-pie -m64 -g3
 
 rapport: $(REPORT_DIR)/rapport.pdf
 

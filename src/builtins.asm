@@ -1,16 +1,16 @@
-; utils.asm
 section .data
     format_registers db "rbx:%ld r12:0x%lx r13:%ld r14:%ld", 10, 0
     format_stack db "sommet (rsp): 0x%lx, base du bloc (rbp): 0x%lx", 10, 0
 
 section .text
-global show_registers
-global show_stack
 global putchar
 global getchar
 global putint
 global getint
+global show_registers
+global show_stack
 extern printf
+
 
 show_registers:
     push rbp
@@ -42,7 +42,6 @@ show_stack:
     pop rbp
     ret
 
-
 putchar:
     push rbp
     mov rbp, rsp
@@ -56,7 +55,10 @@ putchar:
     syscall
 
     pop rdi ; on retire le char de la pile
-        
+
+    mov rax, 0
+    mov eax, edi ; Pour se "conformer" au vrai putchar, on renvoie la caractère écrit
+
     pop rbp
     ret
 
