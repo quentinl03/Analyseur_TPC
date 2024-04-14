@@ -51,7 +51,7 @@ static int _TreeReader_Corps(
 
 /**
  * @brief Generate code for a function.
- * Writes function's label, and its body (Corps).
+ * Writes function's label and its body (Corps).
  * 
  * @param prog
  * @param tree Tree DeclFonct node 
@@ -170,8 +170,13 @@ static int _Instr_Return(const ProgramSymbolTable* table, Tree tree, FILE* nasm,
     // printf("Instr_Return\n");
     const Symbol* sym = SymbolTable_get(&table->globals, func->identifier);
     if (sym->type != type_void) /* Non void */ {
-        _Instr_Expr(table, FIRSTCHILD(tree), nasm, func);
-        // TODO : Write code to pop stack's value to rax
+        if (FIRSTCHILD(tree)) {
+            _Instr_Expr(table, FIRSTCHILD(tree), nasm, func);
+            CodeWriter_Return_Expr(nasm);
+        }
+        else {
+            // TODO : Warning : 'return' with no value, in function returning non-void
+        }
     }
     return 0;
 }

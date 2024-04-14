@@ -69,3 +69,12 @@ int CodeWriter_FunctionLabel(FILE* nasm, const FunctionSymbolTable* func);
  * @return int 
  */
 int CodeWriter_Return(FILE* nasm);
+
+/**
+ * @brief Move computed expression present on stack's head
+ * to `rax` register
+ * 
+ * @param nasm 
+ * @return int 
+ */
+int CodeWriter_Return_Expr(FILE* nasm);

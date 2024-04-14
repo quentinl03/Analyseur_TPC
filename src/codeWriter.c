@@ -77,7 +77,7 @@ int CodeWriter_Ope(FILE* nasm, const Node* node) {
 
 int CodeWriter_ConstantNumber(FILE* nasm, const Node* node) {
     fprintf(nasm,
-            "; Ajout constant numérique sur la pile\n"
+            "; Ajout d'une constante numérique sur la pile\n"
             "push %d\n\n",
             node->att.num);
     return 0;
@@ -85,7 +85,7 @@ int CodeWriter_ConstantNumber(FILE* nasm, const Node* node) {
 
 int CodeWriter_ConstantCharacter(FILE* nasm, const Node* node) {
     fprintf(nasm,
-            "; Ajout constant character sur la pile\n"
+            "; Ajout d'un caractère litéral sur la pile\n"
             "push '%c'\n\n",
             node->att.byte);
     return 0;
@@ -213,6 +213,15 @@ int CodeWriter_Return(FILE* nasm) {
     fprintf(
         nasm,
         "ret\n\n"
+    );
+
+    return 0;
+}
+
+int CodeWriter_Return_Expr(FILE* nasm) {
+    fprintf(
+        nasm,
+        "pop rax\n"
     );
 
     return 0;
