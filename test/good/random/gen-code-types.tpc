@@ -10,11 +10,12 @@ int main(void) {
     local_a = 2;
     somme = 12;
     produit = 24;
-    // quotient=24/12;
+    // quotient=24/12; // TODO : Erreur de type
     letter = 'c';
     digit = '0';
     uppercase = letter + ('A' - 'a');
     reste = getint();
-    putchar('\n');
+    // putchar('\n');
+    putint(reste);
     return 0;
 }

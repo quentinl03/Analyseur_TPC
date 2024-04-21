@@ -16,6 +16,7 @@
 #include "symbol.h"
 #include "symboltable.h"
 #include "tree.h"
+#include "treeReader.h"
 
 static void CodeWriter_entrypoint(FILE* nasm) {
     fprintf(
@@ -86,9 +87,72 @@ int CodeWriter_ConstantNumber(FILE* nasm, const Node* node) {
 int CodeWriter_ConstantCharacter(FILE* nasm, const Node* node) {
     fprintf(nasm,
             "; Ajout d'un caractère litéral sur la pile\n"
-            "push '%c'\n\n",
+            "push %d\n\n",
             node->att.byte);
     return 0;
+}
+
+/**
+ * @brief Emit code to call a function with its arguments
+ * 
+ * @param nasm File to write to
+ * @param node Function node (Ident node with EmptyArgs or ListExp node)
+ * @return int 
+ */
+static ErrorType CodeWriter_CallFunction(
+    FILE* nasm, Node* node,
+    const ProgramSymbolTable* symtable,
+    const FunctionSymbolTable* func,
+    const Symbol* symbol
+) {
+    assert(node->label == Ident && "Node should be an Ident node (function call)");
+
+    fprintf(
+        nasm,
+        ";;; Appel de la fonction %s ;;;\n",
+        symbol->identifier
+    );
+
+    if (node->firstChild->label != EmptyArgs) {
+        // Call function with arguments
+        int i = 0;
+        for (Node* arg = node->firstChild->firstChild; arg; arg = arg->nextSibling, ++i) {
+            TreeReader_Expr(symtable, arg, nasm, func);
+            if (i < 6) {
+                fprintf(
+                    nasm,
+                    "; Passage de l'argument %d à la fonction\n"
+                    "pop %s\n",
+                    i,
+                    Register_to_str(Register_param_to_reg(i))
+                );
+            }
+            else {
+                assert(0 && "Revoir le passage d'arguments > 6 (ordre d'empilement)");
+            }
+        }
+    }
+
+    fprintf(
+        nasm,
+        "call %s\n",
+        symbol->identifier
+    );
+
+    // Push result on stack
+    fprintf(
+        nasm,
+        "; Push valeur de retour sur la pile\n"
+        "push rax\n"
+    );
+
+    fprintf(
+        nasm,
+        ";;; Fin de l'appel de la fonction %s ;;;\n\n",
+        symbol->identifier
+    );
+    
+    return ERR_NONE;
 }
 
 int CodeWriter_LoadVar(
@@ -111,11 +175,33 @@ int CodeWriter_LoadVar(
 
     assert(symbol && "Variable not found");
 
-    fprintf(nasm,
-            "; Ajout d'un contenu de variable sur la pile\n"
-            "mov rax, [rbp + %d]\n" // TODO rbp ?
-            "push rax\n\n",
-            symbol->addr);
+    if (symbol->symbol_type == SYMBOL_FUNCTION) {
+        CodeWriter_CallFunction(nasm, node, symtable, func, symbol);
+    }
+    else if (symbol->symbol_type == SYMBOL_VALUE) {
+        if (symbol->is_static) {
+            fprintf(
+                nasm,
+                "; Chargement de la variable globale '%s' sur la tête de pile\n"
+                "push QWORD [global_vars + %d]\n",
+                symbol->identifier,
+                symbol->addr
+            );
+        }
+        else {
+            fprintf(
+                nasm,
+                "; Chargement de la variable locale '%s' sur la tête de pile\n"
+                "push QWORD [rbp + %d]\n", // TODO rbp ?
+                symbol->identifier,
+                symbol->addr
+            );
+        }
+    }
+    else {
+        assert(0 && "Arrays not implemented, or we should't be there");
+    }
+
     return 0;
 }
 

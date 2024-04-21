@@ -61,7 +61,7 @@ $(OBJ_DIR)/builtins.o: $(SRC_DIR)/builtins.asm
 
 produced_asm: $(OBJ_DIR)/builtins.o
 	nasm $(ASMFLAGS) -o $(OBJ_DIR)/_anonymous.o _anonymous.asm
-	$(CC) $(OBJ_DIR)/builtins.o $(OBJ_DIR)/_anonymous.o -o $(OBJ_DIR)/_anonymous -nostartfiles -no-pie -m64 -g3
+	$(CC) $(OBJ_DIR)/builtins.o $(OBJ_DIR)/_anonymous.o -o $(BIN_DIR)/_anonymous -nostartfiles -no-pie -m64 -g3
 
 rapport: $(REPORT_DIR)/rapport.pdf
 

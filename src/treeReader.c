@@ -23,7 +23,6 @@
 // static const char* NODE_STRING[] = {
 //     FOREACH_NODE(GENERATE_STRING)};
 
-static ErrorType _Instr_Expr(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func);
 static ErrorType _Instr_Return(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func);
 static ErrorType _Instr_Assignation(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func);
 static ErrorType _TreeReader_DeclFoncts(const ProgramSymbolTable* table, Tree tree, FILE* nasm);
@@ -113,7 +112,7 @@ static ErrorType TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree
             case Num:
             case Ident:
                 // TODO ajouter les autre case d'expression
-                err |= _Instr_Expr(table, child, nasm, func);
+                err |= TreeReader_Expr(table, child, nasm, func);
                 break;
             case Assignation:
                 // TODO WIP
@@ -132,15 +131,15 @@ static ErrorType TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree
 /* Instr Unitaire */
 /******************/
 
-static ErrorType _Instr_Expr(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func) {
-    // printf("Instr_Expr\n");
+ErrorType TreeReader_Expr(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func) {
+    // printf("TreeReader_Expr\n");
     ErrorType err = ERR_NONE;
     switch (tree->label) {
         case Addsub:
         case Divstar:
             // printf("Addsub or divstar\n");
-            _Instr_Expr(table, FIRSTCHILD(tree), nasm, func);
-            _Instr_Expr(table, SECONDCHILD(tree), nasm, func);
+            TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);
+            TreeReader_Expr(table, SECONDCHILD(tree), nasm, func);
             CodeWriter_Ope(nasm, tree);
             break;
         case Ident:
@@ -181,7 +180,7 @@ static ErrorType _Instr_Return(const ProgramSymbolTable* table, Tree tree, FILE*
 
     if (sym->type != type_void) /* Non void */ {
         if (FIRSTCHILD(tree)) {
-            err |= _Instr_Expr(table, FIRSTCHILD(tree), nasm, func);
+            err |= TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);
             CodeWriter_Return_Expr(nasm);
         }
         else {
@@ -202,7 +201,7 @@ static ErrorType _Instr_Assignation(const ProgramSymbolTable* table, Tree tree, 
     // TODO : Verif si la fonction marche
     // printf("Instr_Assignation\n");
     ErrorType err = ERR_NONE;
-    err |= _Instr_Expr(table, SECONDCHILD(tree), nasm, func);
+    err |= TreeReader_Expr(table, SECONDCHILD(tree), nasm, func);
     CodeWriter_WriteVar(nasm, FIRSTCHILD(tree), table, func);
     return err;
 }
