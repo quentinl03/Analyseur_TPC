@@ -142,11 +142,11 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
     assert(tree->label == Type || tree->label == DeclFonctArray);
     ErrorType err = 0;
 
-    type_t type = _get_type_from_string(&tree->att);
 
     Tree typeNode = tree;
     FOREACH_SIBLING(typeNode) {
         Tree identNode = typeNode->firstChild;
+        type_t type = _get_type_from_string(&typeNode->att);
 
         /**
          * We need to iterate a second time, for one-line declarations
