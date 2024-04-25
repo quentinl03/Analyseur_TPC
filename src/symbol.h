@@ -15,7 +15,7 @@ typedef enum SymbolType {
 } SymbolType;
 
 typedef struct Symbol {
-    char* identifier;
+    const char* identifier;
     type_t type;
     int type_size;
     int lineno;
@@ -28,6 +28,7 @@ typedef struct Symbol {
     int total_size;  // Total size of the object variable or array
 
     bool is_static;  // Static variables are stored in the bss section
+    bool is_param;   // is a parameter of a function
     bool on_register;
     union {  // First 6 parameters are stored in registers, rest are stored in stack
         Register reg;

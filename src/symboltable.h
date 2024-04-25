@@ -36,7 +36,38 @@ typedef struct ProgramSymbolTable {
  * @param identifier Identifier of the symbol to get
  * @return Symbol A pointer to the symbol, or NULL if the symbol is not found
  */
-Symbol* SymbolTable_get(const SymbolTable* table, char* identifier);
+Symbol* SymbolTable_get(const SymbolTable* table, const char* identifier);
+
+/**
+ * @brief Get a symbol from its name, while respecting the scope
+ * (local > param > global)
+ * 
+ * @param table ProgramSymbolTable object
+ * @param func FunctionSymbolTable object
+ * @param identifier Name of the symbol to get
+ * @return Symbol* 
+ */
+Symbol* SymbolTable_resolve(
+    const ProgramSymbolTable* table,
+    const FunctionSymbolTable* func,
+    const char* identifier
+);
+
+/**
+ * @brief Get a symbol from a node, while respecting the scope
+ * (local > param > global)
+ * If the symbol is not found, prints an error and return NULL
+ * 
+ * @param table ProgramSymbolTable object
+ * @param func FunctionSymbolTable object
+ * @param node Identifier node
+ * @return Symbol* 
+ */
+Symbol* SymbolTable_resolve_from_node(
+    const ProgramSymbolTable* table,
+    const FunctionSymbolTable* func,
+    const Node* node
+);
 
 /**
  * @brief Create symbol table of program's global variables

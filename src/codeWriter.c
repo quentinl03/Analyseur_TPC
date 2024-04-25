@@ -158,22 +158,8 @@ int CodeWriter_LoadVar(FILE* nasm,
                        const FunctionSymbolTable* func) {
     // TODO : Verif si la fucntion marche
     // Get in global variables
-    Symbol* symbol = SymbolTable_get(&symtable->globals, node->att.ident);
-
-    // Get in local variables (overwrites global variable)
-
-    Symbol* tmp;
-    bool is_param = false;
-    if ((tmp = SymbolTable_get(&func->parameters, node->att.ident))) {
-        is_param = true;
-        symbol = tmp;
-    } else if ((tmp = SymbolTable_get(&func->locals, node->att.ident))) {
-        // no need to check if is_param is true
-        // is already check in symboltable.c -> _SymbolTable_check_redeclared_params_in_locals;
-        symbol = tmp;
-    }
-
-    assert(symbol && "Variable not found");
+    const Symbol* symbol;
+    symbol = SymbolTable_resolve_from_node(symtable, func, node);
 
     if (symbol->symbol_type == SYMBOL_FUNCTION) {
         CodeWriter_CallFunction(nasm, node, symtable, func, symbol);
@@ -186,7 +172,7 @@ int CodeWriter_LoadVar(FILE* nasm,
                 symbol->identifier,
                 symbol->addr);
         } else {
-            if (is_param) {
+            if (symbol->is_param) {
                 fprintf(
                     nasm,
                     "; Chargement de l'argument '%s' sur la tête de pile\n"
@@ -213,27 +199,14 @@ int CodeWriter_WriteVar(FILE* nasm, Node* node,
                         const ProgramSymbolTable* symtable,
                         const FunctionSymbolTable* func) {
     // TODO : Verif si la fucntion marche
-    // Get in global variables
-    Symbol* symbol = SymbolTable_get(&symtable->globals, node->att.ident);
 
-    // Get in local variables (overwrites global variable)
-
-    Symbol* tmp;
-    bool is_param = false;
-    if ((tmp = SymbolTable_get(&func->parameters, node->att.ident))) {
-        is_param = true;
-        symbol = tmp;
-    } else if ((tmp = SymbolTable_get(&func->locals, node->att.ident))) {
-        symbol = tmp;
-    }
-
-    assert(symbol && "Variable not found");  // TODO : Error handling
+    const Symbol* symbol;
+    symbol = SymbolTable_resolve_from_node(symtable, func, node);
 
     if (symbol->is_static) {
         fprintf(
             nasm,
-            "; Assignation de la dernière valeur de la pile dans la variable "
-            "globale '%s'\n"
+            "; Assignation de la dernière valeur de la pile dans la variable globale '%s'\n"
             "pop rax\n"
             "mov [global_vars + %d], rax\n",
             symbol->identifier,
@@ -241,7 +214,7 @@ int CodeWriter_WriteVar(FILE* nasm, Node* node,
     }
 
     else {
-        if (is_param) {
+        if (symbol->is_param) {
             fprintf(
                 nasm,
                 "; Assignation de la dernière valeur de la pile dans l'argument '%s'\n"

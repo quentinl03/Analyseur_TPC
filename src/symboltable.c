@@ -64,6 +64,10 @@ ErrorType _SymbolTable_add(SymbolTable* self, Symbol symbol) {
         return ERR_SEM_REDECLARED_SYMBOL;
     }
 
+    if (self->type == SYMBOL_TABLE_PARAM) {
+        symbol.is_param = true;
+    }
+
     /**
      * If the symbol is a parameter and there are less than 6 parameters
      * on this function symbol table, we put parameters on registers
@@ -86,14 +90,53 @@ ErrorType _SymbolTable_add(SymbolTable* self, Symbol symbol) {
     return ERR_NONE;
 }
 
-Symbol* SymbolTable_get(const SymbolTable* self, char* identifier) {
+Symbol* SymbolTable_get(const SymbolTable* self, const char* identifier) {
     /* Returns a symbol associated to an identifier */
 
-    Symbol symbol = (Symbol){
+    const Symbol symbol = (Symbol){
         .identifier = identifier,
     };
 
     return ArrayList_search(&self->symbols, &symbol);
+}
+
+Symbol* SymbolTable_resolve(
+    const ProgramSymbolTable* table,
+    const FunctionSymbolTable* func,
+    const char* identifier
+) {
+    Symbol* symbol = NULL;
+
+    if      ((symbol = SymbolTable_get(&func->locals, identifier))) {}
+    else if ((symbol = SymbolTable_get(&func->parameters, identifier))) {}
+    else if ((symbol = SymbolTable_get(&table->globals, identifier)));
+
+    return symbol;
+}
+
+Symbol* SymbolTable_resolve_from_node(
+    const ProgramSymbolTable* table,
+    const FunctionSymbolTable* func,
+    const Node* node
+) {
+    Symbol* symbol = NULL;
+    if ((symbol = SymbolTable_resolve(table, func, node->att.ident))) {
+        return symbol;
+    }
+    else {
+        // Variable not found
+        CodeError_print(
+            (CodeError) {
+                .err = ERR_UNDECLARED_SYMBOL,
+                .line = node->lineno,
+                .column = 0,
+            },
+            "use of undeclared identifier '%s'",
+            node->att.ident
+        );
+        exit(EXIT_CODE(ERR_UNDECLARED_SYMBOL));
+    }
+    return NULL;
 }
 
 /**
@@ -361,8 +404,8 @@ static ErrorType _ProgramSymbolTable_from_DeclFoncts(ProgramSymbolTable* self, T
  * 
  * @param globals SymbolTable object to fill
  */
-static void _SymbolTable_add_default_functions(SymbolTable* globals) {
-    assert(globals->type == SYMBOL_TABLE_GLOBAL);
+static void _SymbolTable_add_default_functions(ProgramSymbolTable* table) {
+    SymbolTable* globals = &table->globals;
     _SymbolTable_add(
         globals,
         (Symbol) {
@@ -433,7 +476,7 @@ ErrorType ProgramSymbolTable_from_Prog(ProgramSymbolTable* self, Tree tree) {
     *self = (ProgramSymbolTable){0};
     _SymbolTable_init(&self->globals);
     self->globals.type = SYMBOL_TABLE_GLOBAL;
-    _SymbolTable_add_default_functions(&self->globals);
+    _SymbolTable_add_default_functions(self);
     ArrayList_init(&self->functions, sizeof(FunctionSymbolTable), 10, NULL);
 
     // tree->firstChild is the a DeclVars tree of globals variables

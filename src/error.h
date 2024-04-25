@@ -15,6 +15,7 @@ typedef enum ErrorType {
     // 15 bits err de semantic (17 à 32)
     ERR_SEM_REDECLARED_SYMBOL = ERR_SEMANTIC_FLAG | 1ULL << 16,
     ERR_SEM_VAR_IS_NOT_A_FUNC = ERR_SEMANTIC_FLAG | 1ULL << 17,
+    ERR_UNDECLARED_SYMBOL     = ERR_SEMANTIC_FLAG | 1ULL << 18,
 
     // 15 bits err critical (33 à 48)
     ERR_NO_MEMORY = ERR_CRITIAL_FLAG | 1ULL << 32,

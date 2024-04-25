@@ -33,6 +33,13 @@
       - [X] Redéclarer un paramètre, dans une liste de paramètres
       - [X] Redéclarer une variable locale, alors qu'elle existe en paramètre
   
+  - [X] Utilisation d'une variable non déclarée
+        ```c
+        int main(void) {
+            return a;
+        }
+        ```
+
   - [ ] Vérifier que l'on appelle pas une variable
         ```c
         int a;
