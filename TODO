@@ -45,6 +45,15 @@
         int a;
         a();
         ```
+  - [X] Vérifier que l'ont utilise pas une fonction comme une variable (sans l'appeler)
+        ```c
+        int f(void) {
+            return 0;
+        }
+        int main(void) {
+            return f + 1;
+        }
+        ```
   - [ ] Vérifier l'existence d'un main
   - [ ] Vérifier l'ordre de déclaration des fonctions (déclaration avant utilisation)
         ```c
@@ -78,3 +87,22 @@
         ```
 
 - Ne pas compiler le builtins.asm, mais copier son contenu dans le nasm généré
+
+### Tests Caseine
+
+- "Pointer to function '%s' used as rvalue (not allowed)"
+    ```
+    Test 108: Core - SemErr - 25
+    Test 109: Core - SemErr - 26
+    Test 110: Core - SemErr - 27
+    ```
+
+- "use of undeclared identifier '%s'"
+    ```
+    Test 87: Core - SemErr - 04
+    Test 88: Core - SemErr - 05
+    Test 89: Core - SemErr - 06
+    Test 90: Core - SemErr - 07
+    Test 91: Core - SemErr - 08
+    Test 92: Core - SemErr - 09
+    ```

@@ -113,6 +113,22 @@ static ErrorType CodeWriter_CallFunction(FILE* nasm,
     assert(
         node->label == Ident &&
         "Node should be an Ident node (function call)");
+    assert(
+        symbol->symbol_type == SYMBOL_FUNCTION &&
+        "Symbol should be a function");
+    
+    if (node->firstChild == NULL) {
+        CodeError_print(
+            (CodeError){
+                .err = ERR_FUNCTION_AS_RVALUE,
+                .line = node->lineno,
+                .column = 0
+            },
+            "Pointer to function '%s' used as rvalue (not allowed)",
+            symbol->identifier
+        );
+        exit(EXIT_CODE(ERR_FUNCTION_AS_RVALUE));
+    }
 
     fprintf(nasm, ";;; Appel de la fonction %s ;;;\n", symbol->identifier);
 
