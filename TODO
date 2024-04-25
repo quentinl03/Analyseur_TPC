@@ -34,5 +34,40 @@
       - [X] Redéclarer une variable locale, alors qu'elle existe en paramètre
   
   - [ ] Vérifier que l'on appelle pas une variable
+        ```c
+        int a;
+        a();
+        ```
   - [ ] Vérifier l'existence d'un main
-  - [ ] Vérifier l'ordre de déclaration des fonctions
+  - [ ] Vérifier l'ordre de déclaration des fonctions (déclaration avant utilisation)
+        ```c
+        int f(void) {
+            return g();
+        }
+        int g(void) {
+            return 0;
+        }
+        ```
+  - [ ] Vérifier le type des paramètres lors d'un appel de fonction
+        ```c
+        int f(char a, int b) {
+            return 0;
+        }
+        int main(void) {
+            f(10000, 'b');
+            return 0;
+        }
+        ```
+  - [ ] Vérifier le type de retour d'une fonction déclarée :
+        ```c
+        char f(void) {
+            return 10000;
+        }
+        ```
+  - [ ] Vérifier le type lors d'une assignation
+        ```c
+        char a;
+        a = 10000 + f(10);
+        ```
+
+- Ne pas compiler le builtins.asm, mais copier son contenu dans le nasm généré
