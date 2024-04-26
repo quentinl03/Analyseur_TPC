@@ -177,6 +177,21 @@ int CodeWriter_LoadVar(FILE* nasm,
     const Symbol* symbol;
     symbol = SymbolTable_resolve_from_node(symtable, func, node);
 
+    if (symbol->symbol_type != SYMBOL_FUNCTION && node->firstChild != NULL &&
+        (node->firstChild->label == EmptyArgs || node->firstChild->label == ListExp)
+    ) {
+        CodeError_print(
+            (CodeError){
+                .err = ERR_SEM_IS_NOT_CALLABLE,
+                .line = node->lineno,
+                .column = 0
+            },
+            "called object '%s' is not a function",
+            symbol->identifier
+        );
+        exit(EXIT_CODE(ERR_FUNCTION_AS_RVALUE));
+    }
+
     if (symbol->symbol_type == SYMBOL_FUNCTION) {
         CodeWriter_CallFunction(nasm, node, symtable, func, symbol);
     } else if (symbol->symbol_type == SYMBOL_VALUE) {

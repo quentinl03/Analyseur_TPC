@@ -40,7 +40,7 @@
         }
         ```
 
-  - [ ] Vérifier que l'on appelle pas une variable
+  - [X] Vérifier que l'on appelle pas une variable
         ```c
         int a;
         a();
