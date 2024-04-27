@@ -15,3 +15,5 @@
 #include "error.h"
 
 ErrorType TreeReader_Prog(const ProgramSymbolTable* table, Tree tree, FILE* nasm);
+
+ErrorType TreeReader_Expr(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func);

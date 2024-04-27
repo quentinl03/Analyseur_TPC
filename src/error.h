@@ -13,8 +13,16 @@ typedef enum ErrorType {
     ERR_PARSE_SYNTAX = ERR_PARSE_FLAG | 1ULL << 4,
 
     // 15 bits err de semantic (17 à 32)
-    ERR_SEM_REDECLARED_SYMBOL = ERR_SEMANTIC_FLAG | 1ULL << 16,
-    ERR_SEM_VAR_IS_NOT_A_FUNC = ERR_SEMANTIC_FLAG | 1ULL << 17,
+    ERR_SEM_REDECLARED_SYMBOL  = ERR_SEMANTIC_FLAG | 1ULL << 16,
+    ERR_SEM_IS_NOT_CALLABLE    = ERR_SEMANTIC_FLAG | 1ULL << 17,
+    ERR_UNDECLARED_SYMBOL      = ERR_SEMANTIC_FLAG | 1ULL << 18,
+    ERR_FUNCTION_AS_RVALUE     = ERR_SEMANTIC_FLAG | 1ULL << 19,
+    ERR_RETURN_TYPE_NON_VOID   = ERR_SEMANTIC_FLAG | 1ULL << 20,
+    ERR_RETURN_TYPE_VOID       = ERR_SEMANTIC_FLAG | 1ULL << 21,
+    ERR_MAIN_UNAVAILABLE       = ERR_SEMANTIC_FLAG | 1ULL << 22,
+    ERR_USE_UNDEFINED_FUNCTION = ERR_SEMANTIC_FLAG | 1ULL << 23,
+    ERR_MAIN_RETURN_TYPE       = ERR_SEMANTIC_FLAG | 1ULL << 24,
+    ERR_MAIN_PARAM             = ERR_SEMANTIC_FLAG | 1ULL << 25,
 
     // 15 bits err critical (33 à 48)
     ERR_NO_MEMORY = ERR_CRITIAL_FLAG | 1ULL << 32,
@@ -22,7 +30,6 @@ typedef enum ErrorType {
 
     // 15 bits Warn (49 à 63)
     WARN_IMPLICIT_INT_TO_CHAR = ERR_WARN_FLAG | 1ULL << 48,
-    WARN_RETURN_WITHOUT_VALUE = ERR_WARN_FLAG | 1ULL << 49,
 
 } ErrorType;
 
@@ -30,6 +37,7 @@ typedef enum ErrorType {
 #define IS_SEMANTIC(err)    ((err & ERR_SEMANTIC_FLAG) == ERR_SEMANTIC_FLAG)
 #define IS_WARNING(err)     ((err & ERR_WARN_FLAG) == ERR_WARN_FLAG)
 #define IS_CRITICAL(err)    ((err & ERR_CRITIAL_FLAG) == ERR_CRITIAL_FLAG)
+#define LEVEL_MASK(err)     ((1ULL << 4) - 1)
 
 #define EXIT_CODE(err) (                   \
     (err) == ERR_NONE || IS_WARNING(err) ? 0 \

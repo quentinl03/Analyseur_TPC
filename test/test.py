@@ -7,6 +7,7 @@ import sys
 import argparse
 from pathlib import Path
 from subprocess import run
+from typing import List
 
 # Get project's path
 PROJECT = Path(__file__).resolve().parents[1]
@@ -52,26 +53,26 @@ def test_input(file: Path, expected_retcode: int, prefix_exec=[], args=[]) -> in
 __unittest = True # Silents Python's traceback for unittests
 class SyntaxTest(unittest.TestCase):
 
-    def _subtest_files(self, path_glob: str, expected_retcode: int, err_msg: str):
+    def _subtest_files(self, args: List[str], path_glob: str, expected_retcode: int, err_msg: str):
         count = 0
         files = list(Path(".").glob(path_glob))
 
         for filename in files:
             with self.subTest(str(filename)):
-                retcode = test_input(filename, expected_retcode, args=["--only-tree"])
+                retcode = test_input(filename, expected_retcode, args=args)
                 count += retcode == expected_retcode
                 self.assertEqual(retcode, expected_retcode, err_msg)
 
         log_level = logging.INFO if count == len(files) else logging.WARNING
         logger.log(log_level, f"{count}/{len(files)} of {path_glob} are ok\n")
 
-    def test_valid_syntax_inputs(self):
+    def test_0_valid_syntax_inputs(self):
         logger.debug("# Test valid inputs :")
-        self._subtest_files("syn-good/**/*.tpc", 0, "Input was not accepted while it should")
+        self._subtest_files(["--only-tree"], "syn-good/**/*.tpc", 0, "Syntax was not accepted while it should")
 
-    def test_rejected_syntax_inputs(self):
+    def test_1_rejected_syntax_inputs(self):
         logger.debug("# Test rejected inputs :")
-        self._subtest_files("syn-err/**/*.tpc", 1, "Input was accepted while it should not")
+        self._subtest_files(["--only-tree"], "syn-err/**/*.tpc", 1, "Syntax was accepted while it should not")
     
     def _valgrind_conditionnal_jumps(self, path_glob: str, expected_retcode: int):
         """Use valgrind against inputs, to check for conditionnal jumps"""
@@ -81,8 +82,12 @@ class SyntaxTest(unittest.TestCase):
             with self.subTest(str(filename)):
                 retcode = test_input(filename, expected_retcode, ["valgrind", "--error-exitcode=10", "--leak-check=no", "--track-origins=yes"])
                 self.assertEqual(retcode, expected_retcode, "Valgrind detected conditionnl jumps")
+
+    def test_2_semantic_errors(self):
+        logger.debug("# Test semantic errors :")
+        self._subtest_files([], "sem-err/**/*.tpc", 2, "At least one semantic error was expected but nothing was detected")
     
-    def test_valid_valgrind_conditionnal_jumps(self):
+    def test_3_valid_valgrind_conditionnal_jumps(self):
         logger.debug("# Test valgrind for conditionnal jumps :")
         self._valgrind_conditionnal_jumps("good/random/*.tpc", 0)
         self._valgrind_conditionnal_jumps("syn-err/random/*.tpc", 1)

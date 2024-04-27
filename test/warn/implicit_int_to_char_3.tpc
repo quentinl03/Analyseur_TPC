@@ -1,0 +1,5 @@
+int main(void) {
+    char a;
+    a = 32770;
+    return 0;
+}

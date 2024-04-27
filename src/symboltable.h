@@ -20,6 +20,7 @@ typedef struct SymbolTable {
 
 typedef struct FunctionSymbolTable {
     char* identifier;
+    type_t ret_type;
     SymbolTable parameters;
     SymbolTable locals;
 } FunctionSymbolTable;
@@ -36,7 +37,48 @@ typedef struct ProgramSymbolTable {
  * @param identifier Identifier of the symbol to get
  * @return Symbol A pointer to the symbol, or NULL if the symbol is not found
  */
-Symbol* SymbolTable_get(const SymbolTable* table, char* identifier);
+Symbol* SymbolTable_get(const SymbolTable* table, const char* identifier);
+
+/**
+ * @brief Get a symbol from its name, while respecting the scope
+ * (local > param > global)
+ * 
+ * @param table ProgramSymbolTable object
+ * @param func FunctionSymbolTable object
+ * @param identifier Name of the symbol to get
+ * @return Symbol* 
+ */
+Symbol* SymbolTable_resolve(
+    const ProgramSymbolTable* table,
+    const FunctionSymbolTable* func,
+    const char* identifier
+);
+
+/**
+ * @brief Check if a called function was defined before use
+ * 
+ * @param caller FunctionSymbolTable of the caller
+ * @param callee FunctionSymbolTable of the function being called
+ * @return true 
+ * @return false 
+ */
+bool FunctionSymbolTable_is_defined_before_use(const FunctionSymbolTable* caller, const FunctionSymbolTable* callee);
+
+/**
+ * @brief Get a symbol from a node, while respecting the scope
+ * (local > param > global)
+ * If the symbol is not found, prints an error and return NULL
+ * 
+ * @param table ProgramSymbolTable object
+ * @param func FunctionSymbolTable object
+ * @param node Identifier node
+ * @return Symbol* 
+ */
+Symbol* SymbolTable_resolve_from_node(
+    const ProgramSymbolTable* table,
+    const FunctionSymbolTable* func,
+    const Node* node
+);
 
 /**
  * @brief Create symbol table of program's global variables
@@ -56,8 +98,16 @@ ErrorType ProgramSymbolTable_from_Prog(ProgramSymbolTable* self, Tree tree);
  * @param func_name
  * @return FunctionSymbolTable*
  */
-FunctionSymbolTable* SymbolTable_get_from_func_name(const ProgramSymbolTable* self,
+FunctionSymbolTable* FunctionSymbolTable_get_from_name(const ProgramSymbolTable* self,
                                                     const char* func_name);
+
+/**
+ * @brief Get the number of parameters of a function
+ * 
+ * @param self 
+ * @return FunctionSymbolTable* 
+ */
+int FunctionSymbolTable_get_param_count(const FunctionSymbolTable* self);
 
 /**
  * @brief Print the symbol table

@@ -23,7 +23,7 @@ TESTS_DIR=test
 REPORT_DIR=rep
 OUT_DIRS=$(OBJ_DIR) $(BIN_DIR)
 
-MODULES=$(patsubst %.c, $(OBJ_DIR)/%.o, tree.c parser.c main.c symbol.c symboltable.c arraylist.c registers.c treeReader.c codeWriter.c error.c)
+MODULES=$(patsubst %.c, $(OBJ_DIR)/%.o, tree.c parser.c main.c symbol.c symboltable.c arraylist.c registers.c treeReader.c codeWriter.c error.c semantic.c)
 OBJS=$(wildcard $(OBJ_DIR)/*.tab.* $(OBJ_DIR)/*.yy.* $(OBJ_DIR)/*.o)
 
 TAR_CONTENT=$(SRC_DIR)/ $(TESTS_DIR)/ $(REPORT_DIR)/ $(OBJ_DIR)/ $(BIN_DIR) Makefile README.md
@@ -61,7 +61,7 @@ $(OBJ_DIR)/builtins.o: $(SRC_DIR)/builtins.asm
 
 produced_asm: $(OBJ_DIR)/builtins.o
 	nasm $(ASMFLAGS) -o $(OBJ_DIR)/_anonymous.o _anonymous.asm
-	$(CC) $(OBJ_DIR)/builtins.o $(OBJ_DIR)/_anonymous.o -o $(OBJ_DIR)/_anonymous -nostartfiles -no-pie -m64 -g3
+	$(CC) $(OBJ_DIR)/builtins.o $(OBJ_DIR)/_anonymous.o -o $(BIN_DIR)/_anonymous -nostartfiles -no-pie -m64 -g3
 
 rapport: $(REPORT_DIR)/rapport.pdf
 

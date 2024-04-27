@@ -64,6 +64,10 @@ ErrorType _SymbolTable_add(SymbolTable* self, Symbol symbol) {
         return ERR_SEM_REDECLARED_SYMBOL;
     }
 
+    if (self->type == SYMBOL_TABLE_PARAM) {
+        symbol.is_param = true;
+    }
+
     /**
      * If the symbol is a parameter and there are less than 6 parameters
      * on this function symbol table, we put parameters on registers
@@ -86,14 +90,59 @@ ErrorType _SymbolTable_add(SymbolTable* self, Symbol symbol) {
     return ERR_NONE;
 }
 
-Symbol* SymbolTable_get(const SymbolTable* self, char* identifier) {
+Symbol* SymbolTable_get(const SymbolTable* self, const char* identifier) {
     /* Returns a symbol associated to an identifier */
 
-    Symbol symbol = (Symbol){
+    const Symbol symbol = (Symbol){
         .identifier = identifier,
     };
 
     return ArrayList_search(&self->symbols, &symbol);
+}
+
+Symbol* SymbolTable_resolve(
+    const ProgramSymbolTable* table,
+    const FunctionSymbolTable* func,
+    const char* identifier
+) {
+    Symbol* symbol = NULL;
+
+    if      ((symbol = SymbolTable_get(&func->locals, identifier))) {}
+    else if ((symbol = SymbolTable_get(&func->parameters, identifier))) {}
+    else if ((symbol = SymbolTable_get(&table->globals, identifier)));
+
+    return symbol;
+}
+
+bool FunctionSymbolTable_is_defined_before_use(const FunctionSymbolTable* caller, const FunctionSymbolTable* callee) {
+    //* The function array isn't sorted, and thus preserve insertion order
+    //* Moreover, we only pass FunctionSymbolTable through pointers
+    return callee <= caller;
+}
+
+Symbol* SymbolTable_resolve_from_node(
+    const ProgramSymbolTable* table,
+    const FunctionSymbolTable* func,
+    const Node* node
+) {
+    Symbol* symbol = NULL;
+    if ((symbol = SymbolTable_resolve(table, func, node->att.ident))) {
+        return symbol;
+    }
+    else {
+        // Variable not found
+        CodeError_print(
+            (CodeError) {
+                .err = ERR_UNDECLARED_SYMBOL,
+                .line = node->lineno,
+                .column = 0,
+            },
+            "use of undeclared identifier '%s'",
+            node->att.ident
+        );
+        exit(EXIT_CODE(ERR_UNDECLARED_SYMBOL));
+    }
+    return NULL;
 }
 
 /**
@@ -142,11 +191,11 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
     assert(tree->label == Type || tree->label == DeclFonctArray);
     ErrorType err = 0;
 
-    type_t type = _get_type_from_string(&tree->att);
 
     Tree typeNode = tree;
     FOREACH_SIBLING(typeNode) {
         Tree identNode = typeNode->firstChild;
+        type_t type = _get_type_from_string(&typeNode->att);
 
         /**
          * We need to iterate a second time, for one-line declarations
@@ -295,7 +344,7 @@ static ErrorType _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Fu
     Node* identNode = header->firstChild->nextSibling;
     _FunctionSymbolTable_init(func, identNode->att.ident);
 
-    type_t return_type = is_void ? type_void : _get_type_from_string(&header->firstChild->att);
+    func->ret_type = is_void ? type_void : _get_type_from_string(&header->firstChild->att);
 
     // * Add the function to the program's global symbol table
     err |= _SymbolTable_add(
@@ -306,8 +355,8 @@ static ErrorType _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Fu
             .symbol_type = SYMBOL_FUNCTION,
             // return type
             .is_static = true,
-            .type = return_type,
-            .type_size = _get_type_size(return_type),
+            .type = func->ret_type,
+            .type_size = _get_type_size(func->ret_type),
             .total_size = 0,
             .lineno = identNode->lineno,
         }
@@ -361,8 +410,8 @@ static ErrorType _ProgramSymbolTable_from_DeclFoncts(ProgramSymbolTable* self, T
  * 
  * @param globals SymbolTable object to fill
  */
-static void _SymbolTable_add_default_functions(SymbolTable* globals) {
-    assert(globals->type == SYMBOL_TABLE_GLOBAL);
+static void _SymbolTable_add_default_functions(ProgramSymbolTable* table) {
+    SymbolTable* globals = &table->globals;
     _SymbolTable_add(
         globals,
         (Symbol) {
@@ -433,7 +482,7 @@ ErrorType ProgramSymbolTable_from_Prog(ProgramSymbolTable* self, Tree tree) {
     *self = (ProgramSymbolTable){0};
     _SymbolTable_init(&self->globals);
     self->globals.type = SYMBOL_TABLE_GLOBAL;
-    _SymbolTable_add_default_functions(&self->globals);
+    _SymbolTable_add_default_functions(self);
     ArrayList_init(&self->functions, sizeof(FunctionSymbolTable), 10, NULL);
 
     // tree->firstChild is the a DeclVars tree of globals variables
@@ -445,8 +494,8 @@ ErrorType ProgramSymbolTable_from_Prog(ProgramSymbolTable* self, Tree tree) {
     return err;
 }
 
-FunctionSymbolTable* SymbolTable_get_from_func_name(const ProgramSymbolTable* self,
-                                                    const char* func_name) {
+FunctionSymbolTable* FunctionSymbolTable_get_from_name(const ProgramSymbolTable* self,
+                                                       const char* func_name) {
     for (int i = 0; i < ArrayList_get_length(&self->functions); ++i) {
         FunctionSymbolTable* function = ArrayList_get(&self->functions, i);
         if (!strcmp(function->identifier, func_name)) {
@@ -454,6 +503,10 @@ FunctionSymbolTable* SymbolTable_get_from_func_name(const ProgramSymbolTable* se
         }
     }
     return NULL;
+}
+
+int FunctionSymbolTable_get_param_count(const FunctionSymbolTable* self) {
+    return ArrayList_get_length(&self->parameters.symbols);
 }
 
 void SymbolTable_print(const SymbolTable* self) {
@@ -464,7 +517,10 @@ void SymbolTable_print(const SymbolTable* self) {
 }
 
 void FunctionSymbolTable_print(const FunctionSymbolTable* self) {
-    printf(BOLD UNDERLINE "FunctionSymbolTable of %s():\n" RESET, self->identifier);
+    printf(
+        BOLD UNDERLINE "FunctionSymbolTable of %s(...) -> %s:\n" RESET,
+        self->identifier, Symbol_get_type_str(self->ret_type)
+    );
     printf(BOLD "Parameters:\n" RESET);
     SymbolTable_print(&self->parameters);
     printf(BOLD "Locals:\n" RESET);

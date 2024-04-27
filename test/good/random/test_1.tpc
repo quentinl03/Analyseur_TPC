@@ -1,0 +1,28 @@
+int f(int a) {
+    char c;
+    return a;
+}
+
+int g(int a, char b) {
+    return a + b;
+}
+
+int h(void) {
+    int res;
+    res = f(10) + '2';
+    return res - 2 * 8 * 'a';
+}
+
+void fg(void) {
+    return;
+}
+
+int main(void) {
+    int input, res;
+    char c;
+
+    res = h() + g(input, 'a');
+    putint(res);
+
+    return res;
+}
