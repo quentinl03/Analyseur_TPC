@@ -17,6 +17,13 @@ typedef struct Option {
     int flag_symtabs;
 } Option;
 
+/**
+ * @brief Parse the command line arguments using getopt_long.
+ *
+ * @param argc
+ * @param argv
+ * @return Option
+ */
 Option parser(int argc, char** argv);
 
 #endif  // PARSER_H

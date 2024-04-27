@@ -67,7 +67,7 @@ static const char* _CodeWriter_Node_To_Ope(const Node* node) {
     }
 }
 
-int CodeWriter_Ope(FILE* nasm, const Node* node) {
+void CodeWriter_Ope(FILE* nasm, const Node* node) {
     const char* ope = _CodeWriter_Node_To_Ope(node);
     fprintf(
         nasm,
@@ -80,7 +80,7 @@ int CodeWriter_Ope(FILE* nasm, const Node* node) {
     return 0;
 }
 
-int CodeWriter_ConstantNumber(FILE* nasm, const Node* node) {
+void CodeWriter_ConstantNumber(FILE* nasm, const Node* node) {
     fprintf(
         nasm,
         "; Ajout d'une constante numérique sur la pile\n"
@@ -89,7 +89,7 @@ int CodeWriter_ConstantNumber(FILE* nasm, const Node* node) {
     return 0;
 }
 
-int CodeWriter_ConstantCharacter(FILE* nasm, const Node* node) {
+void CodeWriter_ConstantCharacter(FILE* nasm, const Node* node) {
     fprintf(
         nasm,
         "; Ajout d'un caractère litéral sur la pile\n"
@@ -156,12 +156,10 @@ static ErrorType CodeWriter_CallFunction(FILE* nasm,
     return ERR_NONE;
 }
 
-int CodeWriter_LoadVar(FILE* nasm,
-                       Node* node,
-                       const ProgramSymbolTable* symtable,
-                       const FunctionSymbolTable* func) {
-    // TODO : Verif si la fucntion marche
-    // Get in global variables
+void CodeWriter_LoadVar(FILE* nasm,
+                        Node* node,
+                        const ProgramSymbolTable* symtable,
+                        const FunctionSymbolTable* func) {
     const Symbol* symbol;
     symbol = SymbolTable_resolve_from_node(symtable, func, node);
 
@@ -195,15 +193,11 @@ int CodeWriter_LoadVar(FILE* nasm,
     } else {
         assert(0 && "Arrays not implemented, or we should't be there");
     }
-
-    return 0;
 }
 
-int CodeWriter_WriteVar(FILE* nasm, Node* node,
-                        const ProgramSymbolTable* symtable,
-                        const FunctionSymbolTable* func) {
-    // TODO : Verif si la fucntion marche
-
+void CodeWriter_WriteVar(FILE* nasm, Node* node,
+                         const ProgramSymbolTable* symtable,
+                         const FunctionSymbolTable* func) {
     const Symbol* symbol;
     symbol = SymbolTable_resolve_from_node(symtable, func, node);
 
@@ -237,19 +231,9 @@ int CodeWriter_WriteVar(FILE* nasm, Node* node,
                 symbol->addr + 8);
         }
     }
-
-    // Pop last value
-    // fprintf(
-    //     nasm,
-    //     "; Pop la dernière valeur de la pile après son assignation\n"
-    //     "add rsp, %d\n\n",
-    //     symbol->total_size
-    // );
-
-    return 0;
 }
 
-int CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func) {
+void CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func) {
     // TODO : Implement > 6 functions paramters (compute sum of size of
     // paramters from index 6)
     fprintf(
@@ -261,34 +245,24 @@ int CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func) {
         "sub rsp, %ld\n\n",
         func->locals.next_addr,
         func->locals.next_addr);
-
-    return 0;
 }
 
-int CodeWriter_stackFrame_end(FILE* nasm, const FunctionSymbolTable* func) {
+void CodeWriter_stackFrame_end(FILE* nasm, const FunctionSymbolTable* func) {
     fprintf(
         nasm,
         "; Frees stack frame, (reset stack pointer to caller's state)\n"
         "mov rsp, rbp\n"
         "pop rbp\n\n");
-
-    return 0;
 }
 
-int CodeWriter_FunctionLabel(FILE* nasm, const FunctionSymbolTable* func) {
+void CodeWriter_FunctionLabel(FILE* nasm, const FunctionSymbolTable* func) {
     fprintf(nasm, "%s:\n\n", func->identifier);
-
-    return 0;
 }
 
-int CodeWriter_Return(FILE* nasm) {
+void CodeWriter_Return(FILE* nasm) {
     fprintf(nasm, "ret\n\n");
-
-    return 0;
 }
 
-int CodeWriter_Return_Expr(FILE* nasm) {
+void CodeWriter_Return_Expr(FILE* nasm) {
     fprintf(nasm, "pop rax\n");
-
-    return 0;
 }

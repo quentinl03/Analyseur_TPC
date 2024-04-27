@@ -1,12 +1,12 @@
 #include "symboltable.h"
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "symbol.h"
 #include "error.h"
-#include <stdint.h>
+#include "symbol.h"
 
 #define BOLD "\x1b[1m"
 #define UNDERLINE "\x1b[4m"
@@ -51,16 +51,15 @@ static void _FunctionSymbolTable_init(FunctionSymbolTable* self, char* identifie
 ErrorType _SymbolTable_add(SymbolTable* self, Symbol symbol) {
     if (ArrayList_contains(&self->symbols, &symbol)) {
         CodeError_print(
-            (CodeError) {
+            (CodeError){
                 .err = ERR_SEM_REDECLARED_SYMBOL,
                 .line = symbol.lineno,
                 .column = 0,
             },
-            self->type == SYMBOL_TABLE_PARAM ? "redeclaration of parameter '%s'"
-                : symbol.symbol_type == SYMBOL_FUNCTION ? "redefinition of function '%s'"
-                : "redeclaration of '%s'",
-            symbol.identifier
-        );
+            self->type == SYMBOL_TABLE_PARAM        ? "redeclaration of parameter '%s'"
+            : symbol.symbol_type == SYMBOL_FUNCTION ? "redefinition of function '%s'"
+                                                    : "redeclaration of '%s'",
+            symbol.identifier);
         return ERR_SEM_REDECLARED_SYMBOL;
     }
 
@@ -100,16 +99,15 @@ Symbol* SymbolTable_get(const SymbolTable* self, const char* identifier) {
     return ArrayList_search(&self->symbols, &symbol);
 }
 
-Symbol* SymbolTable_resolve(
-    const ProgramSymbolTable* table,
-    const FunctionSymbolTable* func,
-    const char* identifier
-) {
+Symbol* SymbolTable_resolve(const ProgramSymbolTable* table,
+                            const FunctionSymbolTable* func,
+                            const char* identifier) {
     Symbol* symbol = NULL;
 
-    if      ((symbol = SymbolTable_get(&func->locals, identifier))) {}
-    else if ((symbol = SymbolTable_get(&func->parameters, identifier))) {}
-    else if ((symbol = SymbolTable_get(&table->globals, identifier)));
+    if ((symbol = SymbolTable_get(&func->locals, identifier))) {
+    } else if ((symbol = SymbolTable_get(&func->parameters, identifier))) {
+    } else if ((symbol = SymbolTable_get(&table->globals, identifier)))
+        ;
 
     return symbol;
 }
@@ -120,26 +118,22 @@ bool FunctionSymbolTable_is_defined_before_use(const FunctionSymbolTable* caller
     return callee <= caller;
 }
 
-Symbol* SymbolTable_resolve_from_node(
-    const ProgramSymbolTable* table,
-    const FunctionSymbolTable* func,
-    const Node* node
-) {
+Symbol* SymbolTable_resolve_from_node(const ProgramSymbolTable* table,
+                                      const FunctionSymbolTable* func,
+                                      const Node* node) {
     Symbol* symbol = NULL;
     if ((symbol = SymbolTable_resolve(table, func, node->att.ident))) {
         return symbol;
-    }
-    else {
+    } else {
         // Variable not found
         CodeError_print(
-            (CodeError) {
+            (CodeError){
                 .err = ERR_UNDECLARED_SYMBOL,
                 .line = node->lineno,
                 .column = 0,
             },
             "use of undeclared identifier '%s'",
-            node->att.ident
-        );
+            node->att.ident);
         exit(EXIT_CODE(ERR_UNDECLARED_SYMBOL));
     }
     return NULL;
@@ -191,7 +185,6 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
     assert(tree->label == Type || tree->label == DeclFonctArray);
     ErrorType err = 0;
 
-
     Tree typeNode = tree;
     FOREACH_SIBLING(typeNode) {
         Tree identNode = typeNode->firstChild;
@@ -204,7 +197,7 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
         FOREACH_SIBLING(identNode) {
             Symbol symbol;
             if (typeNode->label == DeclFonctArray) {
-                symbol = (Symbol) {
+                symbol = (Symbol){
                     .identifier = identNode->att.ident,
                     .type = type,
                     .type_size = _get_type_size(type),
@@ -218,7 +211,7 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
             }
 
             else if (identNode->label == DeclArray) {
-                symbol = (Symbol) {
+                symbol = (Symbol){
                     .identifier = identNode->att.ident,
                     .is_static = self->type == SYMBOL_TABLE_GLOBAL,
                     .type = type,
@@ -231,7 +224,7 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
             }
 
             else if (identNode->label == Ident) {
-                symbol = (Symbol) {
+                symbol = (Symbol){
                     .identifier = identNode->att.ident,
                     .type = type,
                     .type_size = _get_type_size(type),
@@ -291,7 +284,7 @@ static ErrorType _FunctionSymbolTable_create_from_ListTypVar(FunctionSymbolTable
 
 /**
  * @brief Check if a local variable is redeclared in the parameters list
- * 
+ *
  * @param func FunctionSymbolTable object to check
  * @return ErrorType ERR_SEM_REDECLARED_SYMBOL if a symbol was already in the table
  */
@@ -303,14 +296,13 @@ static ErrorType _SymbolTable_check_redeclared_params_in_locals(FunctionSymbolTa
         Symbol* param = SymbolTable_get(&func->parameters, local->identifier);
         if (param) {
             CodeError_print(
-                (CodeError) {
+                (CodeError){
                     .err = ERR_SEM_REDECLARED_SYMBOL,
                     .line = local->lineno,
                     .column = 0,
                 },
                 "redeclaration of variable '%s' already declared in parameters list",
-                local->identifier
-            );
+                local->identifier);
             err |= ERR_SEM_REDECLARED_SYMBOL;
         }
     }
@@ -349,7 +341,7 @@ static ErrorType _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Fu
     // * Add the function to the program's global symbol table
     err |= _SymbolTable_add(
         &prog->globals,
-        (Symbol) {
+        (Symbol){
             // function name
             .identifier = identNode->att.ident,
             .symbol_type = SYMBOL_FUNCTION,
@@ -359,8 +351,7 @@ static ErrorType _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Fu
             .type_size = _get_type_size(func->ret_type),
             .total_size = 0,
             .lineno = identNode->lineno,
-        }
-    );
+        });
 
     // * Add the function's parameters to the function's symbol table, if any
     Node* listParams = header->firstChild->nextSibling->nextSibling;
@@ -407,58 +398,54 @@ static ErrorType _ProgramSymbolTable_from_DeclFoncts(ProgramSymbolTable* self, T
  * - putint
  * - getchar
  * - getint
- * 
+ *
  * @param globals SymbolTable object to fill
  */
 static void _SymbolTable_add_default_functions(ProgramSymbolTable* table) {
     SymbolTable* globals = &table->globals;
     _SymbolTable_add(
         globals,
-        (Symbol) {
+        (Symbol){
             .identifier = "putchar",
             .symbol_type = SYMBOL_FUNCTION,
             .is_static = true,
             .type = type_num,
             .type_size = _get_type_size(type_num),
             .total_size = 1 * _get_type_size(type_num),
-        }
-    );
+        });
 
     _SymbolTable_add(
         globals,
-        (Symbol) {
+        (Symbol){
             .identifier = "putint",
             .symbol_type = SYMBOL_FUNCTION,
             .is_static = true,
             .type = type_num,
             .type_size = _get_type_size(type_num),
             .total_size = 1 * _get_type_size(type_num),
-        }
-    );
+        });
 
     _SymbolTable_add(
         globals,
-        (Symbol) {
+        (Symbol){
             .identifier = "getchar",
             .symbol_type = SYMBOL_FUNCTION,
             .is_static = true,
             .type = type_byte,
             .type_size = _get_type_size(type_byte),
             .total_size = 1 * _get_type_size(type_byte),
-        }
-    );
+        });
 
     _SymbolTable_add(
         globals,
-        (Symbol) {
+        (Symbol){
             .identifier = "getint",
             .symbol_type = SYMBOL_FUNCTION,
             .is_static = true,
             .type = type_num,
             .type_size = _get_type_size(type_num),
             .total_size = 1 * _get_type_size(type_num),
-        }
-    );
+        });
 }
 
 /**
@@ -519,8 +506,7 @@ void SymbolTable_print(const SymbolTable* self) {
 void FunctionSymbolTable_print(const FunctionSymbolTable* self) {
     printf(
         BOLD UNDERLINE "FunctionSymbolTable of %s(...) -> %s:\n" RESET,
-        self->identifier, Symbol_get_type_str(self->ret_type)
-    );
+        self->identifier, Symbol_get_type_str(self->ret_type));
     printf(BOLD "Parameters:\n" RESET);
     SymbolTable_print(&self->parameters);
     printf(BOLD "Locals:\n" RESET);

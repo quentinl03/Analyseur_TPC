@@ -2,22 +2,17 @@
 
 #include <assert.h>
 
-
-static ErrorType _Semantic_Expr(
-    Tree tree,
-    const FunctionSymbolTable* func,
-    const ProgramSymbolTable* prog
-);
+static ErrorType _Semantic_Expr(Tree tree,
+                                const FunctionSymbolTable* func,
+                                const ProgramSymbolTable* prog);
 
 #define IS_FUNCTION_CALL_NODE(node) ( \
-        (node)->firstChild != NULL && \
-        ((node)->firstChild->label == EmptyArgs || (node)->firstChild->label == ListExp))
+    (node)->firstChild != NULL &&     \
+    ((node)->firstChild->label == EmptyArgs || (node)->firstChild->label == ListExp))
 
-static ErrorType _Semantic_FunctionCall(
-    Tree tree,
-    const FunctionSymbolTable* caller,
-    const ProgramSymbolTable* prog
-) {
+static ErrorType _Semantic_FunctionCall(Tree tree,
+                                        const FunctionSymbolTable* caller,
+                                        const ProgramSymbolTable* prog) {
     assert(tree->label == Ident);
     assert(IS_FUNCTION_CALL_NODE(tree));
 
@@ -32,8 +27,7 @@ static ErrorType _Semantic_FunctionCall(
                 .line = tree->lineno,
             },
             "implicit declaration of function '%s'",
-            tree->att.ident
-        );
+            tree->att.ident);
     }
 
     // TODO : Check argument types
@@ -50,58 +44,50 @@ static ErrorType _Semantic_FunctionCall(
     return err;
 }
 
-static ErrorType _Semantic_Expr(
-    Tree tree,
-    const FunctionSymbolTable* func,
-    const ProgramSymbolTable* prog
-) {
+static ErrorType _Semantic_Expr(Tree tree,
+                                const FunctionSymbolTable* func,
+                                const ProgramSymbolTable* prog) {
     ErrorType err = ERR_NONE;
 
     switch (tree->label) {
-    case Addsub:
-    case Divstar:
-        err |= _Semantic_Expr(FIRSTCHILD(tree), func, prog);
-        err |= _Semantic_Expr(SECONDCHILD(tree), func, prog);
-        break;
-    case Ident:;
-        const Symbol* sym = SymbolTable_resolve_from_node(prog, func, tree);
-        if (IS_FUNCTION_CALL_NODE(tree)) {
-            if (sym->symbol_type == SYMBOL_FUNCTION) {
-                err |= _Semantic_FunctionCall(tree, func, prog);
+        case Addsub:
+        case Divstar:
+            err |= _Semantic_Expr(FIRSTCHILD(tree), func, prog);
+            err |= _Semantic_Expr(SECONDCHILD(tree), func, prog);
+            break;
+        case Ident:;
+            const Symbol* sym = SymbolTable_resolve_from_node(prog, func, tree);
+            if (IS_FUNCTION_CALL_NODE(tree)) {
+                if (sym->symbol_type == SYMBOL_FUNCTION) {
+                    err |= _Semantic_FunctionCall(tree, func, prog);
+                } else {
+                    CodeError_print(
+                        (CodeError){
+                            .err = (err |= ERR_SEM_IS_NOT_CALLABLE),
+                            .line = tree->lineno,
+                            .column = 0,
+                        },
+                        "called object '%s' is not a function",
+                        sym->identifier);
+                }
             }
-            else {
+            // Use of function identifier without calling it is not allowed
+            else if (!IS_FUNCTION_CALL_NODE(tree) && sym->symbol_type == SYMBOL_FUNCTION) {
                 CodeError_print(
-                    (CodeError) {
-                        .err = (err |= ERR_SEM_IS_NOT_CALLABLE),
+                    (CodeError){
+                        .err = (err |= ERR_FUNCTION_AS_RVALUE),
                         .line = tree->lineno,
-                        .column = 0,
-                    },
-                    "called object '%s' is not a function",
-                    sym->identifier
-                );
+                        .column = 0},
+                    "Pointer to function '%s' used as rvalue (not allowed)",
+                    sym->identifier);
+            } else if (
+                (sym->symbol_type == SYMBOL_POINTER_TO_ARRAY) ||
+                (sym->symbol_type == SYMBOL_ARRAY)) {
+                // TODO : Check array access
             }
-        }
-        // Use of function identifier without calling it is not allowed
-        else if (!IS_FUNCTION_CALL_NODE(tree) && sym->symbol_type == SYMBOL_FUNCTION) {
-            CodeError_print(
-                (CodeError){
-                    .err = (err |= ERR_FUNCTION_AS_RVALUE),
-                    .line = tree->lineno,
-                    .column = 0
-                },
-                "Pointer to function '%s' used as rvalue (not allowed)",
-                sym->identifier
-            );
-        }
-        else if (
-            (sym->symbol_type == SYMBOL_POINTER_TO_ARRAY) ||
-            (sym->symbol_type == SYMBOL_ARRAY)
-        ) {
-            // TODO : Check array access
-        }
-        break;
-    default:
-        break;
+            break;
+        default:
+            break;
     }
 
     return err;
@@ -111,17 +97,15 @@ static ErrorType _Semantic_Expr(
  * @brief Check return validity
  * - A function with a return value should have a expression as a child
  * - A function without a return value should not have a child
- * 
+ *
  * @param tree Return node
- * @param func 
- * @param prog 
- * @return ErrorType 
+ * @param func
+ * @param prog
+ * @return ErrorType
  */
-static ErrorType _Semantic_Return(
-    Tree tree,
-    const FunctionSymbolTable* func,
-    const ProgramSymbolTable* prog
-) {
+static ErrorType _Semantic_Return(Tree tree,
+                                  const FunctionSymbolTable* func,
+                                  const ProgramSymbolTable* prog) {
     assert(tree->label == Return);
     const Symbol* fsym = SymbolTable_get(&prog->globals, func->identifier);
     ErrorType err = ERR_NONE;
@@ -130,14 +114,13 @@ static ErrorType _Semantic_Return(
     if (fsym->type == type_void) {
         if (FIRSTCHILD(tree) != NULL) {
             CodeError_print(
-                (CodeError) {
+                (CodeError){
                     .err = (err |= ERR_RETURN_TYPE_NON_VOID),
                     .line = tree->lineno,
                     .column = 0,
                 },
                 "void function '%s' should not return a value",
-                func->identifier
-            );
+                func->identifier);
         }
     }
 
@@ -145,16 +128,14 @@ static ErrorType _Semantic_Return(
         // The function returns non-void, but threre is no return value
         if (FIRSTCHILD(tree) == NULL) {
             CodeError_print(
-                (CodeError) {
+                (CodeError){
                     .err = (err |= ERR_RETURN_TYPE_VOID),
                     .line = tree->lineno,
                     .column = 0,
                 },
                 "non-void function '%s' should return a value",
-                func->identifier
-            );
-        }
-        else {
+                func->identifier);
+        } else {
             err |= _Semantic_Expr(FIRSTCHILD(tree), func, prog);
         }
     }
@@ -162,11 +143,9 @@ static ErrorType _Semantic_Return(
     return err;
 }
 
-static ErrorType _Semantic_Assignation(
-    Tree tree,
-    const FunctionSymbolTable* func,
-    const ProgramSymbolTable* prog
-) {
+static ErrorType _Semantic_Assignation(Tree tree,
+                                       const FunctionSymbolTable* func,
+                                       const ProgramSymbolTable* prog) {
     assert(tree->label == Assignation);
     ErrorType err = ERR_NONE;
 
@@ -179,67 +158,66 @@ static ErrorType _Semantic_Assignation(
 static ErrorType _Semantic_SuiteInstr(
     Tree tree,
     const FunctionSymbolTable* func,
-    const ProgramSymbolTable* prog
-) {
+    const ProgramSymbolTable* prog) {
     assert(tree->label == SuiteInstr);
     ErrorType err = ERR_NONE;
     bool has_return = false;
 
     for (Node* child = tree->firstChild; child != NULL; child = child->nextSibling) {
         switch (child->label) {
-        case Return:
-            has_return = true;
-            err |= _Semantic_Return(child, func, prog);
-            break;
-        case Assignation:
-            err |= _Semantic_Assignation(child, func, prog);
-            break;
-        case Ident:
-            err |= _Semantic_FunctionCall(child, func, prog);
-            break;
-        default:
-            break;
+            case Return:
+                has_return = true;
+                err |= _Semantic_Return(child, func, prog);
+                break;
+            case Assignation:
+                err |= _Semantic_Assignation(child, func, prog);
+                break;
+            case Ident:
+                err |= _Semantic_FunctionCall(child, func, prog);
+                break;
+            default:
+                break;
         }
     }
 
     if (!has_return) {
         CodeError_print(
-            (CodeError) {
+            (CodeError){
                 .err = ERR_RETURN_TYPE_VOID,
                 .line = tree->lineno,
                 .column = 0,
             },
             "missing return statement in function '%s' returning non-void",
-            func->identifier
-        );
+            func->identifier);
         err |= ERR_RETURN_TYPE_VOID;
     }
 
     return err;
 }
 
-static ErrorType _Semantic_DeclFonct(Tree tree, const ProgramSymbolTable* prog) {
+static ErrorType _Semantic_DeclFonct(Tree tree,
+                                     const ProgramSymbolTable* prog) {
     assert(tree->label == DeclFonct);
     FunctionSymbolTable* func = FunctionSymbolTable_get_from_name(
         prog,
         // DeclFonct->EnTeteFonct->Ident
-        FIRSTCHILD(tree)->firstChild->nextSibling->att.ident
-    );
+        FIRSTCHILD(tree)->firstChild->nextSibling->att.ident);
     ErrorType err = ERR_NONE;
-    err |= _Semantic_SuiteInstr(SECONDCHILD(tree)->firstChild->nextSibling, func, prog);
+    err |= _Semantic_SuiteInstr(SECONDCHILD(tree)->firstChild->nextSibling,
+                                func, prog);
     // TODO : Vérifier l'existence d'un return
     return err;
 }
 
-static ErrorType _Semantic_DeclFoncts(Tree tree, const ProgramSymbolTable* prog) {
+static ErrorType _Semantic_DeclFoncts(Tree tree,
+                                      const ProgramSymbolTable* prog) {
     assert(tree->label == DeclFoncts);
     ErrorType err = ERR_NONE;
 
     // On parcourt les noeux DeclFonct
     for (Node* child = tree->firstChild;
          child != NULL;
-         child = child->nextSibling
-    ) {
+         child = child->nextSibling) {
         err |= _Semantic_DeclFonct(child, prog);
     }
 
@@ -252,34 +230,31 @@ ErrorType static Semantic_check_main(const ProgramSymbolTable* prog) {
 
     if ((fst_main = FunctionSymbolTable_get_from_name(prog, "main")) == NULL) {
         CodeError_print(
-            (CodeError) {
+            (CodeError){
                 .err = (err |= ERR_MAIN_UNAVAILABLE),
                 .line = 0,
                 .column = 0,
             },
-            "undefined reference to 'main'"
-        );
+            "undefined reference to 'main'");
     } else {
         const Symbol* sym_main = SymbolTable_get(&prog->globals, "main");
         if (fst_main->ret_type != type_num) {
             CodeError_print(
-                (CodeError) {
+                (CodeError){
                     .err = (err |= ERR_MAIN_RETURN_TYPE),
                     .line = sym_main->lineno,
                     .column = 0,
                 },
-                "'main' must return 'int'"
-            );
+                "'main' must return 'int'");
         }
         if (FunctionSymbolTable_get_param_count(fst_main) > 0) {
             CodeError_print(
-                (CodeError) {
+                (CodeError){
                     .err = (err |= ERR_MAIN_PARAM),
                     .line = sym_main->lineno,
                     .column = 0,
                 },
-                "'main' must not have any parameter (void)"
-            );
+                "'main' must not have any parameter (void)");
         }
     }
 

@@ -17,64 +17,103 @@
  * @brief Write the header of the nasm file,
  * including the BSS section and the extern declaration
  * of utils.asm functions.
- * 
- * @param nasm File to write to
+ *
+ * @param nasm File to write into
  * @param globals Symbol table of the global variables
  */
 void CodeWriter_Init_File(FILE* nasm, const SymbolTable* globals);
 
-int CodeWriter_Ope(FILE* nasm, const Node* node);
+/**
+ * @brief Write a basic operation to the nasm file.
+ * Pop two values from the stack, apply the operation and push the result.
+ *
+ * @param nasm File to write into
+ * @param node Node to write
+ */
+void CodeWriter_Ope(FILE* nasm, const Node* node);
 
-int CodeWriter_ConstantNumber(FILE* nasm, const Node* node);
+/**
+ * @brief Write a constant number to the nasm file.
+ * Push the constant value to the stack.
+ *
+ * @param nasm File to write into
+ * @param node Node to write
+ */
+void CodeWriter_ConstantNumber(FILE* nasm, const Node* node);
 
-int CodeWriter_ConstantCharacter(FILE* nasm, const Node* node);
+/**
+ * @brief Write a constant character to the nasm file.
+ *
+ * @param nasm File to write into
+ * @param node Node to write
+ */
+void CodeWriter_ConstantCharacter(FILE* nasm, const Node* node);
 
-int CodeWriter_LoadVar(FILE* nasm, Node* node,
-                       const ProgramSymbolTable* symtable, const FunctionSymbolTable* func);
+/**
+ * @brief Push the variable value to the stack.
+ * If the variable is a global variable, use bss section.
+ * If the variable is a local variable, use the stack.
+ * If the variable is a parameter, use registers.
+ *
+ * @param nasm File to write into
+ * @param node Node to write
+ * @param symtable Program symbol table
+ * @param func Function symbol table
+ */
+void CodeWriter_LoadVar(FILE* nasm, Node* node,
+                        const ProgramSymbolTable* symtable,
+                        const FunctionSymbolTable* func);
 
-int CodeWriter_WriteVar(FILE* nasm, Node* node,
-                        const ProgramSymbolTable* symtable, const FunctionSymbolTable* func);
+/**
+ * @brief Change the value of a variable from the last value on the stack.
+ * If the variable is a global variable, use bss section.
+ * If the variable is a local variable, use the stack.
+ * If the variable is a parameter, use registers.
+ *
+ * @param nasm File to write into
+ * @param node Node to write
+ * @param symtable Program symbol table
+ * @param func Function symbol table
+ */
+void CodeWriter_WriteVar(FILE* nasm, Node* node,
+                         const ProgramSymbolTable* symtable,
+                         const FunctionSymbolTable* func);
 
 /**
  * @brief Write the start of a stack frame.
- * 
- * @param nasm FILE* to write to
- * @param func Function's symbol table
- * @return int 
+ *
+ * @param nasm File to write into
+ * @param func Function symbol table
  */
-int CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func);
+void CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func);
 
 /**
  * @brief Write the end of a stack frame.
- * 
- * @param nasm 
- * @param func 
- * @return int 
+ *
+ * @param nasm File to write into
+ * @param func Function symbol table
  */
-int CodeWriter_stackFrame_end(FILE* nasm, const FunctionSymbolTable* func);
+void CodeWriter_stackFrame_end(FILE* nasm, const FunctionSymbolTable* func);
 
 /**
  * @brief Write the label of a function.
- * 
- * @param nasm FILE* to write to
- * @param func Function symbol table of the function
- * @return int 
+ *
+ * @param nasm File to write into
+ * @param func Function symbol table
  */
-int CodeWriter_FunctionLabel(FILE* nasm, const FunctionSymbolTable* func);
+void CodeWriter_FunctionLabel(FILE* nasm, const FunctionSymbolTable* func);
 
 /**
  * @brief Write `ret` instruction.
- * 
- * @param nasm 
- * @return int 
+ *
+ * @param nasm File to write into
  */
-int CodeWriter_Return(FILE* nasm);
+void CodeWriter_Return(FILE* nasm);
 
 /**
  * @brief Move computed expression present on stack's head
  * to `rax` register
- * 
- * @param nasm 
- * @return int 
+ *
+ * @param nasm File to write into
  */
-int CodeWriter_Return_Expr(FILE* nasm);
+void CodeWriter_Return_Expr(FILE* nasm);

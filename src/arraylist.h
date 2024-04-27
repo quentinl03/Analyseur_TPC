@@ -18,17 +18,10 @@ typedef struct ArrayList {
     uint8_t* arr;
 } ArrayList;
 
-#define ARRAYLIST_REALLOC_BLOCK 10
-
-// https://stackoverflow.com/questions/28524896/casting-pointer-to-memory-buffer-to-pointer-to-vla
-// int (*arrPointer)[ARRSIZE] = (int(*)[ARRSIZE]) pointer;
-#define ARRAYLIST_DECLARE_VLA(self, typename, array_name) \
-    typename(*array_name)[self.len] = ((typename(*)[self.len])(typename*)self.arr)
+#define ARRAYLIST_REALLOC_MULTIPLIER 2
 
 #define ARRAYLIST_DECLARE_ARRAY(self, typename, array_name) \
     typename* array_name = (typename*)(self).arr
-
-// #define ArrayList_pop_t(self, elem_type) ((elem_type) ArrayList_pop(self))
 
 /**
  * @brief Create a new vector object
