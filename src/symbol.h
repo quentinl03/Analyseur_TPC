@@ -63,4 +63,12 @@ void Symbol_print(const Symbol* symbol);
  */
 const char* SymbolType_to_str(SymbolType type);
 
+/**
+ * @brief Get type as a string
+ * 
+ * @param type Type (type_void, type_num, type_byte)
+ * @return const char* 
+ */
+const char* Symbol_get_type_str(type_t type);
+
 #endif

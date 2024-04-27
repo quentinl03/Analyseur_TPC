@@ -34,6 +34,7 @@
       - [X] Redéclarer une variable locale, alors qu'elle existe en paramètre
   
   - [X] Utilisation d'une variable non déclarée
+
         ```c
         int main(void) {
             return a;
@@ -41,11 +42,13 @@
         ```
 
   - [X] Vérifier que l'on appelle pas une variable
+  
         ```c
         int a;
         a();
         ```
-  - [X] Vérifier que l'ont utilise pas une fonction comme une variable (sans l'appeler)
+  - [X] Vérifier que l'ont utilise pas une fonction comme une variable (
+    sans l'appeler)
         ```c
         int f(void) {
             return 0;
@@ -54,37 +57,142 @@
             return f + 1;
         }
         ```
-  - [ ] Vérifier l'existence d'un main
-  - [ ] Vérifier l'ordre de déclaration des fonctions (déclaration avant utilisation)
+  - [X] Vérifier l'existence d'un main
+
+  - [X] Vérifier le prototype du main
+    - [X] Type de retour
+
         ```c
-        int f(void) {
-            return g();
-        }
-        int g(void) {
-            return 0;
+        char main(void) {
+            return 5;
         }
         ```
+
+        ```shell
+        ❯ clang -Wall -pedantic -std=c89 test.c -o test
+        test.c:2:1: error: 'main' must return 'int'
+        char main(void) {
+        ^~~~
+        int
+        ```
+
+        ```shell
+        ❯ gcc -Wall -pedantic -std=c89 test.c -o test
+        test.c:2:6: warning: return type of ‘main’ is not ‘int’ [-Wmain]
+            2 | char main(void) {
+            |      ^~~~
+        ```
+    - [X] Aucun arguments
+
+  - [X] Vérifier l'ordre de déclaration des fonctions (déclaration avant utilisation)
+
+    ```c
+    int f(void) {
+        return g();
+    }
+    int g(void) {
+        return 0;
+    }
+    ```
+
+
+  - [X] Fonction devant retourner une valeur, mais ne possède pas d'instructions return
+
+    ```c
+    int a;
+    int f(void) {
+        a = 1;
+    }
+    ```
+    
+    ```shell
+    ❯ clang -Wall -pedantic -std=c89 test.c -o test
+    test.c:5:1: warning: non-void function does not return a value [-Wreturn-type]
+    }
+    ^
+    ```
+    
+    ```shell
+    test.c: In function ‘f’:
+    test.c:5:1: warning: control reaches end of non-void function [-Wreturn-type]
+        5 | }
+            | ^
+    ```
+
+  - [X] Fonction possédant un return, devant retourner void mais possédant un return avec une valeur :
+
+    ```c
+    void f(void) {
+        return 15;
+    }
+    ```
+    Pour clang c'est une erreur, pour gcc un warning...
+    
+    ```shell
+    ❯ clang -Wall -pedantic -std=c89 test.c -o test
+    test.c:4:5: error: void function 'f' should not return a value [-Wreturn-type]
+        return 15;
+        ^      ~~
+    ```
+    
+    ```shell
+    ❯ gcc -Wall -pedantic -std=c89 test.c -o test
+    test.c: In function ‘f’:
+    test.c:4:12: warning: ‘return’ with a value, in function returning void [-Wreturn-type]
+        4 |     return 15;
+            |            ^~
+    ```
+
+  - [X] Fonction possédant un return devant retourner non-void, mais possédant un return vide
+
+    ```c
+    int f(void) {
+        return;
+    }
+    ```
+    Pour clang c'est une erreur, pour gcc un warning...
+    
+    ```shell
+    ❯ clang -Wall -pedantic -std=c89 test.c -o test
+    test.c:4:5: error: non-void function 'f' should return a value [-Wreturn-type]
+        return;
+        ^
+    ```
+    
+    ```shell
+    ❯ gcc -Wall -pedantic -std=c89 test.c -o test
+    test.c: In function ‘f’:
+    test.c:4:5: warning: ‘return’ with no value, in function returning non-void [-Wreturn-type]
+        4 |     return;
+            |     ^~~~~~
+    ```
+
   - [ ] Vérifier le type des paramètres lors d'un appel de fonction
-        ```c
-        int f(char a, int b) {
-            return 0;
-        }
-        int main(void) {
-            f(10000, 'b');
-            return 0;
-        }
-        ```
+
+    ```c
+    int f(char a, int b) {
+        return 0;
+    }
+    int main(void) {
+        f(10000, 'b');
+        return 0;
+    }
+    ```
+
   - [ ] Vérifier le type de retour d'une fonction déclarée :
-        ```c
-        char f(void) {
-            return 10000;
-        }
-        ```
+
+    ```c
+    char f(void) {
+        return 10000;
+    }
+    ```
+
   - [ ] Vérifier le type lors d'une assignation
-        ```c
-        char a;
-        a = 10000 + f(10);
-        ```
+
+    ```c
+    char a;
+    a = 10000 + f(10);
+    ```
 
 - Ne pas compiler le builtins.asm, mais copier son contenu dans le nasm généré
 

@@ -23,7 +23,7 @@ TESTS_DIR=test
 REPORT_DIR=rep
 OUT_DIRS=$(OBJ_DIR) $(BIN_DIR)
 
-MODULES=$(patsubst %.c, $(OBJ_DIR)/%.o, tree.c parser.c main.c symbol.c symboltable.c arraylist.c registers.c treeReader.c codeWriter.c error.c)
+MODULES=$(patsubst %.c, $(OBJ_DIR)/%.o, tree.c parser.c main.c symbol.c symboltable.c arraylist.c registers.c treeReader.c codeWriter.c error.c semantic.c)
 OBJS=$(wildcard $(OBJ_DIR)/*.tab.* $(OBJ_DIR)/*.yy.* $(OBJ_DIR)/*.o)
 
 TAR_CONTENT=$(SRC_DIR)/ $(TESTS_DIR)/ $(REPORT_DIR)/ $(OBJ_DIR)/ $(BIN_DIR) Makefile README.md

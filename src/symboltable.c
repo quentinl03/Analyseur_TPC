@@ -114,6 +114,12 @@ Symbol* SymbolTable_resolve(
     return symbol;
 }
 
+bool FunctionSymbolTable_is_defined_before_use(const FunctionSymbolTable* caller, const FunctionSymbolTable* callee) {
+    //* The function array isn't sorted, and thus preserve insertion order
+    //* Moreover, we only pass FunctionSymbolTable through pointers
+    return callee <= caller;
+}
+
 Symbol* SymbolTable_resolve_from_node(
     const ProgramSymbolTable* table,
     const FunctionSymbolTable* func,
@@ -338,7 +344,7 @@ static ErrorType _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Fu
     Node* identNode = header->firstChild->nextSibling;
     _FunctionSymbolTable_init(func, identNode->att.ident);
 
-    type_t return_type = is_void ? type_void : _get_type_from_string(&header->firstChild->att);
+    func->ret_type = is_void ? type_void : _get_type_from_string(&header->firstChild->att);
 
     // * Add the function to the program's global symbol table
     err |= _SymbolTable_add(
@@ -349,8 +355,8 @@ static ErrorType _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Fu
             .symbol_type = SYMBOL_FUNCTION,
             // return type
             .is_static = true,
-            .type = return_type,
-            .type_size = _get_type_size(return_type),
+            .type = func->ret_type,
+            .type_size = _get_type_size(func->ret_type),
             .total_size = 0,
             .lineno = identNode->lineno,
         }
@@ -488,8 +494,8 @@ ErrorType ProgramSymbolTable_from_Prog(ProgramSymbolTable* self, Tree tree) {
     return err;
 }
 
-FunctionSymbolTable* SymbolTable_get_from_func_name(const ProgramSymbolTable* self,
-                                                    const char* func_name) {
+FunctionSymbolTable* FunctionSymbolTable_get_from_name(const ProgramSymbolTable* self,
+                                                       const char* func_name) {
     for (int i = 0; i < ArrayList_get_length(&self->functions); ++i) {
         FunctionSymbolTable* function = ArrayList_get(&self->functions, i);
         if (!strcmp(function->identifier, func_name)) {
@@ -497,6 +503,10 @@ FunctionSymbolTable* SymbolTable_get_from_func_name(const ProgramSymbolTable* se
         }
     }
     return NULL;
+}
+
+int FunctionSymbolTable_get_param_count(const FunctionSymbolTable* self) {
+    return ArrayList_get_length(&self->parameters.symbols);
 }
 
 void SymbolTable_print(const SymbolTable* self) {
@@ -507,7 +517,10 @@ void SymbolTable_print(const SymbolTable* self) {
 }
 
 void FunctionSymbolTable_print(const FunctionSymbolTable* self) {
-    printf(BOLD UNDERLINE "FunctionSymbolTable of %s():\n" RESET, self->identifier);
+    printf(
+        BOLD UNDERLINE "FunctionSymbolTable of %s(...) -> %s:\n" RESET,
+        self->identifier, Symbol_get_type_str(self->ret_type)
+    );
     printf(BOLD "Parameters:\n" RESET);
     SymbolTable_print(&self->parameters);
     printf(BOLD "Locals:\n" RESET);

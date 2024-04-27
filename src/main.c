@@ -15,6 +15,7 @@
 #include "tpc_bison.h"
 #include "tree.h"
 #include "treeReader.h"
+#include "semantic.h"
 
 int main(int argc, char* argv[]) {
     extern FILE* yyin;
@@ -51,12 +52,12 @@ int main(int argc, char* argv[]) {
 
     ProgramSymbolTable symtable;
     err = ProgramSymbolTable_from_Prog(&symtable, abr);
-    if (IS_SEMANTIC(err) || IS_CRITICAL(err)) {
-        return EXIT_CODE(err);
-    }
-
     if (opt.flag_symtabs) {
         ProgramSymbolTable_print(&symtable);
+    }
+    err |= Semantic_check(abr, &symtable);
+    if (IS_SEMANTIC(err) || IS_CRITICAL(err)) {
+        return EXIT_CODE(err);
     }
 
     FILE* file = fopen(opt.output, "w");

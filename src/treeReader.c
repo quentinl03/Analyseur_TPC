@@ -69,9 +69,9 @@ static ErrorType _TreeReader_DeclFonct(
     Tree tree, FILE* nasm
 ) {
     assert(tree->label == DeclFonct);
-    FunctionSymbolTable* func = SymbolTable_get_from_func_name(
+    FunctionSymbolTable* func = FunctionSymbolTable_get_from_name(
         prog,
-        // On passe de DeclFonct à SuiteInstr
+        // DeclFonct->EnTeteFonct->Ident
         FIRSTCHILD(tree)->firstChild->nextSibling->att.ident
     );
     CodeWriter_FunctionLabel(nasm, func);
@@ -179,19 +179,10 @@ static ErrorType _Instr_Return(const ProgramSymbolTable* table, Tree tree, FILE*
     const Symbol* sym = SymbolTable_get(&table->globals, func->identifier);
 
     if (sym->type != type_void) /* Non void */ {
+        // Verifiy if a value to returns exists, see _Instr_Return
         if (FIRSTCHILD(tree)) {
             err |= TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);
             CodeWriter_Return_Expr(nasm);
-        }
-        else {
-            CodeError_print(
-                (CodeError) {
-                    .err = WARN_RETURN_WITHOUT_VALUE,
-                    .line = tree->lineno,
-                    .column = 0,
-                },
-                "'return' with no value, in function returning non-void"
-            );
         }
     }
     return err;

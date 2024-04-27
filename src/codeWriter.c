@@ -116,19 +116,7 @@ static ErrorType CodeWriter_CallFunction(FILE* nasm,
     assert(
         symbol->symbol_type == SYMBOL_FUNCTION &&
         "Symbol should be a function");
-    
-    if (node->firstChild == NULL) {
-        CodeError_print(
-            (CodeError){
-                .err = ERR_FUNCTION_AS_RVALUE,
-                .line = node->lineno,
-                .column = 0
-            },
-            "Pointer to function '%s' used as rvalue (not allowed)",
-            symbol->identifier
-        );
-        exit(EXIT_CODE(ERR_FUNCTION_AS_RVALUE));
-    }
+    assert(node->firstChild != NULL);
 
     fprintf(nasm, ";;; Appel de la fonction %s ;;;\n", symbol->identifier);
 
@@ -176,21 +164,6 @@ int CodeWriter_LoadVar(FILE* nasm,
     // Get in global variables
     const Symbol* symbol;
     symbol = SymbolTable_resolve_from_node(symtable, func, node);
-
-    if (symbol->symbol_type != SYMBOL_FUNCTION && node->firstChild != NULL &&
-        (node->firstChild->label == EmptyArgs || node->firstChild->label == ListExp)
-    ) {
-        CodeError_print(
-            (CodeError){
-                .err = ERR_SEM_IS_NOT_CALLABLE,
-                .line = node->lineno,
-                .column = 0
-            },
-            "called object '%s' is not a function",
-            symbol->identifier
-        );
-        exit(EXIT_CODE(ERR_FUNCTION_AS_RVALUE));
-    }
 
     if (symbol->symbol_type == SYMBOL_FUNCTION) {
         CodeWriter_CallFunction(nasm, node, symtable, func, symbol);
