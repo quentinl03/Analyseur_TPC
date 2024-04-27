@@ -77,7 +77,6 @@ void CodeWriter_Ope(FILE* nasm, const Node* node) {
         "%s rax, rcx\n"
         "push rax\n\n",
         ope);
-    return 0;
 }
 
 void CodeWriter_ConstantNumber(FILE* nasm, const Node* node) {
@@ -86,7 +85,6 @@ void CodeWriter_ConstantNumber(FILE* nasm, const Node* node) {
         "; Ajout d'une constante numérique sur la pile\n"
         "push %d\n\n",
         node->att.num);
-    return 0;
 }
 
 void CodeWriter_ConstantCharacter(FILE* nasm, const Node* node) {
@@ -95,7 +93,6 @@ void CodeWriter_ConstantCharacter(FILE* nasm, const Node* node) {
         "; Ajout d'un caractère litéral sur la pile\n"
         "push %d\n\n",
         node->att.byte);
-    return 0;
 }
 
 /**

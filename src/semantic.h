@@ -2,6 +2,11 @@
 #include "symboltable.h"
 #include "tree.h"
 
+typedef struct ExprReturn {
+    ErrorType err;
+    type_t type;  // Type of the expression (int / char)
+} ExprReturn;
+
 /**
  * @brief Check semantic vailidity before producing assembler
  *
