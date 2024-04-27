@@ -27,7 +27,7 @@ static ErrorType _Semantic_FunctionCall(
     if (!FunctionSymbolTable_is_defined_before_use(caller, calleefst)) {
         CodeError_print(
             (CodeError){
-                .err = ERR_USE_UNDEFINED_FUNCTION,
+                .err = (err |= ERR_USE_UNDEFINED_FUNCTION),
                 .column = 0,
                 .line = tree->lineno,
             },
