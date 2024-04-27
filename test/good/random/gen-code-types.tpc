@@ -11,9 +11,10 @@ int main(void) {
     somme = 12;
     produit = 24;
     // quotient=24/12; // TODO : Erreur de type
-    letter = 'c';
+    letter = 'e';
     digit = '0';
     uppercase = letter + ('A' - 'a');
+    putchar(uppercase);
     reste = getint();
     // putchar('\n');
     putint(reste);
