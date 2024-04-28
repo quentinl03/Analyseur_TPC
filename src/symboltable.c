@@ -84,6 +84,7 @@ ErrorType _SymbolTable_add(SymbolTable* self, Symbol symbol) {
         symbol.addr = self->next_addr;
         self->next_addr += symbol.total_size;
     }
+    symbol.index = ArrayList_get_length(&self->symbols);
 
     assert(ArrayList_sorted_insert(&self->symbols, &symbol) != ARRAYLIST_ERR_ALLOC);
 
@@ -117,6 +118,16 @@ bool FunctionSymbolTable_is_defined_before_use(const FunctionSymbolTable* caller
     //* The function array isn't sorted, and thus preserve insertion order
     //* Moreover, we only pass FunctionSymbolTable through pointers
     return callee <= caller;
+}
+
+const Symbol* FunctionSymbolTable_get_param(const FunctionSymbolTable* self, int i) {
+    for (int j = 0; j < ArrayList_get_length(&self->parameters.symbols); ++j) {
+        const Symbol* symbol = ArrayList_get(&self->parameters.symbols, j);
+        if (symbol->index == i) {
+            return symbol;
+        }
+    }
+    return NULL;
 }
 
 Symbol* SymbolTable_resolve_from_node(const ProgramSymbolTable* table,

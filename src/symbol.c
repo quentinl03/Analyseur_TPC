@@ -40,20 +40,24 @@ static const char* _Symbol_get_location_str(const Symbol* self) {
 
 static void _Symbol_print_Function(const Symbol* self) {
     printf(
-        "%-15s : symbol_type=%-16s type=%-5s\n",
+        "%-15s : symbol_type=%-16s type=%-5s index=%-2d\n",
         self->identifier,
         SymbolType_to_str(self->symbol_type),
-        Symbol_get_type_str(self->type));
+        Symbol_get_type_str(self->type),
+        self->index
+    );
 }
 
 static void _Symbol_print_Array(const Symbol* self) {
     printf(
-        "%-15s : symbol_type=%-16s type=%-5s length=%d total_size=%d ",
+        "%-15s : symbol_type=%-16s type=%-5s length=%d total_size=%d index=%-2d\n",
         self->identifier,
         SymbolType_to_str(self->symbol_type),
         Symbol_get_type_str(self->type),
         self->array.length,
-        self->total_size);
+        self->total_size,
+        self->index
+    );
     printf(
         "addr=%s",
         _Symbol_get_location_str(self));
@@ -62,11 +66,13 @@ static void _Symbol_print_Array(const Symbol* self) {
 
 static void _Symbol_print_Value(const Symbol* self) {
     printf(
-        "%-15s : symbol_type=%-16s type=%-5s total_size=%d ",
+        "%-15s : symbol_type=%-16s type=%-5s total_size=%d index=%-2d\n",
         self->identifier,
         SymbolType_to_str(self->symbol_type),
         Symbol_get_type_str(self->type),
-        self->total_size);
+        self->total_size,
+        self->index
+    );
     printf(
         "addr=%s",
         _Symbol_get_location_str(self));
@@ -75,12 +81,14 @@ static void _Symbol_print_Value(const Symbol* self) {
 
 static void _Symbol_print_Pointer(const Symbol* self) {
     printf(
-        "%-15s : symbol_type=%-16s type=%-5s total_size=%d addr=%s\n",
+        "%-15s : symbol_type=%-16s type=%-5s total_size=%d addr=%s\n index=%-2d\n",
         self->identifier,
         SymbolType_to_str(self->symbol_type),
         Symbol_get_type_str(self->type),
         self->total_size,
-        _Symbol_get_location_str(self));
+        _Symbol_get_location_str(self),
+        self->index
+    );
 }
 
 void Symbol_print(const Symbol* self) {

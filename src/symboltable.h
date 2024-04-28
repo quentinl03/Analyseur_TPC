@@ -63,6 +63,15 @@ Symbol* SymbolTable_resolve(const ProgramSymbolTable* table,
 bool FunctionSymbolTable_is_defined_before_use(const FunctionSymbolTable* caller, const FunctionSymbolTable* callee);
 
 /**
+ * @brief Get the i-th parameter of a function
+ * 
+ * @param self 
+ * @param i index of the parameter
+ * @return const Symbol* 
+ */
+const Symbol* FunctionSymbolTable_get_param(const FunctionSymbolTable* self, int i);
+
+/**
  * @brief Get a symbol from a node, while respecting the scope
  * (local > param > global)
  * If the symbol is not found, prints an error and return NULL

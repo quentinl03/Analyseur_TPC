@@ -35,24 +35,53 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
 
     // TODO : Check argument types
 
-    if (tree->firstChild->label != EmptyArgs) {
-        // Check function arguments
-        int i = 0;
-        for (Node* arg = tree->firstChild->firstChild; arg;
-             arg = arg->nextSibling, ++i) {
-            ExprReturn ret = _Semantic_Expr(arg, caller, prog);
-            // fprintf(stderr, "arg %d type: %d\n", i, arg->type);
-            // if (ret.type == type_num && arg->type == type_byte) {
-            //     CodeError_print(
-            //         (CodeError){
-            //             .err = (err |= ERR_SEM_TYPE_MISMATCH),
-            //             .line = arg->lineno,
-            //             .column = 0,
-            //         },
-            //         "passing 'int' to parameter of type 'char'");
-            // }
-            err |= ret.err;
+    int i = 0;
+    Node* arg;
+    // Check function arguments
+    for (arg = tree->firstChild->firstChild; arg; arg = arg->nextSibling, ++i) {
+
+        if (i >= FunctionSymbolTable_get_param_count(calleefst)) {
+            CodeError_print(
+                (CodeError){
+                    .err = (err |= ERR_INVALID_PARAM_COUNT),
+                    .line = arg->lineno,
+                    .column = 0,
+                },
+                "too many arguments to function call '%s', expected %d",
+                tree->att.ident,
+                FunctionSymbolTable_get_param_count(calleefst)
+            );
+            break;
         }
+    
+        ExprReturn ret = _Semantic_Expr(arg, caller, prog);
+        // Get the i-th parameter of the function being called for type checking
+        const Symbol* arg_sym = FunctionSymbolTable_get_param(calleefst, i);
+
+        if (ret.type == type_num && arg_sym->type == type_byte) {
+            CodeError_print(
+                (CodeError){
+                    .err = (err |= WARN_IMPLICIT_INT_TO_CHAR),
+                    .line = arg->lineno,
+                    .column = 0,
+                },
+                "passing 'int' to parameter of type 'char'");
+        }
+        err |= ret.err;
+    }
+
+    if (i < FunctionSymbolTable_get_param_count(calleefst)) {
+        CodeError_print(
+            (CodeError){
+                .err = (err |= ERR_INVALID_PARAM_COUNT),
+                .line = tree->lineno,
+                .column = 0,
+            },
+            "too few arguments to function call '%s', expected %d, have %d",
+            tree->att.ident,
+            FunctionSymbolTable_get_param_count(calleefst),
+            i
+        );
     }
 
     return err;
@@ -67,7 +96,7 @@ static ExprReturn _Semantic_Expr(Tree tree,
         case Divstar:;
             ExprReturn left = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
             ExprReturn right = _Semantic_Expr(SECONDCHILD(tree), func, prog);
-            ret.type = type_num;
+            ret.type = type_num; // Any operation between two numbers will result in a int
             ret.err |= left.err | right.err;
             break;
         case Ident:;
@@ -221,6 +250,8 @@ static ErrorType _Semantic_SuiteInstr(Tree tree,
         }
     }
 
+    // Check if the function has a return statement (naive approch, should be improved)
+    // Doesn't work with blocks of code (if, while)
     if (!has_return) {
         CodeError_print(
             (CodeError){

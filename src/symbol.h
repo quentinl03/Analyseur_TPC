@@ -20,6 +20,8 @@ typedef struct Symbol {
     int type_size;
     int lineno;
 
+    int index; // Insertion order in the symbol table
+
     SymbolType symbol_type;
     struct {
         int length;
@@ -30,6 +32,7 @@ typedef struct Symbol {
     bool is_default_function;
     bool is_static;  // Static variables are stored in the bss section
     bool is_param;   // is a parameter of a function
+
     bool on_register;
     union {  // First 6 parameters are stored in registers, rest are stored in stack
         Register reg;
