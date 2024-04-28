@@ -60,14 +60,23 @@ static const char* _CodeWriter_Node_To_Ope(const Node* node) {
             return "sub";
         case '*':
             return "imul";
-        case '/':  // ! TODO : A revoir (car idiv c de la merde)
-            return "idiv";
         default:
             assert(0 && "We shoudn't be there");
     }
 }
 
 void CodeWriter_Ope(FILE* nasm, const Node* node) {
+    if (node->att.byte == '/' || node->att.byte == '%') {
+        fprintf(
+            nasm,
+            "; Operation basique sur les 2 dernieres valeurs de la pile\n"
+            "mov rdx, 0\n"
+            "pop rax\n"
+            "pop rcx\n"
+            "idiv rcx\n");
+        fprintf(nasm, "push %s\n\n", (node->att.byte == '%') ? "rdx" : "rax");
+        return;
+    }
     const char* ope = _CodeWriter_Node_To_Ope(node);
     fprintf(
         nasm,
