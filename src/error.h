@@ -40,12 +40,12 @@ typedef enum ErrorType {
 #define IS_CRITICAL(err) ((err & ERR_CRITIAL_FLAG) == ERR_CRITIAL_FLAG)
 #define LEVEL_MASK(err) ((1ULL << 4) - 1)
 
-#define EXIT_CODE(err) (                     \
-    (err) == ERR_NONE || IS_WARNING(err) ? 0 \
-    : IS_PARSE_ERROR(err)                ? 1 \
-    : IS_SEMANTIC(err)                   ? 2 \
-    : IS_CRITICAL(err)                   ? 3 \
-                                         : -1)
+#define EXIT_CODE(err) (                       \
+    IS_CRITICAL(err)                       ? 3 \
+    : IS_PARSE_ERROR(err)                  ? 1 \
+    : IS_SEMANTIC(err)                     ? 2 \
+    : (err) == ERR_NONE || IS_WARNING(err) ? 0 \
+                                           : -1)
 
 typedef struct CodeError {
     ErrorType err;

@@ -37,7 +37,6 @@ int main(int argc, char* argv[]) {
 
     if (IS_PARSE_ERROR(err)) {
         return EXIT_CODE(err);
-        ;
     }
 
     if (opt.flag_show_tree) {
