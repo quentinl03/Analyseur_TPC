@@ -1,4 +1,5 @@
 // nb_warnings=1
+// nb_errors=0
 
 int main(void) {
     char a;
