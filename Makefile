@@ -88,6 +88,9 @@ tar_assignment:
 assignment: clean rapport
 	@$(MAKE) --no-print-directory tar_assignment
 
+light_zip:
+	zip -r $(TAR_NAME).zip src/ Makefile
+
 test: $(BIN_DIR)/$(EXEC)
 	python3 test/test.py
 

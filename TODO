@@ -45,8 +45,8 @@
 - CD
     - Rapport avec Pandoc
 
-- Betises
-    - realloc ArrayList en mult et pas add
+- Bêtises
+    - [X] realloc ArrayList en mult et pas add
 
 ## Table des symboles
 
@@ -201,6 +201,54 @@
   test.c:4:5: warning: ‘return’ with no value, in function returning non-void [-Wreturn-type]
       4 |     return;
         |     ^~~~~~
+  ```
+
+- [X] Appel de fonction avec moins d'arguments que de paramètres
+
+  ```c
+  int f(int a, int b) {
+    return 0;
+  }
+
+  int main(void) {
+      return f(1);
+  }
+  ```
+
+- [X] Appel de fonction avec plus d'arguments de paramètres
+
+  ```c
+  int f(int a, int b) {
+      return 0;
+  }
+
+  int main(void) {
+      return f(1, 2, 3);
+  }
+  ```
+
+- [X] Appel de fonction avec des arguments, mais sur une fonction sans paramètres
+
+  ```c
+  int f(void) {
+      return 0;
+  }
+
+  int main(void) {
+      return f(1);
+  }
+  ```
+
+- [X] Appel de fonction sans arguments, mais sur une fonction ayant des paramètres
+
+  ```c
+  int f(int a, int b) {
+      return a + b;
+  }
+
+  int main(void) {
+      return f();
+  }
   ```
 
 - [ ] Vérifier le type des paramètres lors d'un appel de fonction
