@@ -15,6 +15,7 @@ typedef struct Option {
     int flag_show_tree;
     int flag_only_tree;  // If true, we stop execution after parsing the source code.
     int flag_symtabs;
+    int flag_semantic;
 } Option;
 
 /**

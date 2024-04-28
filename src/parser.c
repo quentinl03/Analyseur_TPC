@@ -50,6 +50,7 @@ static Option init_option(void) {
         .flag_show_tree = false,
         .flag_only_tree = false,
         .flag_symtabs = false,
+        .flag_semantic = false,
         .output = "_anonymous.asm",
     };
 }
@@ -89,6 +90,7 @@ Option parser(int argc, char** argv) {
         {"tree", no_argument, 0, 't'},
         {"symtabs", no_argument, 0, 's'},
         {"only-tree", no_argument, 0, 'a'},
+        {"only-semantic", no_argument, 0, 'w'},
         {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "asht", long_options, &option_index)) != -1) {
@@ -107,6 +109,10 @@ Option parser(int argc, char** argv) {
 
             case 'a':
                 option.flag_only_tree = true;
+                break;
+
+            case 'w':
+                option.flag_semantic = true;
                 break;
 
             case '?':

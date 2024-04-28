@@ -56,8 +56,12 @@ int main(int argc, char* argv[]) {
     if (opt.flag_symtabs) {
         ProgramSymbolTable_print(&symtable);
     }
-    err |= Semantic_check(abr, &symtable);
     if (IS_SEMANTIC(err) || IS_CRITICAL(err)) {
+        return EXIT_CODE(err);
+    }
+
+    err |= Semantic_check(abr, &symtable);
+    if (opt.flag_semantic || IS_SEMANTIC(err) || IS_CRITICAL(err)) {
         return EXIT_CODE(err);
     }
 
