@@ -29,9 +29,10 @@ static ArrayListError _SymbolTable_init(SymbolTable* self) {
  * @param self FunctionSymbolTable object
  * @param identifier Function name, should be pre-allocated
  */
-static void _FunctionSymbolTable_init(FunctionSymbolTable* self, char* identifier) {
+static void _FunctionSymbolTable_init(FunctionSymbolTable* self, const char* identifier, type_t ret_type) {
     *self = (FunctionSymbolTable){
         .identifier = identifier,
+        .ret_type = ret_type,
     };
 
     _SymbolTable_init(&self->parameters);
@@ -342,9 +343,9 @@ static ErrorType _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Fu
     bool is_void = header->firstChild->type == type_void;
 
     Node* identNode = header->firstChild->nextSibling;
-    _FunctionSymbolTable_init(func, identNode->att.ident);
 
-    func->ret_type = is_void ? type_void : _get_type_from_string(&header->firstChild->att);
+    type_t ret_type = is_void ? type_void : _get_type_from_string(&header->firstChild->att);
+    _FunctionSymbolTable_init(func, identNode->att.ident, ret_type);
 
     // * Add the function to the program's global symbol table
     err |= _SymbolTable_add(
@@ -402,6 +403,58 @@ static ErrorType _ProgramSymbolTable_from_DeclFoncts(ProgramSymbolTable* self, T
 }
 
 /**
+ * @brief Add an hardcoded function to the progran
+ * (putchar, getint, etc...)
+ * 
+ * @param prog 
+ * @param ret A Symbol object representing the return value, with only
+ * identifier and type defined
+ * @param symbols Array of symbols to add as parameters. Last element should be {0}
+ * in order to stop the loop (a NULL identifier is considered as the end of the array)
+ * NULL if none (void parameter)
+ */
+static void ProgramSymbolTable_add_default_function(
+    ProgramSymbolTable* prog,
+    Symbol ret,
+    Symbol symbols[]
+) {
+    ret = (Symbol){
+        .identifier = ret.identifier,
+        .type = ret.type,
+        .symbol_type = SYMBOL_FUNCTION,
+        .is_static = true,
+        .is_default_function = true,
+        .type_size = _get_type_size(ret.type),
+        .total_size = 1 * _get_type_size(ret.type),
+    };
+    _SymbolTable_add(&prog->globals, ret);
+
+    FunctionSymbolTable fun;
+    _FunctionSymbolTable_init(&fun, ret.identifier, ret.type);
+
+    // If there are parameters, add them to the function's symbol table
+    if (symbols != NULL) {
+        // Loop until we find a NULL identifier (end of the array)
+        for (const Symbol* param = symbols; param->identifier; ++param) {
+            _SymbolTable_add(
+                &fun.parameters,
+                (Symbol){
+                    .identifier = param->identifier,
+                    .type = param->type,
+                    .is_param = true,
+                    .symbol_type = SYMBOL_VALUE,
+                    .type_size = _get_type_size(param->type),
+                    // A parameter never take an array by copy, only by pointer
+                    .total_size = 1 * _get_type_size(param->type),
+                }
+            );
+        }
+    }
+
+    ArrayList_append(&prog->functions, &fun);
+}
+
+/**
  * @brief Add default functions to the global symbol table :
  * - putchar
  * - putint
@@ -411,53 +464,53 @@ static ErrorType _ProgramSymbolTable_from_DeclFoncts(ProgramSymbolTable* self, T
  * @param globals SymbolTable object to fill
  */
 static void _SymbolTable_add_default_functions(ProgramSymbolTable* table) {
-    SymbolTable* globals = &table->globals;
-    _SymbolTable_add(
-        globals,
-        (Symbol) {
+
+    ProgramSymbolTable_add_default_function(
+        table,
+        (Symbol){
             .identifier = "putchar",
-            .symbol_type = SYMBOL_FUNCTION,
-            .is_static = true,
             .type = type_num,
-            .type_size = _get_type_size(type_num),
-            .total_size = 1 * _get_type_size(type_num),
+        },
+        (Symbol[]) {
+            (Symbol) {
+                .identifier = "character",
+                .type = type_byte,
+            },
+            {0}
         }
     );
 
-    _SymbolTable_add(
-        globals,
-        (Symbol) {
+    ProgramSymbolTable_add_default_function(
+        table,
+        (Symbol){
             .identifier = "putint",
-            .symbol_type = SYMBOL_FUNCTION,
-            .is_static = true,
-            .type = type_num,
-            .type_size = _get_type_size(type_num),
-            .total_size = 1 * _get_type_size(type_num),
+            .type = type_void,
+        },
+        (Symbol[]) {
+            (Symbol) {
+                .identifier = "number",
+                .type = type_num,
+            },
+            {0}
         }
     );
 
-    _SymbolTable_add(
-        globals,
-        (Symbol) {
+    ProgramSymbolTable_add_default_function(
+        table,
+        (Symbol){
             .identifier = "getchar",
-            .symbol_type = SYMBOL_FUNCTION,
-            .is_static = true,
             .type = type_byte,
-            .type_size = _get_type_size(type_byte),
-            .total_size = 1 * _get_type_size(type_byte),
-        }
+        },
+        NULL
     );
 
-    _SymbolTable_add(
-        globals,
-        (Symbol) {
+    ProgramSymbolTable_add_default_function(
+        table,
+        (Symbol){
             .identifier = "getint",
-            .symbol_type = SYMBOL_FUNCTION,
-            .is_static = true,
             .type = type_num,
-            .type_size = _get_type_size(type_num),
-            .total_size = 1 * _get_type_size(type_num),
-        }
+        },
+        NULL
     );
 }
 
@@ -482,8 +535,8 @@ ErrorType ProgramSymbolTable_from_Prog(ProgramSymbolTable* self, Tree tree) {
     *self = (ProgramSymbolTable){0};
     _SymbolTable_init(&self->globals);
     self->globals.type = SYMBOL_TABLE_GLOBAL;
-    _SymbolTable_add_default_functions(self);
     ArrayList_init(&self->functions, sizeof(FunctionSymbolTable), 10, NULL);
+    _SymbolTable_add_default_functions(self);
 
     // tree->firstChild is the a DeclVars tree of globals variables
     err |= SymbolTable_create_from_DeclVars(&self->globals, 0, tree->firstChild);

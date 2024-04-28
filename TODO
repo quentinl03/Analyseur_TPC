@@ -6,6 +6,8 @@
 
 - [ ] Les divisions / modulos
 
+- [ ] Opérateur unaire (+/-)
+
 - [ ] Expressions booléennes
 
 - [ ] Instructions conditionnelles (if/else)
@@ -13,6 +15,8 @@
 - [ ] Boucles while
 
 - [ ] Les appels de fonctions à revoir
+
+  - Évaluer tous les arguments dans l'ordre inverse de leur apparition, en empilant successivement leur valeur dans la pile. Puis dépiler, les six premières valeurs de la pile vers les registres correspondants
 
 ## A faire quand il y aura du temps / juste des idées
 
@@ -93,26 +97,26 @@
 
   - [X] Type de retour
 
-      ```c
-      char main(void) {
-          return 5;
-      }
-      ```
+    ```c
+    char main(void) {
+        return 5;
+    }
+    ```
 
-      ```shell
-      ❯ clang -Wall -pedantic -std=c89 test.c -o test
-      test.c:2:1: error: 'main' must return 'int'
-      char main(void) {
-      ^~~~
-      int
-      ```
+    ```shell
+    ❯ clang -Wall -pedantic -std=c89 test.c -o test
+    test.c:2:1: error: 'main' must return 'int'
+    char main(void) {
+    ^~~~
+    int
+    ```
 
-      ```shell
-      ❯ gcc -Wall -pedantic -std=c89 test.c -o test
-      test.c:2:6: warning: return type of ‘main’ is not ‘int’ [-Wmain]
-          2 | char main(void) {
-          |      ^~~~
-      ```
+    ```shell
+    ❯ gcc -Wall -pedantic -std=c89 test.c -o test
+    test.c:2:6: warning: return type of ‘main’ is not ‘int’ [-Wmain]
+        2 | char main(void) {
+        |      ^~~~
+    ```
 
   - [X] Aucun arguments
 

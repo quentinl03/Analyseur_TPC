@@ -19,7 +19,7 @@ typedef struct SymbolTable {
 } SymbolTable;
 
 typedef struct FunctionSymbolTable {
-    char* identifier;
+    const char* identifier;
     type_t ret_type;
     SymbolTable parameters;
     SymbolTable locals;

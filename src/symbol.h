@@ -27,6 +27,7 @@ typedef struct Symbol {
 
     int total_size;  // Total size of the object variable or array
 
+    bool is_default_function;
     bool is_static;  // Static variables are stored in the bss section
     bool is_param;   // is a parameter of a function
     bool on_register;
