@@ -39,7 +39,6 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
     Node* arg;
     // Check function arguments
     for (arg = tree->firstChild->firstChild; arg; arg = arg->nextSibling, ++i) {
-
         if (i >= FunctionSymbolTable_get_param_count(calleefst)) {
             CodeError_print(
                 (CodeError){
@@ -49,11 +48,10 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
                 },
                 "too many arguments to function call '%s', expected %d",
                 tree->att.ident,
-                FunctionSymbolTable_get_param_count(calleefst)
-            );
+                FunctionSymbolTable_get_param_count(calleefst));
             break;
         }
-    
+
         ExprReturn ret = _Semantic_Expr(arg, caller, prog);
         // Get the i-th parameter of the function being called for type checking
         const Symbol* arg_sym = FunctionSymbolTable_get_param(calleefst, i);
@@ -80,8 +78,7 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
             "too few arguments to function call '%s', expected %d, have %d",
             tree->att.ident,
             FunctionSymbolTable_get_param_count(calleefst),
-            i
-        );
+            i);
     }
 
     return err;
@@ -91,13 +88,18 @@ static ExprReturn _Semantic_Expr(Tree tree,
                                  const FunctionSymbolTable* func,
                                  const ProgramSymbolTable* prog) {
     ExprReturn ret = {.err = ERR_NONE, .type = type_byte};
+    ExprReturn left, right;
     switch (tree->label) {
         case Addsub:
         case Divstar:;
-            ExprReturn left = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
-            ExprReturn right = _Semantic_Expr(SECONDCHILD(tree), func, prog);
-            ret.type = type_num; // Any operation between two numbers will result in a int
-            ret.err |= left.err | right.err;
+            left = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
+            ret.err |= left.err;
+            ret.type = type_num;       // Any operation between two numbers will result in a int
+            if (!SECONDCHILD(tree)) {  // Addsub unary
+                break;
+            }
+            right = _Semantic_Expr(SECONDCHILD(tree), func, prog);
+            ret.err |= right.err;
             break;
         case Ident:;
             const Symbol* sym = SymbolTable_resolve_from_node(prog, func, tree);
@@ -134,6 +136,18 @@ static ExprReturn _Semantic_Expr(Tree tree,
             break;
         case Character:
             ret.type = type_byte;
+            break;
+        case Eq:
+        case Or:
+        case And:
+        case Order:;
+            left = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
+            right = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
+            ret.type = type_num;
+            ret.err |= left.err | right.err;
+        case Not:
+            ret.err |= _Semantic_Expr(FIRSTCHILD(tree), func, prog).err;
+            ret.type = type_num;
             break;
         default:
             break;
@@ -244,6 +258,12 @@ static ErrorType _Semantic_SuiteInstr(Tree tree,
                 break;
             case Ident:
                 err |= _Semantic_FunctionCall(child, func, prog);
+                break;
+            case If:
+                err |= _Semantic_Expr(FIRSTCHILD(child), func, prog).err;
+                break;
+            case While:
+                err |= _Semantic_Expr(FIRSTCHILD(child), func, prog).err;
                 break;
             default:
                 break;
