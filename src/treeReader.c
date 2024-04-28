@@ -14,22 +14,24 @@
 #include <stdio.h>
 
 #include "codeWriter.h"
+#include "error.h"
 #include "symboltable.h"
 #include "tree.h"
-
-#include "error.h"
 
 // ! à retirer avant rendu debug parcours arbre laisser pour le moment
 // static const char* NODE_STRING[] = {
 //     FOREACH_NODE(GENERATE_STRING)};
 
-static ErrorType _Instr_Return(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func);
-static ErrorType _Instr_Assignation(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func);
-static ErrorType _TreeReader_DeclFoncts(const ProgramSymbolTable* table, Tree tree, FILE* nasm);
-static ErrorType TreeReader_SuiteInst(
-    const ProgramSymbolTable* table, Tree tree,
-    const FunctionSymbolTable* func, FILE* nasm
-);
+static ErrorType _Instr_Return(const ProgramSymbolTable* table,
+                               Tree tree, FILE* nasm,
+                               const FunctionSymbolTable* func);
+static ErrorType _Instr_Assignation(const ProgramSymbolTable* table,
+                                    Tree tree, FILE* nasm,
+                                    const FunctionSymbolTable* func);
+static ErrorType _TreeReader_DeclFoncts(const ProgramSymbolTable* table,
+                                        Tree tree, FILE* nasm);
+static ErrorType TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
+                                      const FunctionSymbolTable* func, FILE* nasm);
 
 ErrorType TreeReader_Prog(const ProgramSymbolTable* table, Tree tree, FILE* nasm) {
     // Si est pas dans le noeux c'est grave car la suite du parcours est foutu.
@@ -39,11 +41,9 @@ ErrorType TreeReader_Prog(const ProgramSymbolTable* table, Tree tree, FILE* nasm
     return _TreeReader_DeclFoncts(table, SECONDCHILD(tree), nasm);
 }
 
-static ErrorType _TreeReader_Corps(
-    const ProgramSymbolTable* prog,
-    const FunctionSymbolTable* func,
-    Tree tree, FILE* nasm
-) {
+static ErrorType _TreeReader_Corps(const ProgramSymbolTable* prog,
+                                   const FunctionSymbolTable* func,
+                                   Tree tree, FILE* nasm) {
     assert(tree->label == Corps);
     ErrorType err = ERR_NONE;
     // Implement stack frame
@@ -58,28 +58,25 @@ static ErrorType _TreeReader_Corps(
 /**
  * @brief Generate code for a function.
  * Writes function's label and its body (Corps).
- * 
+ *
  * @param prog
- * @param tree Tree DeclFonct node 
- * @param nasm 
- * @return int 
+ * @param tree Tree DeclFonct node
+ * @param nasm
+ * @return int
  */
-static ErrorType _TreeReader_DeclFonct(
-    const ProgramSymbolTable* prog,
-    Tree tree, FILE* nasm
-) {
+static ErrorType _TreeReader_DeclFonct(const ProgramSymbolTable* prog,
+                                       Tree tree, FILE* nasm) {
     assert(tree->label == DeclFonct);
     FunctionSymbolTable* func = FunctionSymbolTable_get_from_name(
         prog,
         // DeclFonct->EnTeteFonct->Ident
-        FIRSTCHILD(tree)->firstChild->nextSibling->att.ident
-    );
+        FIRSTCHILD(tree)->firstChild->nextSibling->att.ident);
     CodeWriter_FunctionLabel(nasm, func);
     return _TreeReader_Corps(prog, func, SECONDCHILD(tree), nasm);
 }
 
-
-static ErrorType _TreeReader_DeclFoncts(const ProgramSymbolTable* table, Tree tree, FILE* nasm) {
+static ErrorType _TreeReader_DeclFoncts(const ProgramSymbolTable* table,
+                                        Tree tree, FILE* nasm) {
     // Si est pas dans le noeux c'est grave car la suite du parcours est foutu.
     assert(tree->label == DeclFoncts);
     ErrorType err = ERR_NONE;
@@ -87,8 +84,7 @@ static ErrorType _TreeReader_DeclFoncts(const ProgramSymbolTable* table, Tree tr
     // On parcourt les noeux DeclFonct
     for (Node* child = tree->firstChild;
          child != NULL;
-         child = child->nextSibling
-    ) {
+         child = child->nextSibling) {
         err |= _TreeReader_DeclFonct(table, child, nasm);
     }
 
@@ -96,14 +92,14 @@ static ErrorType _TreeReader_DeclFoncts(const ProgramSymbolTable* table, Tree tr
 }
 
 static ErrorType TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
-                         const FunctionSymbolTable* func, FILE* nasm) {
+                                      const FunctionSymbolTable* func, FILE* nasm) {
     // printf("SuiteInst \t");
     // printf("func_name: %s\n", func_name);
     ErrorType err = ERR_NONE;
 
     for (Node* child = tree->firstChild; child != NULL; child = child->nextSibling) {
         switch (child->label) {
-            case Return: // TODO : Attentions aux returns surnuméraires !
+            case Return:  // TODO : Attentions aux returns surnuméraires !
                 err |= _Instr_Return(table, child, nasm, func);
                 break;
             case Addsub:
@@ -131,7 +127,9 @@ static ErrorType TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree
 /* Instr Unitaire */
 /******************/
 
-ErrorType TreeReader_Expr(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func) {
+ErrorType TreeReader_Expr(const ProgramSymbolTable* table,
+                          Tree tree, FILE* nasm,
+                          const FunctionSymbolTable* func) {
     // printf("TreeReader_Expr\n");
     ErrorType err = ERR_NONE;
     switch (tree->label) {
@@ -166,14 +164,16 @@ ErrorType TreeReader_Expr(const ProgramSymbolTable* table, Tree tree, FILE* nasm
  * @brief If the function is non-void (returns a value) move computed
  * expression to rax register (result of the expression).
  * If the function returns void, do nothing.
- * 
- * @param table 
- * @param tree 
- * @param nasm 
- * @param func 
- * @return int 
+ *
+ * @param table
+ * @param tree
+ * @param nasm
+ * @param func
+ * @return int
  */
-static ErrorType _Instr_Return(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func) {
+static ErrorType _Instr_Return(const ProgramSymbolTable* table,
+                               Tree tree, FILE* nasm,
+                               const FunctionSymbolTable* func) {
     // printf("Instr_Return\n");
     ErrorType err = ERR_NONE;
     const Symbol* sym = SymbolTable_get(&table->globals, func->identifier);
@@ -188,7 +188,9 @@ static ErrorType _Instr_Return(const ProgramSymbolTable* table, Tree tree, FILE*
     return err;
 }
 
-static ErrorType _Instr_Assignation(const ProgramSymbolTable* table, Tree tree, FILE* nasm, const FunctionSymbolTable* func) {
+static ErrorType _Instr_Assignation(const ProgramSymbolTable* table,
+                                    Tree tree, FILE* nasm,
+                                    const FunctionSymbolTable* func) {
     // TODO : Verif si la fonction marche
     // printf("Instr_Assignation\n");
     ErrorType err = ERR_NONE;

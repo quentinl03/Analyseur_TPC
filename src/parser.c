@@ -15,6 +15,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * @brief Print the help menu and exit the program.
+ *
+ * @param path path to the executable
+ * @param exitcode exit code
+ */
 static void print_help(char* path, int exitcode) {
     printf(
         "\nTPCC helper :\n\n"
@@ -33,6 +39,11 @@ static void print_help(char* path, int exitcode) {
     exit(exitcode);
 }
 
+/**
+ * @brief Initialize the option structure with default values.
+ *
+ * @return Option initialized.
+ */
 static Option init_option(void) {
     return (Option){
         .path = NULL,
@@ -63,7 +74,7 @@ static char* default_output_name(char* path) {
     if (extension) {
         // We replace the extension by ".asm"
         snprintf(result, PATH_MAX, "%.*s.asm", (int)(extension - last_slash), last_slash);
-    } else { // File have no extension
+    } else {  // File have no extension
         snprintf(result, PATH_MAX, "%s.asm", last_slash);
     }
 

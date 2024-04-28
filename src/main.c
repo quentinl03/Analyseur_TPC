@@ -11,11 +11,11 @@
 
 #include "codeWriter.h"
 #include "parser.h"
+#include "semantic.h"
 #include "symboltable.h"
 #include "tpc_bison.h"
 #include "tree.h"
 #include "treeReader.h"
-#include "semantic.h"
 
 int main(int argc, char* argv[]) {
     extern FILE* yyin;
@@ -36,7 +36,8 @@ int main(int argc, char* argv[]) {
     fclose(yyin);
 
     if (IS_PARSE_ERROR(err)) {
-        return EXIT_CODE(err);;
+        return EXIT_CODE(err);
+        ;
     }
 
     if (opt.flag_show_tree) {
