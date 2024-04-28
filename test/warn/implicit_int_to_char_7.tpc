@@ -1,0 +1,4 @@
+int main(void) {
+    putchar(32770);
+    return 0;
+}
