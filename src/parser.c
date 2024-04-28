@@ -34,7 +34,9 @@ static void print_help(char* path, int exitcode) {
         "-s / --symtabs :\n"
         "\t Prints symbol tables.\n\n"
         "-a / --only-tree :\n"
-        "\t Only generate the syntax tree, and stop the execution.\n\n",
+        "\t Only generate the syntax tree, and stop the execution.\n\n"
+        "-w / --only-semantic :\n"
+        "\t Only generate the semantics errors/warnings, and stop the execution.\n\n",
         path);
     exit(exitcode);
 }
