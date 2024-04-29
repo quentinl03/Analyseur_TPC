@@ -100,7 +100,8 @@ static ExprReturn _Semantic_ArrayLR(Tree tree,
     Symbol* sym = SymbolTable_resolve_from_node(prog, func, tree);
     if (sym->symbol_type == SYMBOL_ARRAY || sym->symbol_type == SYMBOL_POINTER_TO_ARRAY) {
         // We check if the indexing expression is valid
-        return (ExprReturn){_Semantic_Expr(FIRSTCHILD(tree), func, prog).err, sym->type};
+        ExprReturn ret = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
+        return ret;
     }
     else {
         CodeError_print(
@@ -132,6 +133,44 @@ static type_t _cast_types(type_t t1, type_t t2) {
     return type_num;
 }
 
+static ExprReturn _Semantic_IdentRValue(Tree tree,
+                                  const FunctionSymbolTable* func,
+                                  const ProgramSymbolTable* prog) {
+    assert(tree->label == Ident);
+
+    ErrorType error = ERR_NONE;
+    const Symbol* sym = SymbolTable_resolve_from_node(prog, func, tree);
+
+    if (IS_FUNCTION_CALL_NODE(tree) && sym->type != type_void) {              // true function call
+        if (sym->symbol_type == SYMBOL_FUNCTION) {  // verify if it's a function
+            return (ExprReturn){
+                .err = _Semantic_FunctionCall(tree, func, prog),
+                .type = sym->type};
+        }
+        CodeError_print(
+            (CodeError){
+                .err = (error |= ERR_SEM_IS_NOT_CALLABLE),
+                .line = tree->lineno,
+                .column = 0,
+            },
+            "called object '%s' is not a function",
+            sym->identifier);
+        return (ExprReturn){.err = error, .type = sym->type};
+    }
+    else if (sym->symbol_type == SYMBOL_VALUE) {
+        return (ExprReturn){.err = error, .type = sym->type};
+    }
+    CodeError_print(
+        (CodeError){
+            .err = (error |= ERR_NOT_AN_RVALUE),
+            .line = tree->lineno,
+            .column = 0,
+        },
+        "'%s' is not an rvalue",
+        sym->identifier);
+    return (ExprReturn){.err = error, .type = sym->type};
+}
+
 /**
  * @brief Calculate the type of an expression
  * Operations between a char and an int will result in an int type (implicit cast)
@@ -161,38 +200,9 @@ static ExprReturn _Semantic_Expr(Tree tree,
             right = _Semantic_Expr(SECONDCHILD(tree), func, prog);
             return (ExprReturn){.err = left.err | right.err, .type = _cast_types(left.type, right.type)};
         case Ident:;
-            const Symbol* sym = SymbolTable_resolve_from_node(prog, func, tree);
-            if (IS_FUNCTION_CALL_NODE(tree)) {              // true function call
-                if (sym->symbol_type == SYMBOL_FUNCTION) {  // verify if it's a function
-                    return (ExprReturn){
-                        .err = _Semantic_FunctionCall(tree, func, prog),
-                        .type = sym->type};
-                }
-                CodeError_print(
-                    (CodeError){
-                        .err = (error |= ERR_SEM_IS_NOT_CALLABLE),
-                        .line = tree->lineno,
-                        .column = 0,
-                    },
-                    "called object '%s' is not a function",
-                    sym->identifier);
-                return (ExprReturn){.err = error, .type = sym->type};
-            }
-            else if (sym->symbol_type == SYMBOL_VALUE) {
-                return (ExprReturn){.err = error, .type = sym->type};
-            }
-            else {
-                CodeError_print(
-                    (CodeError){
-                        .err = (error |= ERR_NOT_AN_RVALUE),
-                        .line = tree->lineno,
-                        .column = 0,
-                    },
-                    "'%s' is not an rvalue",
-                    sym->identifier);
-                return (ExprReturn){.err = error, .type = sym->type};
-            }
-            return (ExprReturn){.err = error, .type = sym->type};
+            return _Semantic_IdentRValue(tree, func, prog);
+        case EmptyArgs:
+            return (ExprReturn){.err = error, .type = type_void};
         case Num:
             return (ExprReturn){.err = error, .type = type_num};
         case Character:
