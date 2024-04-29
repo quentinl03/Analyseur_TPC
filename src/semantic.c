@@ -87,74 +87,64 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
 static ExprReturn _Semantic_Expr(Tree tree,
                                  const FunctionSymbolTable* func,
                                  const ProgramSymbolTable* prog) {
-    ExprReturn ret = {.err = ERR_NONE, .type = type_byte};
+    ErrorType error = ERR_NONE;
     ExprReturn left, right;
     switch (tree->label) {
         case AddsubU:
             left = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
-            ret.err |= left.err;
-            ret.type = type_num;
-            break;
+            return (ExprReturn){.err = left.err, .type = type_num};
         case Addsub:
         case Divstar:;
             left = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
             right = _Semantic_Expr(SECONDCHILD(tree), func, prog);
-            ret.err |= left.err | right.err;
-            ret.type = type_num;
-            break;
+            return (ExprReturn){.err = left.err | right.err, .type = type_num};
         case Ident:;
             const Symbol* sym = SymbolTable_resolve_from_node(prog, func, tree);
             if (IS_FUNCTION_CALL_NODE(tree)) {              // true function call
                 if (sym->symbol_type == SYMBOL_FUNCTION) {  // verify if it's a function
-                    ret.err |= _Semantic_FunctionCall(tree, func, prog);
-                    ret.type = sym->type;
-                } else {
-                    CodeError_print(
-                        (CodeError){
-                            .err = (ret.err |= ERR_SEM_IS_NOT_CALLABLE),
-                            .line = tree->lineno,
-                            .column = 0,
-                        },
-                        "called object '%s' is not a function",
-                        sym->identifier);
+                    return (ExprReturn){
+                        .err = _Semantic_FunctionCall(tree, func, prog),
+                        .type = sym->type};
                 }
-                return ret;
+                CodeError_print(
+                    (CodeError){
+                        .err = (error |= ERR_SEM_IS_NOT_CALLABLE),
+                        .line = tree->lineno,
+                        .column = 0,
+                    },
+                    "called object '%s' is not a function",
+                    sym->identifier);
+                return (ExprReturn){.err = error, .type = sym->type};
             }
             // Use of function identifier without calling it is not allowed
             if (!IS_FUNCTION_CALL_NODE(tree) && sym->symbol_type == SYMBOL_FUNCTION) {
                 CodeError_print(
                     (CodeError){
-                        .err = (ret.err |= ERR_FUNCTION_AS_RVALUE),
+                        .err = (error |= ERR_FUNCTION_AS_RVALUE),
                         .line = tree->lineno,
                         .column = 0},
                     "Pointer to function '%s' used as rvalue (not allowed)",
                     sym->identifier);
-                return ret;
+                return (ExprReturn){.err = error, .type = sym->type};
             }
-            break;
+            return (ExprReturn){.err = error, .type = sym->type};
         case Num:
-            ret.type = type_num;
-            break;
+            return (ExprReturn){.err = error, .type = type_num};
         case Character:
-            ret.type = type_byte;
-            break;
+            return (ExprReturn){.err = error, .type = type_byte};
         case Eq:
         case Or:
         case And:
         case Order:;
             left = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
             right = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
-            ret.type = type_num;
-            ret.err |= left.err | right.err;
+            return (ExprReturn){.err = left.err | right.err, .type = type_num};
         case Not:
-            ret.err |= _Semantic_Expr(FIRSTCHILD(tree), func, prog).err;
-            ret.type = type_num;
-            break;
+            left = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
+            return (ExprReturn){.err = left.err, .type = type_num};
         default:
-            break;
+            assert(0 && "We shouldn't be there (_Sematinic_Expr)");
     }
-
-    return ret;
 }
 
 /**
