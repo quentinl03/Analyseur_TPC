@@ -33,6 +33,14 @@ void CodeWriter_Init_File(FILE* nasm, const SymbolTable* globals);
 void CodeWriter_Ope(FILE* nasm, const Node* node);
 
 /**
+ * @brief Write a unary operation to the nasm file.
+ *
+ * @param nasm File to write into
+ * @param node Node to write
+ */
+void CodeWriter_Ope_Unaire(FILE* nasm, const Node* node);
+
+/**
  * @brief Write a constant number to the nasm file.
  * Push the constant value to the stack.
  *

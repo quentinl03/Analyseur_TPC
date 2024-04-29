@@ -28,6 +28,7 @@
     NODE(F)                \
     NODE(ListExp)          \
     NODE(Addsub)           \
+    NODE(AddsubU)          \
     NODE(Divstar)          \
     NODE(Character)        \
     NODE(Num)              \

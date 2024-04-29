@@ -102,6 +102,7 @@ static ErrorType TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree
             case Return:  // TODO : Attentions aux returns surnuméraires !
                 err |= _Instr_Return(table, child, nasm, func);
                 break;
+            case AddsubU:
             case Addsub:
             case Divstar:
             case Character:
@@ -133,23 +134,23 @@ ErrorType TreeReader_Expr(const ProgramSymbolTable* table,
     // printf("TreeReader_Expr\n");
     ErrorType err = ERR_NONE;
     switch (tree->label) {
+        case AddsubU:
+            TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);
+            CodeWriter_Ope_Unaire(nasm, tree);
+            break;
         case Addsub:
         case Divstar:
-            // printf("Addsub or divstar\n");
             TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);
             TreeReader_Expr(table, SECONDCHILD(tree), nasm, func);
             CodeWriter_Ope(nasm, tree);
             break;
         case Ident:
-            // printf("Ident\n");
             CodeWriter_LoadVar(nasm, tree, table, func);
             break;
         case Num:
-            // printf("Num\n");
             CodeWriter_ConstantNumber(nasm, tree);
             break;
         case Character:
-            // printf("Char\n");
             CodeWriter_ConstantCharacter(nasm, tree);
             break;
         default:

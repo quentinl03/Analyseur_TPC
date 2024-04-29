@@ -94,8 +94,17 @@ putint:
     push rbp
     mov rbp, rsp
     
+
     mov r12, 20  ; i
     mov r13, rdi ; number
+
+    cmp r13, 0
+    jge my_putint_not_get
+        mov rdi , '-'
+        call putchar
+        neg r13
+
+    my_putint_not_get: 
 
     ; on met chaque digit sur la pile pour les print apres
     my_putint_loop:

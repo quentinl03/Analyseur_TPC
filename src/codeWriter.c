@@ -73,8 +73,9 @@ void CodeWriter_Ope(FILE* nasm, const Node* node) {
             "mov rdx, 0\n"
             "pop rcx\n"
             "pop rax\n"
-            "idiv rcx\n");
-        fprintf(nasm, "push %s\n\n", (node->att.byte == '%') ? "rdx" : "rax");
+            "idiv rcx\n"
+            "push %s\n\n",
+            (node->att.byte == '%') ? "rdx" : "rax");
         return;
     }
     const char* ope = _CodeWriter_Node_To_Ope(node);
@@ -86,6 +87,17 @@ void CodeWriter_Ope(FILE* nasm, const Node* node) {
         "%s rax, rcx\n"
         "push rax\n\n",
         ope);
+}
+
+void CodeWriter_Ope_Unaire(FILE* nasm, const Node* node) {
+    if (node->att.byte == '-') {
+        fprintf(
+            nasm,
+            "; Operation oposé la derniere valeur de la pile\n"
+            "pop rax\n"
+            "neg rax\n"
+            "push rax\n\n");
+    }
 }
 
 void CodeWriter_ConstantNumber(FILE* nasm, const Node* node) {

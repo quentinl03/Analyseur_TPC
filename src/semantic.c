@@ -90,16 +90,17 @@ static ExprReturn _Semantic_Expr(Tree tree,
     ExprReturn ret = {.err = ERR_NONE, .type = type_byte};
     ExprReturn left, right;
     switch (tree->label) {
+        case AddsubU:
+            left = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
+            ret.err |= left.err;
+            ret.type = type_num;
+            break;
         case Addsub:
         case Divstar:;
             left = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
-            ret.err |= left.err;
-            ret.type = type_num;       // Any operation between two numbers will result in a int
-            if (!SECONDCHILD(tree)) {  // Addsub unary
-                break;
-            }
             right = _Semantic_Expr(SECONDCHILD(tree), func, prog);
-            ret.err |= right.err;
+            ret.err |= left.err | right.err;
+            ret.type = type_num;
             break;
         case Ident:;
             const Symbol* sym = SymbolTable_resolve_from_node(prog, func, tree);

@@ -188,7 +188,7 @@ T   :  T DIVSTAR F                      {$$ = makeNode(Divstar);
                                         addChild($$, $3);};
     |  F                                {$$ = $1;};
     ;
-F   :  ADDSUB F                         {$$ = makeNode(Addsub);
+F   :  ADDSUB F                         {$$ = makeNode(AddsubU);
                                         addAttributByte($$, $1);
                                         addChild($$,$2);};
     |  '!' F                            {$$ = makeNode(Not);
