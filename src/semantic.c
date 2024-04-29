@@ -84,20 +84,82 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
     return err;
 }
 
+/**
+ * @brief Check if the array is a valid RValue (array or pointer to array,
+ * and the indexing expression is valid)
+ * 
+ * @param tree ArrayLR node
+ * @param func 
+ * @param prog 
+ * @return ExprReturn 
+ */
+static ExprReturn _Semantic_ArrayLR(Tree tree,
+                                     const FunctionSymbolTable* func,
+                                     const ProgramSymbolTable* prog) {
+    assert(tree->label == ArrayLR);
+    Symbol* sym = SymbolTable_resolve_from_node(prog, func, tree);
+    if (sym->symbol_type == SYMBOL_ARRAY || sym->symbol_type == SYMBOL_POINTER_TO_ARRAY) {
+        // We check if the indexing expression is valid
+        return (ExprReturn){_Semantic_Expr(FIRSTCHILD(tree), func, prog).err, sym->type};
+    }
+    else {
+        CodeError_print(
+            (CodeError){
+                .err = ERR_SUBSCRIPT_NOT_ARRAY,
+                .line = tree->lineno,
+                .column = 0,
+            },
+            "subscripted value '%s' is not an array or pointer to array",
+            sym->identifier
+        );
+        return (ExprReturn){ERR_SUBSCRIPT_NOT_ARRAY, sym->type};
+    }
+}
+
+/**
+ * @brief Cast types to a common type
+ * Any operation between a void and another type will result in a void type
+ * Any operation between a char or int will result in an int type
+ * 
+ * @param t1 
+ * @param t2 
+ * @return type_t 
+ */
+static type_t _cast_types(type_t t1, type_t t2) {
+    if (t1 == type_void || t2 == type_void) {
+        return type_void;
+    }
+    return type_num;
+}
+
+/**
+ * @brief Calculate the type of an expression
+ * Operations between a char and an int will result in an int type (implicit cast)
+ * If any of the operands is a void, the result will be a void type. We avoid
+ * edges cases where the void type is used in an operation like :
+ * void f(void) {return;}
+ * int main(void) {int a; a = 2 + f();}
+ * 
+ * @param tree 
+ * @param func 
+ * @param prog 
+ * @return ExprReturn 
+ */
 static ExprReturn _Semantic_Expr(Tree tree,
                                  const FunctionSymbolTable* func,
                                  const ProgramSymbolTable* prog) {
     ErrorType error = ERR_NONE;
     ExprReturn left, right;
+
     switch (tree->label) {
         case AddsubU:
             left = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
-            return (ExprReturn){.err = left.err, .type = type_num};
+            return (ExprReturn){.err = left.err, .type = _cast_types(left.type, type_num)};
         case Addsub:
         case Divstar:;
             left = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
             right = _Semantic_Expr(SECONDCHILD(tree), func, prog);
-            return (ExprReturn){.err = left.err | right.err, .type = type_num};
+            return (ExprReturn){.err = left.err | right.err, .type = _cast_types(left.type, right.type)};
         case Ident:;
             const Symbol* sym = SymbolTable_resolve_from_node(prog, func, tree);
             if (IS_FUNCTION_CALL_NODE(tree)) {              // true function call
@@ -116,14 +178,17 @@ static ExprReturn _Semantic_Expr(Tree tree,
                     sym->identifier);
                 return (ExprReturn){.err = error, .type = sym->type};
             }
-            // Use of function identifier without calling it is not allowed
-            if (!IS_FUNCTION_CALL_NODE(tree) && sym->symbol_type == SYMBOL_FUNCTION) {
+            else if (sym->symbol_type == SYMBOL_VALUE) {
+                return (ExprReturn){.err = error, .type = sym->type};
+            }
+            else {
                 CodeError_print(
                     (CodeError){
-                        .err = (error |= ERR_FUNCTION_AS_RVALUE),
+                        .err = (error |= ERR_NOT_AN_RVALUE),
                         .line = tree->lineno,
-                        .column = 0},
-                    "Pointer to function '%s' used as rvalue (not allowed)",
+                        .column = 0,
+                    },
+                    "'%s' is not an rvalue",
                     sym->identifier);
                 return (ExprReturn){.err = error, .type = sym->type};
             }
@@ -135,13 +200,15 @@ static ExprReturn _Semantic_Expr(Tree tree,
         case Eq:
         case Or:
         case And:
-        case Order:;
+        case Order:
             left = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
-            right = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
-            return (ExprReturn){.err = left.err | right.err, .type = type_num};
+            right = _Semantic_Expr(SECONDCHILD(tree), func, prog);
+            return (ExprReturn){.err = left.err | right.err, .type = _cast_types(left.type, right.type)};
         case Not:
             left = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
-            return (ExprReturn){.err = left.err, .type = type_num};
+            return (ExprReturn){.err = left.err, .type = _cast_types(left.type, type_num)};
+        case ArrayLR:
+            return _Semantic_ArrayLR(tree, func, prog);
         default:
             assert(0 && "We shouldn't be there (_Sematinic_Expr)");
     }
@@ -164,9 +231,44 @@ static ErrorType _Semantic_Return(Tree tree,
     const Symbol* fsym = SymbolTable_get(&prog->globals, func->identifier);
     ErrorType err = ERR_NONE;
 
-    // The function returns void, but there is a return value
-    if (fsym->type == type_void) {
-        if (FIRSTCHILD(tree) != NULL) {
+    // The function returns non-void, but threre is no return value
+    if (FIRSTCHILD(tree) == NULL && fsym->type != type_void) {
+        CodeError_print(
+            (CodeError){
+                .err = (err |= ERR_RETURN_TYPE_VOID),
+                .line = tree->lineno,
+                .column = 0,
+            },
+            "non-void function '%s' should return a value",
+            func->identifier);
+    }
+    if (FIRSTCHILD(tree)) {
+        ExprReturn ret = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
+        err |= ret.err;
+        if (fsym->type == type_byte && ret.type == type_num) {
+            CodeError_print(
+                (CodeError){
+                    .err = (err |= WARN_IMPLICIT_INT_TO_CHAR),
+                    .line = tree->lineno,
+                    .column = 0,
+                },
+                "return type mismatch in function '%s' (cast from 'int' to 'char')",
+                func->identifier
+            );
+        }
+        else if (fsym->type == type_void && ret.type == type_void) {
+            CodeError_print(
+                (CodeError){
+                    .err = (err |= ERR_RETURN_TYPE_VOID),
+                    .line = tree->lineno,
+                    .column = 0,
+                },
+                "In function '%s', ISO C forbids 'return' with expression, "
+                "even if the expression evaluates to void",
+                func->identifier
+            );
+        }
+        else if (fsym->type == type_void) {
             CodeError_print(
                 (CodeError){
                     .err = (err |= ERR_RETURN_TYPE_NON_VOID),
@@ -174,34 +276,8 @@ static ErrorType _Semantic_Return(Tree tree,
                     .column = 0,
                 },
                 "void function '%s' should not return a value",
-                func->identifier);
-        }
-    }
-
-    else {
-        // The function returns non-void, but threre is no return value
-        if (FIRSTCHILD(tree) == NULL) {
-            CodeError_print(
-                (CodeError){
-                    .err = (err |= ERR_RETURN_TYPE_VOID),
-                    .line = tree->lineno,
-                    .column = 0,
-                },
-                "non-void function '%s' should return a value",
-                func->identifier);
-        } else {
-            ExprReturn ret = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
-            err |= ret.err;
-            if (ret.type == type_num && fsym->type == type_byte) {
-                CodeError_print(
-                    (CodeError){
-                        .err = (err |= WARN_IMPLICIT_INT_TO_CHAR),
-                        .line = tree->lineno,
-                        .column = 0,
-                    },
-                    "return type mismatch in function '%s' (cast from 'int' to 'char')",
-                    func->identifier);
-            }
+                func->identifier
+            );
         }
     }
 
@@ -213,21 +289,52 @@ static ErrorType _Semantic_Assignation(Tree tree,
                                        const ProgramSymbolTable* prog) {
     assert(tree->label == Assignation);
     ErrorType err = ERR_NONE;
-    const Symbol* sym = SymbolTable_resolve_from_node(prog, func, FIRSTCHILD(tree));
+    const Symbol* lvalue = SymbolTable_resolve_from_node(prog, func, FIRSTCHILD(tree));
 
-    // TODO : Check if left side is a lvalue (function, tab without index)
+    if (FIRSTCHILD(tree)->label == ArrayLR) {
+        err |= _Semantic_ArrayLR(FIRSTCHILD(tree), func, prog).err;
+    }
+    else if (lvalue->symbol_type != SYMBOL_VALUE) {
+        CodeError_print(
+            (CodeError){
+                .err = (err |= ERR_NOT_AN_LVALUE),
+                .line = tree->lineno,
+                .column = 0,
+            },
+            "'%s' is not an lvalue",
+            lvalue->identifier
+        );
+        return err;
+    }
+
     ExprReturn ret = _Semantic_Expr(SECONDCHILD(tree), func, prog);
     err |= ret.err;
-    if (ret.type == type_num && sym->type == type_byte) {
+
+    if (lvalue->type == type_byte && ret.type == type_num) {
         CodeError_print(
             (CodeError){
                 .err = (err |= WARN_IMPLICIT_INT_TO_CHAR),
                 .line = tree->lineno,
                 .column = 0,
             },
-            "assignation type mismatch in function '%s' (cast from 'int' to 'char')",
-            func->identifier);
+            "assignation type mismatch in function '%s' to variable '%s' (cast from 'int' to 'char')",
+            func->identifier,
+            lvalue->identifier
+        );
     }
+    else if (ret.type == type_void) {
+        CodeError_print(
+            (CodeError){
+                .err = (err |= ERR_NO_VOID_EXPRESSION),
+                .line = tree->lineno,
+                .column = 0,
+            },
+            "assigning to variable '%s' from incompatible type 'void' in function '%s'",
+            lvalue->identifier,
+            func->identifier
+        );
+    }
+
     return err;
 }
 
@@ -251,8 +358,6 @@ static ErrorType _Semantic_SuiteInstr(Tree tree,
                 err |= _Semantic_FunctionCall(child, func, prog);
                 break;
             case If:
-                err |= _Semantic_Expr(FIRSTCHILD(child), func, prog).err;
-                break;
             case While:
                 err |= _Semantic_Expr(FIRSTCHILD(child), func, prog).err;
                 break;
