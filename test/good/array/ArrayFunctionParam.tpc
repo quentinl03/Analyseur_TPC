@@ -1,0 +1,10 @@
+int f(int tab[], char tab2[]) {
+    return tab[0] + tab2[0];
+}
+
+int main(void) {
+    int tab[10];
+    char tab2[10];
+    f(tab, tab2);
+    return 0;
+}

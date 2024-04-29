@@ -1,6 +1,7 @@
 obj/
 bin/
 tmp/
+tmp_*/
 
 __pycache__/
 .vscode/

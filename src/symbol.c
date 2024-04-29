@@ -66,7 +66,7 @@ static void _Symbol_print_Array(const Symbol* self) {
 
 static void _Symbol_print_Value(const Symbol* self) {
     printf(
-        "%-15s : symbol_type=%-16s type=%-5s total_size=%d index=%-2d\n",
+        "%-15s : symbol_type=%-16s type=%-5s total_size=%d index=%-2d",
         self->identifier,
         SymbolType_to_str(self->symbol_type),
         Symbol_get_type_str(self->type),
@@ -81,7 +81,7 @@ static void _Symbol_print_Value(const Symbol* self) {
 
 static void _Symbol_print_Pointer(const Symbol* self) {
     printf(
-        "%-15s : symbol_type=%-16s type=%-5s total_size=%d addr=%s\n index=%-2d\n",
+        "%-15s : symbol_type=%-16s type=%-5s total_size=%d addr=%s index=%-2d\n",
         self->identifier,
         SymbolType_to_str(self->symbol_type),
         Symbol_get_type_str(self->type),

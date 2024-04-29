@@ -51,19 +51,54 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
                 FunctionSymbolTable_get_param_count(calleefst));
             break;
         }
-
-        ExprReturn ret = _Semantic_Expr(arg, caller, prog);
         // Get the i-th parameter of the function being called for type checking
-        const Symbol* arg_sym = FunctionSymbolTable_get_param(calleefst, i);
+        const Symbol* param_sym = FunctionSymbolTable_get_param(calleefst, i);
+        const Symbol* array_arg;
+        ExprReturn ret;
 
-        if (ret.type == type_num && arg_sym->type == type_byte) {
+        if (param_sym->symbol_type == SYMBOL_POINTER_TO_ARRAY) {
+            // Check if the node can be an array identifier,
+            // and if it is, resolve it to check if it exists
+            if (!(arg->label == Ident && FIRSTCHILD(arg) == NULL) ||
+                !(array_arg = SymbolTable_resolve_from_node(prog, caller, arg))
+            ) {
+                CodeError_print(
+                    (CodeError){
+                        .err = (err |= ERR_MUST_BE_ARRAY),
+                        .line = arg->lineno,
+                        .column = 0,
+                    },
+                    "expected array identifier not an expression"
+                );
+                continue;
+            }
+            ret = (ExprReturn){.err = ERR_NONE, .type = param_sym->type};
+        }
+        else {
+            ret = _Semantic_Expr(arg, caller, prog);
+        }
+
+        if (param_sym->symbol_type == SYMBOL_VALUE && ret.type == type_num && param_sym->type == type_byte) {
             CodeError_print(
                 (CodeError){
                     .err = (err |= WARN_IMPLICIT_INT_TO_CHAR),
                     .line = arg->lineno,
                     .column = 0,
                 },
-                "passing 'int' to parameter of type 'char'");
+                "'int' to parameter of type 'char'"
+            );
+        }
+        else if (param_sym->symbol_type == SYMBOL_POINTER_TO_ARRAY && (array_arg->type != param_sym->type)) {
+            CodeError_print(
+                (CodeError){
+                    .err = (err |= ERR_INVALID_ARRAY_TYPE),
+                    .line = arg->lineno,
+                    .column = 0,
+                },
+                "expected array of type '%s', got '%s'",
+                Symbol_get_type_str(param_sym->type),
+                Symbol_get_type_str(array_arg->type)
+            );
         }
         err |= ret.err;
     }
@@ -78,7 +113,8 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
             "too few arguments to function call '%s', expected %d, have %d",
             tree->att.ident,
             FunctionSymbolTable_get_param_count(calleefst),
-            i);
+            i
+        );
     }
 
     return err;
@@ -141,7 +177,7 @@ static ExprReturn _Semantic_IdentRValue(Tree tree,
     ErrorType error = ERR_NONE;
     const Symbol* sym = SymbolTable_resolve_from_node(prog, func, tree);
 
-    if (IS_FUNCTION_CALL_NODE(tree) && sym->type != type_void) {              // true function call
+    if (IS_FUNCTION_CALL_NODE(tree) && sym->type != type_void) { // true function call
         if (sym->symbol_type == SYMBOL_FUNCTION) {  // verify if it's a function
             return (ExprReturn){
                 .err = _Semantic_FunctionCall(tree, func, prog),
@@ -245,11 +281,11 @@ static ErrorType _Semantic_Return(Tree tree,
     if (FIRSTCHILD(tree) == NULL && fsym->type != type_void) {
         CodeError_print(
             (CodeError){
-                .err = (err |= ERR_RETURN_TYPE_VOID),
+                .err = (err |= ERR_MUST_RETURN_VALUE),
                 .line = tree->lineno,
                 .column = 0,
             },
-            "non-void function '%s' should return a value",
+            "non-void function '%s' must return a value",
             func->identifier);
     }
     if (FIRSTCHILD(tree)) {
@@ -269,7 +305,7 @@ static ErrorType _Semantic_Return(Tree tree,
         else if (fsym->type == type_void && ret.type == type_void) {
             CodeError_print(
                 (CodeError){
-                    .err = (err |= ERR_RETURN_TYPE_VOID),
+                    .err = (err |= WARN_RETURN_TYPE_VOID),
                     .line = tree->lineno,
                     .column = 0,
                 },
@@ -381,13 +417,13 @@ static ErrorType _Semantic_SuiteInstr(Tree tree,
     if (!has_return) {
         CodeError_print(
             (CodeError){
-                .err = ERR_RETURN_TYPE_VOID,
+                .err = WARN_RETURN_TYPE_VOID,
                 .line = tree->lineno,
                 .column = 0,
             },
             "missing return statement in function '%s' returning non-void",
             func->identifier);
-        err |= ERR_RETURN_TYPE_VOID;
+        err |= WARN_RETURN_TYPE_VOID;
     }
 
     return err;
