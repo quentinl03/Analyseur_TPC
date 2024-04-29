@@ -1,4 +1,4 @@
-// nb_errors=1
+// nb_errors=2
 // nb_warnings=0
 
 void f(void) {

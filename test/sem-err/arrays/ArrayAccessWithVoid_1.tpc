@@ -1,4 +1,4 @@
-// nb_errors=2
+// nb_errors=1
 // nb_warnings=0
 
 void f(void) {
@@ -6,8 +6,7 @@ void f(void) {
 }
 
 int main(void) {
-    int res;
-    res = 5 < f();
+    int tab[5];
 
-    return res;
+    return tab[f()];
 }

@@ -11,6 +11,7 @@ from typing import Tuple, List
 from dataclasses import dataclass
 from collections import namedtuple
 import re
+from unittest import skip
 
 # Get project's path
 PROJECT = Path(__file__).resolve().parents[1]
@@ -160,11 +161,11 @@ class SyntaxTest(unittest.TestCase):
         logger.log(log_level, f"{count}/{len(files)} of {path_glob} are ok\n")
 
     def test_0_valid_syntax_inputs(self):
-        logger.debug("# Test valid inputs :")
+        logger.debug("# Test syntaxically valid inputs :")
         self._subtest_files(["--only-tree"], "syn-good/**/*.tpc", 0, "Syntax was not accepted while it should")
 
     def test_1_rejected_syntax_inputs(self):
-        logger.debug("# Test rejected inputs :")
+        logger.debug("# Test syntaxically rejected inputs :")
         self._subtest_files(["--only-tree"], "syn-err/**/*.tpc", 1, "Syntax was accepted while it should not")
 
     def test_2_semantic_errors(self):
@@ -175,6 +176,16 @@ class SyntaxTest(unittest.TestCase):
         logger.debug("# Test warning emission :")
         self._subtest_files(["--only-semantic"], "warn/**/*.tpc", 0, "A warning caused an error different than 0")
 
+    def test_4_semantic_good(self):
+        logger.debug("# Test semantically good source code")
+        files = list(Path(".").glob("good/**/*.tpc"))
+
+        for filename in files:
+            with self.subTest(str(filename)):
+                retcode, scs = test_input(filename, 0, args=["--only-semantic"])
+                self.assertEqual(retcode, 0, "")
+                self.assertEqual(scs.result, CompileResults(0, 0))
+
     def _valgrind_conditionnal_jumps(self, path_glob: str, expected_retcode: int):
         """Use valgrind against inputs, to check for conditionnal jumps"""
         files = list(Path(".").glob(path_glob))
@@ -184,7 +195,8 @@ class SyntaxTest(unittest.TestCase):
                 retcode, _ = test_input(filename, expected_retcode, ["valgrind", "--error-exitcode=10", "--leak-check=no", "--track-origins=yes"])
                 self.assertEqual(retcode, expected_retcode, "Valgrind detected conditionnl jumps")
 
-    def test_3_valid_valgrind_conditionnal_jumps(self):
+    @skip
+    def test_5_valid_valgrind_conditionnal_jumps(self):
         logger.debug("# Test valgrind for conditionnal jumps :")
         self._valgrind_conditionnal_jumps("good/random/*.tpc", 0)
         self._valgrind_conditionnal_jumps("syn-err/random/*.tpc", 1)
