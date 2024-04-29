@@ -71,8 +71,8 @@ void CodeWriter_Ope(FILE* nasm, const Node* node) {
             nasm,
             "; Operation basique sur les 2 dernieres valeurs de la pile\n"
             "mov rdx, 0\n"
-            "pop rax\n"
             "pop rcx\n"
+            "pop rax\n"
             "idiv rcx\n");
         fprintf(nasm, "push %s\n\n", (node->att.byte == '%') ? "rdx" : "rax");
         return;
