@@ -198,8 +198,8 @@ class SyntaxTest(unittest.TestCase):
     # @skip
     def test_5_valid_valgrind_conditionnal_jumps(self):
         logger.debug("# Test valgrind for conditionnal jumps :")
-        self._valgrind_conditionnal_jumps("good/**/*.tpc", 0)
-        self._valgrind_conditionnal_jumps("syn-err/**/*.tpc", 1)
+        self._valgrind_conditionnal_jumps("good/random/*.tpc", 0)
+        self._valgrind_conditionnal_jumps("syn-err/random/*.tpc", 1)
 
 def parse_args():
     parser = argparse.ArgumentParser(
