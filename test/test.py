@@ -192,7 +192,7 @@ class SyntaxTest(unittest.TestCase):
 
         for filename in files:
             with self.subTest(str(filename)):
-                retcode, _ = test_input(filename, expected_retcode, ["valgrind", "--error-exitcode=10", "--leak-check=no", "--track-origins=yes"])
+                retcode, _ = test_input(filename, expected_retcode, ["valgrind", "--error-exitcode=10", "--leak-check=no", "--track-origins=yes"], args=["--only-semantic"])
                 self.assertEqual(retcode, expected_retcode, "Valgrind detected conditionnl jumps")
 
     # @skip
