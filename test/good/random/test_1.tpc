@@ -1,15 +1,17 @@
-int f(int a) {
+int f(int a, int tab[]) {
     char c;
     return a;
 }
 
 int g(int a, char b) {
+    int tab[15];
     return a + b;
 }
 
 int h(void) {
     int res;
-    res = f(10) + '2';
+    int tab[20];
+    res = f(10, tab) + '2';
     return res - 2 * 8 * 'a';
 }
 

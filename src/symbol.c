@@ -19,10 +19,9 @@ const char* Symbol_get_type_str(type_t type) {
 
 const char* SymbolType_to_str(SymbolType type) {
     static const char* types[] = {
-        [SYMBOL_VALUE] = "VALUE",
-        [SYMBOL_ARRAY] = "ARRAY",
-        [SYMBOL_POINTER_TO_ARRAY] = "POINTER_TO_ARRAY",
-        [SYMBOL_FUNCTION] = "FUNCTION",
+        [SYMBOL_VALUE] = "value",
+        [SYMBOL_ARRAY] = "array",
+        [SYMBOL_FUNCTION] = "function",
     };
 
     return types[type];
@@ -50,17 +49,21 @@ static void _Symbol_print_Function(const Symbol* self) {
 
 static void _Symbol_print_Array(const Symbol* self) {
     printf(
-        "%-15s : symbol_type=%-16s type=%-5s length=%d total_size=%d index=%-2d\n",
+        "%-15s : symbol_type=%-16s type=%-5s length=%d total_size=%d index=%-2d have_length=%s",
         self->identifier,
         SymbolType_to_str(self->symbol_type),
         Symbol_get_type_str(self->type),
         self->array.length,
         self->total_size,
-        self->index
+        self->index,
+        self->array.have_length ? "true" : "false"
     );
     printf(
-        "addr=%s",
+        " addr=%s",
         _Symbol_get_location_str(self));
+    if (self->array.have_length) {
+        printf(" length=%d", self->array.length);
+    }
     putchar('\n');
 }
 
@@ -95,7 +98,6 @@ void Symbol_print(const Symbol* self) {
     const void (*printers[])(const Symbol*) = {
         [SYMBOL_VALUE] = _Symbol_print_Value,
         [SYMBOL_ARRAY] = _Symbol_print_Array,
-        [SYMBOL_POINTER_TO_ARRAY] = _Symbol_print_Pointer,
         [SYMBOL_FUNCTION] = _Symbol_print_Function,
     };
 

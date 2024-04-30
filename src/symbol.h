@@ -10,7 +10,6 @@
 typedef enum SymbolType {
     SYMBOL_VALUE,
     SYMBOL_ARRAY,
-    SYMBOL_POINTER_TO_ARRAY,
     SYMBOL_FUNCTION
 } SymbolType;
 
@@ -24,6 +23,7 @@ typedef struct Symbol {
 
     SymbolType symbol_type;
     struct {
+        bool have_length;
         int length;
     } array;
 

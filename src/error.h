@@ -27,7 +27,7 @@ typedef enum ErrorType {
     ERR_NOT_AN_RVALUE           = ERR_SEMANTIC_FLAG | 1ULL << 28,
     ERR_NOT_AN_LVALUE           = ERR_SEMANTIC_FLAG | 1ULL << 29,
     ERR_MUST_RETURN_VALUE       = ERR_SEMANTIC_FLAG | 1ULL << 30,
-    ERR_MUST_BE_ARRAY           = ERR_SEMANTIC_FLAG | 1ULL << 31,
+    ERR_MISMATCH_ARRAY_TYPE    = ERR_SEMANTIC_FLAG | 1ULL << 31,
     ERR_INVALID_ARRAY_TYPE      = ERR_SEMANTIC_FLAG | 1ULL << 32,
 
     // 15 bits err critical (37 à 48)

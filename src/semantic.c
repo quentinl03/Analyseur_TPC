@@ -13,15 +13,32 @@ static ExprReturn _Semantic_Expr(Tree tree,
     (node)->firstChild != NULL &&     \
     ((node)->firstChild->label == EmptyArgs || (node)->firstChild->label == ListExp))
 
+#define IS_ONLY_IDENTIFIER(node) ( \
+    (node)->label == Ident &&       \
+    (node)->firstChild == NULL)
+
 static ErrorType _Semantic_FunctionCall(Tree tree,
                                         const FunctionSymbolTable* caller,
                                         const ProgramSymbolTable* prog) {
     assert(tree->label == Ident);
     assert(IS_FUNCTION_CALL_NODE(tree));
 
-    const FunctionSymbolTable* calleefst = FunctionSymbolTable_get_from_name(prog, tree->att.ident);
     ErrorType err = ERR_NONE;
 
+    const Symbol* sym = SymbolTable_resolve_from_node(prog, caller, tree);
+    if (sym->symbol_type != SYMBOL_FUNCTION) {
+        CodeError_print(
+            (CodeError){
+                .err = (err |= ERR_SEM_IS_NOT_CALLABLE),
+                .line = tree->lineno,
+                .column = 0,
+            },
+            "called object '%s' is not a function",
+            sym->identifier);
+        return err;
+    }
+
+    const FunctionSymbolTable* calleefst = FunctionSymbolTable_get_from_name(prog, tree->att.ident);
     if (!FunctionSymbolTable_is_defined_before_use(caller, calleefst)) {
         CodeError_print(
             (CodeError){
@@ -40,6 +57,7 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
     // Check function arguments
     for (arg = tree->firstChild->firstChild; arg; arg = arg->nextSibling, ++i) {
         if (i >= FunctionSymbolTable_get_param_count(calleefst)) {
+            // Check if we have more arguments than expected
             CodeError_print(
                 (CodeError){
                     .err = (err |= ERR_INVALID_PARAM_COUNT),
@@ -53,31 +71,46 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
         }
         // Get the i-th parameter of the function being called for type checking
         const Symbol* param_sym = FunctionSymbolTable_get_param(calleefst, i);
-        const Symbol* array_arg;
-        ExprReturn ret;
 
-        if (param_sym->symbol_type == SYMBOL_POINTER_TO_ARRAY) {
-            // Check if the node can be an array identifier,
-            // and if it is, resolve it to check if it exists
-            if (!(arg->label == Ident && FIRSTCHILD(arg) == NULL) ||
-                !(array_arg = SymbolTable_resolve_from_node(prog, caller, arg))
-            ) {
-                CodeError_print(
-                    (CodeError){
-                        .err = (err |= ERR_MUST_BE_ARRAY),
-                        .line = arg->lineno,
-                        .column = 0,
-                    },
-                    "expected array identifier not an expression"
-                );
+        // If we have a node with only an identifier, it could be an array
+        if (IS_ONLY_IDENTIFIER(arg) || param_sym->symbol_type == SYMBOL_ARRAY) {
+            const Symbol* arg_sym = SymbolTable_resolve_from_node(prog, caller, arg);
+
+            if (arg_sym->symbol_type == SYMBOL_ARRAY || param_sym->symbol_type == SYMBOL_ARRAY) {
+                // If one of them is an array, we need to check that the other is also an array
+                if (param_sym->symbol_type != arg_sym->symbol_type) {
+                    CodeError_print(
+                        (CodeError){
+                            .err = (err |= ERR_MISMATCH_ARRAY_TYPE),
+                            .line = arg->lineno,
+                            .column = 0,
+                        },
+                        "expected %s, got %s",
+                        SymbolType_to_str(param_sym->symbol_type),
+                        SymbolType_to_str(arg_sym->symbol_type)
+                    );
+                }
+                // We check if the array types are the same (int[] to char[] is forbidden)
+                else if (arg_sym->type != param_sym->type) {
+                    CodeError_print(
+                        (CodeError){
+                            .err = (err |= ERR_INVALID_ARRAY_TYPE),
+                            .line = arg->lineno,
+                            .column = 0,
+                        },
+                        "expected array of type '%s', got '%s'",
+                        Symbol_get_type_str(param_sym->type),
+                        Symbol_get_type_str(arg_sym->type)
+                    );
+                }
                 continue;
             }
-            ret = (ExprReturn){.err = ERR_NONE, .type = param_sym->type};
         }
-        else {
-            ret = _Semantic_Expr(arg, caller, prog);
-        }
+        // The argument is not an array, and so an expression
+        ExprReturn ret = _Semantic_Expr(arg, caller, prog);
 
+        /* We check that the expression type can be implicitly casted
+           to the parameter type (char to int is allowed, not the opposite) */
         if (param_sym->symbol_type == SYMBOL_VALUE && ret.type == type_num && param_sym->type == type_byte) {
             CodeError_print(
                 (CodeError){
@@ -88,21 +121,10 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
                 "'int' to parameter of type 'char'"
             );
         }
-        else if (param_sym->symbol_type == SYMBOL_POINTER_TO_ARRAY && (array_arg->type != param_sym->type)) {
-            CodeError_print(
-                (CodeError){
-                    .err = (err |= ERR_INVALID_ARRAY_TYPE),
-                    .line = arg->lineno,
-                    .column = 0,
-                },
-                "expected array of type '%s', got '%s'",
-                Symbol_get_type_str(param_sym->type),
-                Symbol_get_type_str(array_arg->type)
-            );
-        }
         err |= ret.err;
     }
 
+    // Check if we have less arguments than expected
     if (i < FunctionSymbolTable_get_param_count(calleefst)) {
         CodeError_print(
             (CodeError){
@@ -134,7 +156,7 @@ static ExprReturn _Semantic_ArrayLR(Tree tree,
                                      const ProgramSymbolTable* prog) {
     assert(tree->label == ArrayLR);
     Symbol* sym = SymbolTable_resolve_from_node(prog, func, tree);
-    if (sym->symbol_type == SYMBOL_ARRAY || sym->symbol_type == SYMBOL_POINTER_TO_ARRAY) {
+    if (sym->symbol_type == SYMBOL_ARRAY) {
         // We check if the indexing expression is valid
         ExprReturn ret = _Semantic_Expr(FIRSTCHILD(tree), func, prog);
         return ret;
@@ -169,6 +191,15 @@ static type_t _cast_types(type_t t1, type_t t2) {
     return type_num;
 }
 
+/**
+ * @brief Check if the identifier is a valid RValue
+ * Don't use on ArrayLR nodes
+ * 
+ * @param tree 
+ * @param func 
+ * @param prog 
+ * @return ExprReturn 
+ */
 static ExprReturn _Semantic_IdentRValue(Tree tree,
                                   const FunctionSymbolTable* func,
                                   const ProgramSymbolTable* prog) {
@@ -177,24 +208,17 @@ static ExprReturn _Semantic_IdentRValue(Tree tree,
     ErrorType error = ERR_NONE;
     const Symbol* sym = SymbolTable_resolve_from_node(prog, func, tree);
 
-    if (IS_FUNCTION_CALL_NODE(tree) && sym->type != type_void) { // true function call
-        if (sym->symbol_type == SYMBOL_FUNCTION) {  // verify if it's a function
+    // The user is trying to call a function
+    if (IS_FUNCTION_CALL_NODE(tree)) {
+        if (sym->type != type_void) {
             return (ExprReturn){
                 .err = _Semantic_FunctionCall(tree, func, prog),
                 .type = sym->type};
         }
-        CodeError_print(
-            (CodeError){
-                .err = (error |= ERR_SEM_IS_NOT_CALLABLE),
-                .line = tree->lineno,
-                .column = 0,
-            },
-            "called object '%s' is not a function",
-            sym->identifier);
-        return (ExprReturn){.err = error, .type = sym->type};
+        // The function is void, we can't use it as an rvalue
     }
     else if (sym->symbol_type == SYMBOL_VALUE) {
-        return (ExprReturn){.err = error, .type = sym->type};
+        return (ExprReturn){.err = ERR_NONE, .type = sym->type};
     }
     CodeError_print(
         (CodeError){

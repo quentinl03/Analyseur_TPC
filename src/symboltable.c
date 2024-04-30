@@ -213,7 +213,8 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                     .identifier = identNode->att.ident,
                     .type = type,
                     .type_size = _get_type_size(type),
-                    .symbol_type = SYMBOL_POINTER_TO_ARRAY,
+                    .symbol_type = SYMBOL_ARRAY,
+                    .array.have_length = false,
                     .is_static = false,
 
                     // TODO: Is this ok? An array is decayed to a pointer in C (8 bytes on x86_64 systems)
@@ -229,6 +230,7 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                     .type = type,
                     .type_size = _get_type_size(type),
                     .symbol_type = SYMBOL_ARRAY,
+                    .array.have_length = true,
                     .array.length = identNode->firstChild->att.num,
                     .total_size = identNode->firstChild->att.num * _get_type_size(type),
                     .lineno = identNode->lineno,

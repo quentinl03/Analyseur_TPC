@@ -195,11 +195,11 @@ class SyntaxTest(unittest.TestCase):
                 retcode, _ = test_input(filename, expected_retcode, ["valgrind", "--error-exitcode=10", "--leak-check=no", "--track-origins=yes"])
                 self.assertEqual(retcode, expected_retcode, "Valgrind detected conditionnl jumps")
 
-    @skip
+    # @skip
     def test_5_valid_valgrind_conditionnal_jumps(self):
         logger.debug("# Test valgrind for conditionnal jumps :")
-        self._valgrind_conditionnal_jumps("good/random/*.tpc", 0)
-        self._valgrind_conditionnal_jumps("syn-err/random/*.tpc", 1)
+        self._valgrind_conditionnal_jumps("good/**/*.tpc", 0)
+        self._valgrind_conditionnal_jumps("syn-err/**/*.tpc", 1)
 
 def parse_args():
     parser = argparse.ArgumentParser(

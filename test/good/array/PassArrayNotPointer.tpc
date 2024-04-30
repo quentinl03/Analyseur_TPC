@@ -1,0 +1,14 @@
+int g(int tab[]) {
+    return tab[0];
+}
+
+int f(int tab1[]) {
+    int tab2[5];
+    return g(tab2);
+}
+
+int main(void) {
+    int tab[5];
+    f(tab);
+    return 0;
+}
