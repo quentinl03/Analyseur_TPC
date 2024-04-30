@@ -224,6 +224,21 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
             }
 
             else if (identNode->label == DeclArray) {
+                int length = identNode->firstChild->att.num;
+
+                if (length == 0) {
+                    CodeError_print(
+                        (CodeError){
+                            .err = ERR_ARRAY_ZERO_SIZE,
+                            .line = identNode->lineno,
+                            .column = 0,
+                        },
+                        "ISO C forbids zero-size array '%s'",
+                        identNode->att.ident
+                    );
+                    err |= ERR_ARRAY_ZERO_SIZE;
+                }
+
                 symbol = (Symbol){
                     .identifier = identNode->att.ident,
                     .is_static = self->type == SYMBOL_TABLE_GLOBAL,
@@ -231,8 +246,8 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                     .type_size = _get_type_size(type),
                     .symbol_type = SYMBOL_ARRAY,
                     .array.have_length = true,
-                    .array.length = identNode->firstChild->att.num,
-                    .total_size = identNode->firstChild->att.num * _get_type_size(type),
+                    .array.length = length,
+                    .total_size = length * _get_type_size(type),
                     .lineno = identNode->lineno,
                 };
             }

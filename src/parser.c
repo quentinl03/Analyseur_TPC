@@ -52,7 +52,7 @@ static Option init_option(void) {
         .flag_show_tree = false,
         .flag_only_tree = false,
         .flag_symtabs = false,
-        .flag_semantic = false,
+        .flag_semantic = true,
         .output = "_anonymous.asm",
     };
 }
