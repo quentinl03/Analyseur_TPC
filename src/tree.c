@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 extern int nbline; /* from lexer */
+extern int nbchar; /* from lexer */
 
 // static const char *StringFromLabel[] = {
 //     "E",
@@ -28,6 +29,7 @@ Node *makeNode(label_t label) {
     node->label = label;
     node->firstChild = node->nextSibling = NULL;
     node->lineno = nbline;
+    node->column = nbchar;
     node->type = type_void;
     return node;
 }

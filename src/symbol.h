@@ -18,6 +18,7 @@ typedef struct Symbol {
     type_t type;
     int type_size;
     int lineno;
+    int column;
 
     int index; // Insertion order in the symbol table
 

@@ -119,23 +119,22 @@ def test_input(file: Path, expected_retcode: int, prefix_exec=[], args=[]) -> Tu
         Tuple[int, SourceCodeStats]: return code, and the result of the compiler's
         warning/error emission
     """
-    with open(file, "r", encoding="utf-8") as f:
-        src_code = f.read()
-        logger.debug(f"Test with {file} ...")
-        process = run(
-            [*prefix_exec, EXECUTABLE, *args],
-            capture_output=True, text=True,
-            input=src_code, check=False
-        )
+    src_code = str(file)
+    logger.debug(f"Test with {file} ...")
+    process = run(
+        [*prefix_exec, EXECUTABLE, src_code, *args],
+        capture_output=True, text=True,
+        check=False
+    )
 
-        scs = SourceCodeStats.from_file(src_code, process.stderr)
+    scs = SourceCodeStats.from_file(src_code, process.stderr)
 
-        if process.returncode == expected_retcode:
-            logger.info(process.stderr)
-        else:
-            logger.error(f"Unexpected return code {process.returncode}\n" + (process.stderr))
+    if process.returncode == expected_retcode:
+        logger.info(process.stderr)
+    else:
+        logger.error(f"Unexpected return code {process.returncode}\n" + (process.stderr))
 
-        return process.returncode, scs
+    return process.returncode, scs
 
 #__unittest = True # Silents Python's traceback for unittests
 class SyntaxTest(unittest.TestCase):

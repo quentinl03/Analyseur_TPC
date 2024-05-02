@@ -17,14 +17,9 @@
 #include "tree.h"
 #include "treeReader.h"
 
-typedef struct {
-    ProgramSymbolTable symtable;
-    Node* abr;
-    Option opt;
-    FILE* file_out;
-} Program;
+#include "program.h"
 
-Program PROGRAM;
+Program PROGRAM = {0};
 
 void atexit_function(void) {
     if (PROGRAM.abr) {
@@ -44,7 +39,7 @@ int main(int argc, char* argv[]) {
     PROGRAM.opt = parser(argc, argv);
 
     if (PROGRAM.opt.path) {
-        yyin = fopen(PROGRAM.opt.path, "r");
+        yyin = (PROGRAM.file_in = fopen(PROGRAM.opt.path, "r"));
         if (!yyin) {
             perror("fopen");
             fprintf(stderr, "End of execution.\n");
@@ -81,13 +76,13 @@ int main(int argc, char* argv[]) {
         return EXIT_CODE(err);
     }
 
-    FILE* file = fopen(PROGRAM.opt.output, "w");
-    if (!file) {
+    PROGRAM.file_out = fopen(PROGRAM.opt.output, "w");
+    if (!PROGRAM.file_out) {
         perror("fopen");
         return EXIT_CODE(ERR_FILE_OPEN);
     }
 
-    TreeReader_Prog(&symtable, PROGRAM.abr, file);
+    TreeReader_Prog(&symtable, PROGRAM.abr, PROGRAM.file_out);
 
     return EXIT_SUCCESS;
 }

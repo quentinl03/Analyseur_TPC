@@ -93,6 +93,7 @@ typedef struct Node {
     Attribut att;
     type_t type;
     int lineno;
+    int column;
 } Node, *Tree;
 
 Node *makeNode(label_t label);

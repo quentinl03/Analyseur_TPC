@@ -31,7 +31,7 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
             (CodeError){
                 .err = (err |= ERR_SEM_IS_NOT_CALLABLE),
                 .line = tree->lineno,
-                .column = 0,
+                .column = tree->column,
             },
             "called object '%s' is not a function",
             sym->identifier);
@@ -43,7 +43,7 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
         CodeError_print(
             (CodeError){
                 .err = (err |= ERR_USE_UNDEFINED_FUNCTION),
-                .column = 0,
+                .column = tree->column,
                 .line = tree->lineno,
             },
             "implicit declaration of function '%s'",
@@ -62,7 +62,7 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
                 (CodeError){
                     .err = (err |= ERR_INVALID_PARAM_COUNT),
                     .line = arg->lineno,
-                    .column = 0,
+                    .column = tree->column,
                 },
                 "too many arguments to function call '%s', expected %d",
                 tree->att.ident,
@@ -83,7 +83,7 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
                         (CodeError){
                             .err = (err |= ERR_MISMATCH_ARRAY_TYPE),
                             .line = arg->lineno,
-                            .column = 0,
+                            .column = tree->column,
                         },
                         "expected %s, got %s",
                         SymbolType_to_str(param_sym->symbol_type),
@@ -96,7 +96,7 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
                         (CodeError){
                             .err = (err |= ERR_INVALID_ARRAY_TYPE),
                             .line = arg->lineno,
-                            .column = 0,
+                            .column = tree->column,
                         },
                         "expected array of type '%s', got '%s'",
                         Symbol_get_type_str(param_sym->type),
@@ -116,7 +116,7 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
                 (CodeError){
                     .err = (err |= WARN_IMPLICIT_INT_TO_CHAR),
                     .line = arg->lineno,
-                    .column = 0,
+                    .column = arg->column,
                 },
                 "'int' to parameter of type 'char'"
             );
@@ -130,7 +130,7 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
             (CodeError){
                 .err = (err |= ERR_INVALID_PARAM_COUNT),
                 .line = tree->lineno,
-                .column = 0,
+                .column = tree->column,
             },
             "too few arguments to function call '%s', expected %d, have %d",
             tree->att.ident,
@@ -166,7 +166,7 @@ static ExprReturn _Semantic_ArrayLR(Tree tree,
             (CodeError){
                 .err = ERR_SUBSCRIPT_NOT_ARRAY,
                 .line = tree->lineno,
-                .column = 0,
+                .column = tree->column,
             },
             "subscripted value '%s' is not an array or pointer to array",
             sym->identifier
@@ -224,7 +224,7 @@ static ExprReturn _Semantic_IdentRValue(Tree tree,
         (CodeError){
             .err = (error |= ERR_NOT_AN_RVALUE),
             .line = tree->lineno,
-            .column = 0,
+            .column = tree->column,
         },
         "'%s' is not an rvalue",
         sym->identifier);
@@ -307,7 +307,7 @@ static ErrorType _Semantic_Return(Tree tree,
             (CodeError){
                 .err = (err |= ERR_MUST_RETURN_VALUE),
                 .line = tree->lineno,
-                .column = 0,
+                .column = tree->column,
             },
             "non-void function '%s' must return a value",
             func->identifier);
@@ -320,7 +320,7 @@ static ErrorType _Semantic_Return(Tree tree,
                 (CodeError){
                     .err = (err |= WARN_IMPLICIT_INT_TO_CHAR),
                     .line = tree->lineno,
-                    .column = 0,
+                    .column = tree->column,
                 },
                 "return type mismatch in function '%s' (cast from 'int' to 'char')",
                 func->identifier
@@ -331,7 +331,7 @@ static ErrorType _Semantic_Return(Tree tree,
                 (CodeError){
                     .err = (err |= WARN_RETURN_TYPE_VOID),
                     .line = tree->lineno,
-                    .column = 0,
+                    .column = tree->column,
                 },
                 "In function '%s', ISO C forbids 'return' with expression, "
                 "even if the expression evaluates to void",
@@ -343,7 +343,7 @@ static ErrorType _Semantic_Return(Tree tree,
                 (CodeError){
                     .err = (err |= ERR_RETURN_TYPE_NON_VOID),
                     .line = tree->lineno,
-                    .column = 0,
+                    .column = tree->column,
                 },
                 "void function '%s' should not return a value",
                 func->identifier
@@ -368,8 +368,8 @@ static ErrorType _Semantic_Assignation(Tree tree,
         CodeError_print(
             (CodeError){
                 .err = (err |= ERR_NOT_AN_LVALUE),
-                .line = tree->lineno,
-                .column = 0,
+                .line = lvalue->lineno,
+                .column = lvalue->column,
             },
             "'%s' is not an lvalue",
             lvalue->identifier
@@ -385,7 +385,7 @@ static ErrorType _Semantic_Assignation(Tree tree,
             (CodeError){
                 .err = (err |= WARN_IMPLICIT_INT_TO_CHAR),
                 .line = tree->lineno,
-                .column = 0,
+                .column = tree->column,
             },
             "assignation type mismatch in function '%s' to variable '%s' (cast from 'int' to 'char')",
             func->identifier,
@@ -397,7 +397,7 @@ static ErrorType _Semantic_Assignation(Tree tree,
             (CodeError){
                 .err = (err |= ERR_NO_VOID_EXPRESSION),
                 .line = tree->lineno,
-                .column = 0,
+                .column = tree->column,
             },
             "assigning to variable '%s' from incompatible type 'void' in function '%s'",
             lvalue->identifier,
@@ -442,7 +442,7 @@ static ErrorType _Semantic_SuiteInstr(Tree tree,
         CodeError_print(
             (CodeError){
                 .err = WARN_RETURN_TYPE_VOID,
-                .line = tree->lineno,
+                .line = tree->lineno + 1,
                 .column = 0,
             },
             "missing return statement in function '%s' returning non-void",
@@ -500,7 +500,7 @@ ErrorType static Semantic_check_main(const ProgramSymbolTable* prog) {
                 (CodeError){
                     .err = (err |= ERR_MAIN_RETURN_TYPE),
                     .line = sym_main->lineno,
-                    .column = 0,
+                    .column = sym_main->column,
                 },
                 "'main' must return 'int'");
         }
@@ -509,7 +509,7 @@ ErrorType static Semantic_check_main(const ProgramSymbolTable* prog) {
                 (CodeError){
                     .err = (err |= ERR_MAIN_PARAM),
                     .line = sym_main->lineno,
-                    .column = 0,
+                    .column = sym_main->column,
                 },
                 "'main' must not have any parameter (void)");
         }

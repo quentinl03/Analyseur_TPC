@@ -55,7 +55,7 @@ ErrorType _SymbolTable_add(SymbolTable* self, Symbol symbol) {
             (CodeError){
                 .err = ERR_SEM_REDECLARED_SYMBOL,
                 .line = symbol.lineno,
-                .column = 0,
+                .column = symbol.column,
             },
             self->type == SYMBOL_TABLE_PARAM        ? "redeclaration of parameter '%s'"
             : symbol.symbol_type == SYMBOL_FUNCTION ? "redefinition of function '%s'"
@@ -142,7 +142,7 @@ Symbol* SymbolTable_resolve_from_node(const ProgramSymbolTable* table,
             (CodeError){
                 .err = ERR_UNDECLARED_SYMBOL,
                 .line = node->lineno,
-                .column = 0,
+                .column = node->column,
             },
             "use of undeclared identifier '%s'",
             node->att.ident);
@@ -220,6 +220,7 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                     // TODO: Is this ok? An array is decayed to a pointer in C (8 bytes on x86_64 systems)
                     .total_size = 8,
                     .lineno = identNode->lineno,
+                    .column = identNode->column,
                 };
             }
 
@@ -231,7 +232,7 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                         (CodeError){
                             .err = ERR_ARRAY_ZERO_SIZE,
                             .line = identNode->lineno,
-                            .column = 0,
+                            .column = identNode->column,
                         },
                         "ISO C forbids zero-size array '%s'",
                         identNode->att.ident
@@ -249,6 +250,7 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                     .array.length = length,
                     .total_size = length * _get_type_size(type),
                     .lineno = identNode->lineno,
+                    .column = identNode->column,
                 };
             }
 
@@ -261,6 +263,7 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                     .symbol_type = SYMBOL_VALUE,
                     .total_size = 1 * _get_type_size(type),
                     .lineno = identNode->lineno,
+                    .column = identNode->column,
                 };
             }
             err |= _SymbolTable_add(self, symbol);
@@ -328,7 +331,7 @@ static ErrorType _SymbolTable_check_redeclared_params_in_locals(FunctionSymbolTa
                 (CodeError){
                     .err = ERR_SEM_REDECLARED_SYMBOL,
                     .line = local->lineno,
-                    .column = 0,
+                    .column = local->column,
                 },
                 "redeclaration of variable '%s' already declared in parameters list",
                 local->identifier);
@@ -380,6 +383,7 @@ static ErrorType _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Fu
             .type_size = _get_type_size(func->ret_type),
             .total_size = 0,
             .lineno = identNode->lineno,
+            .column = identNode->column,
         });
 
     // * Add the function's parameters to the function's symbol table, if any
