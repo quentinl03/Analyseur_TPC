@@ -7,7 +7,7 @@ void f(void) {
 
 int main(void) {
     int res;
-    res = 2 + f();
+    res = 2 + f() * 2;
 
     return res;
 }
