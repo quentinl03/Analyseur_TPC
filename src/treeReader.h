@@ -10,13 +10,12 @@
 
 #include <stdio.h>
 
-#include "error.h"
 #include "symboltable.h"
 #include "tree.h"
 
-ErrorType TreeReader_Prog(const ProgramSymbolTable* table,
-                          Tree tree, FILE* nasm);
+void TreeReader_Prog(const ProgramSymbolTable* table,
+                     Tree tree, FILE* nasm);
 
-ErrorType TreeReader_Expr(const ProgramSymbolTable* table,
-                          Tree tree, FILE* nasm,
-                          const FunctionSymbolTable* func);
+void TreeReader_Expr(const ProgramSymbolTable* table,
+                     Tree tree, FILE* nasm,
+                     const FunctionSymbolTable* func);

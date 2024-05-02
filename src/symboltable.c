@@ -407,19 +407,17 @@ static ErrorType _ProgramSymbolTable_from_DeclFoncts(ProgramSymbolTable* self, T
 /**
  * @brief Add an hardcoded function to the progran
  * (putchar, getint, etc...)
- * 
- * @param prog 
+ *
+ * @param prog
  * @param ret A Symbol object representing the return value, with only
  * identifier and type defined
  * @param symbols Array of symbols to add as parameters. Last element should be {0}
  * in order to stop the loop (a NULL identifier is considered as the end of the array)
  * NULL if none (void parameter)
  */
-static void ProgramSymbolTable_add_default_function(
-    ProgramSymbolTable* prog,
-    Symbol ret,
-    Symbol symbols[]
-) {
+static void ProgramSymbolTable_add_default_function(ProgramSymbolTable* prog,
+                                                    Symbol ret,
+                                                    Symbol symbols[]) {
     ret = (Symbol){
         .identifier = ret.identifier,
         .type = ret.type,
@@ -448,8 +446,7 @@ static void ProgramSymbolTable_add_default_function(
                     .type_size = _get_type_size(param->type),
                     // A parameter never take an array by copy, only by pointer
                     .total_size = 1 * _get_type_size(param->type),
-                }
-            );
+                });
         }
     }
 
@@ -466,21 +463,18 @@ static void ProgramSymbolTable_add_default_function(
  * @param globals SymbolTable object to fill
  */
 static void _SymbolTable_add_default_functions(ProgramSymbolTable* table) {
-
     ProgramSymbolTable_add_default_function(
         table,
         (Symbol){
             .identifier = "putchar",
             .type = type_num,
         },
-        (Symbol[]) {
-            (Symbol) {
+        (Symbol[]){
+            (Symbol){
                 .identifier = "character",
                 .type = type_byte,
             },
-            {0}
-        }
-    );
+            {0}});
 
     ProgramSymbolTable_add_default_function(
         table,
@@ -488,14 +482,12 @@ static void _SymbolTable_add_default_functions(ProgramSymbolTable* table) {
             .identifier = "putint",
             .type = type_void,
         },
-        (Symbol[]) {
-            (Symbol) {
+        (Symbol[]){
+            (Symbol){
                 .identifier = "number",
                 .type = type_num,
             },
-            {0}
-        }
-    );
+            {0}});
 
     ProgramSymbolTable_add_default_function(
         table,
@@ -503,8 +495,7 @@ static void _SymbolTable_add_default_functions(ProgramSymbolTable* table) {
             .identifier = "getchar",
             .type = type_byte,
         },
-        NULL
-    );
+        NULL);
 
     ProgramSymbolTable_add_default_function(
         table,
@@ -512,8 +503,7 @@ static void _SymbolTable_add_default_functions(ProgramSymbolTable* table) {
             .identifier = "getint",
             .type = type_num,
         },
-        NULL
-    );
+        NULL);
 }
 
 /**
