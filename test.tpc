@@ -1,6 +1,19 @@
+
+int f(int tab[], int i) {
+
+    tab[i * 2] = 3 * i + 1;
+    tab[i * 1] = 2 * i + 1;
+    tab[i * 0] = 1 * i + 1;
+
+    return tab[0] + tab[1] + tab[2];
+}
+
+
 int main(void) {
-    int input;
-    input = getint();
-    putint(input);
-    return 0;
+    int i;
+int tab[5];
+
+    i = 1;
+
+    return f(tab, i);
 }

@@ -145,6 +145,7 @@ ErrorType TreeReader_Expr(const ProgramSymbolTable* table,
             CodeWriter_Ope(nasm, tree);
             break;
         case Ident:
+        case ArrayLR:
             CodeWriter_LoadVar(nasm, tree, table, func);
             break;
         case Num:
