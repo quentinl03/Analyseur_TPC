@@ -19,6 +19,8 @@
 #include "tree.h"
 #include "treeReader.h"
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
 static void CodeWriter_entrypoint(FILE* nasm) {
     fprintf(
         nasm,
@@ -115,6 +117,31 @@ void CodeWriter_ConstantCharacter(FILE* nasm, const Node* node) {
 }
 
 /**
+ * @brief Auxilliary function to call a function with its arguments,
+ * in the opposite order.
+ * Recursively go to the last argument, and while going back, evaluate
+ * the arguments and push them on the stack.
+ * 
+ * @param nasm 
+ * @param node 
+ * @param symtable 
+ * @param func 
+ * @param symbol 
+ */
+static void _CodeWriter_CallFunction_aux(FILE* nasm,
+                                         Node* node,
+                                         const ProgramSymbolTable* symtable,
+                                         const FunctionSymbolTable* func) {
+    if (node == NULL) {
+        return;
+    }
+
+    _CodeWriter_CallFunction_aux(nasm, node->nextSibling, symtable, func);
+
+    TreeReader_Expr(symtable, node, nasm, func);
+}
+
+/**
  * @brief Emit code to call a function with its arguments
  *
  * @param nasm File to write to
@@ -124,7 +151,7 @@ void CodeWriter_ConstantCharacter(FILE* nasm, const Node* node) {
 static ErrorType CodeWriter_CallFunction(FILE* nasm,
                                          Node* node,
                                          const ProgramSymbolTable* symtable,
-                                         const FunctionSymbolTable* func,
+                                         const FunctionSymbolTable* caller,
                                          const Symbol* symbol) {
     assert(
         node->label == Ident &&
@@ -136,29 +163,29 @@ static ErrorType CodeWriter_CallFunction(FILE* nasm,
 
     fprintf(nasm, ";;; Appel de la fonction %s ;;;\n", symbol->identifier);
 
+    const FunctionSymbolTable* callee = FunctionSymbolTable_get_from_name(symtable, symbol->identifier);
+
     if (node->firstChild->label != EmptyArgs) {
         // Call function with arguments
-        int i = 0;
-        for (Node* arg = node->firstChild->firstChild; arg;
-             arg = arg->nextSibling, ++i) {
-            TreeReader_Expr(symtable, arg, nasm, func);
-            if (i < 6) {
-                fprintf(
-                    nasm,
-                    "; Passage de l'argument %d à la fonction\n"
-                    "pop %s\n",
-                    i,
-                    Register_to_str(Register_param_to_reg(i)));
-            } else {
-                assert(
-                    0 &&
-                    "Revoir le passage d'arguments > 6 (ordre d'empilement)");
-                // TODO : Revoir le passage d'arguments > 6
-            }
+        _CodeWriter_CallFunction_aux(nasm, node->firstChild->firstChild, symtable, caller);
+
+        int nb_params = MIN(FunctionSymbolTable_get_param_count(callee), 6);
+
+        for (int i = 0; i < nb_params; ++i) {
+            const Symbol* param = FunctionSymbolTable_get_param(callee, i);
+            fprintf(
+                nasm,
+                "pop %s\n",
+                Register_to_str(Register_param_to_reg(i))
+            );
         }
     }
 
-    fprintf(nasm, "call %s\n", symbol->identifier);
+    fprintf(
+        nasm,
+        //"and rsp, -16\n"
+        "call %s\n", symbol->identifier
+    );
 
     // Push result on stack
     fprintf(
@@ -187,21 +214,14 @@ static void _CodeWriter_loadFunctionParam(
     const FunctionSymbolTable* func
 ) {
     const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
-    if (symbol->on_register) {
-        fprintf(
-            nasm,
-            "; Chargement de l'argument '%s' sur la tête de pile\n"
-            "push %s\n",
-            symbol->identifier,
-            Register_to_str(symbol->reg));
-    } else {
-        fprintf(
-            nasm,
-            "; Chargement de l'argument '%s' sur la tête de pile\n"
-            "push qword [rbp - %d]\n",
-            symbol->identifier,
-            symbol->addr + 8); // TODO : Check if it's correct
-    }
+
+    fprintf(
+        nasm,
+        "; Chargement de l'argument '%s' sur la tête de pile\n"
+        "push QWORD [rbp %+d]\n",
+        symbol->identifier,
+        symbol->addr
+    );
 }
 
 /**
@@ -239,8 +259,8 @@ static void _CodeWriter_ComputeArrayAddress(FILE* nasm,
     } else /* symbol is local */ {
         fprintf(
             nasm,
-            "lea rdx, [rbp - %d]; Calcul de l'adresse de %s[0] dans la pile\n",
-            symbol->addr + symbol->total_size,
+            "lea rdx, [rbp %+d]; Calcul de l'adresse de %s[0] dans la pile\n",
+            symbol->addr,
             symbol->identifier
         );
     }
@@ -378,9 +398,9 @@ static void _CodeWriter_LoadValue(FILE* nasm, Node* node,
         fprintf(
             nasm,
             "; Chargement de la variable locale '%s' sur la tête de pile\n"
-            "push QWORD [rbp - %d]\n",
+            "push QWORD [rbp %+d]\n",
             symbol->identifier,
-            symbol->addr + symbol->type_size);
+            symbol->addr);
     }
 }
 
@@ -438,17 +458,17 @@ static void CodeWriter_WriteValue(FILE* nasm, Node* node,
             nasm,
             "; Assignation de la dernière valeur de la pile dans l'argument '%s'\n"
             "pop rax\n"
-            "mov %s, rax\n",
+            "mov [rbp %+d], rax\n",
             symbol->identifier,
-            Register_to_str(symbol->reg));
+            symbol->addr);
     } else /* local */ {
         fprintf(
             nasm,
             "; Assignation de la dernière valeur de la pile dans la variable locale '%s'\n"
             "pop rax\n"
-            "mov [rbp - %d], rax\n",
+            "mov [rbp %+d], rax\n",
             symbol->identifier,
-            symbol->addr + 8);
+            symbol->addr);
     }
 }
 
@@ -508,9 +528,27 @@ void CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func) {
         "push rbp\n"
         "mov rbp, rsp\n"
         "; Allocates %ld bytes on the the stack\n"
-        "sub rsp, %ld\n\n",
+        "sub rsp, %ld\n",
         func->locals.next_addr,
         func->locals.next_addr);
+
+    // Move parameters to the callee's stack frame
+    int nb_params_to_save = MIN(FunctionSymbolTable_get_param_count(func), 6);
+
+    for (int i = 0; i < nb_params_to_save; ++i) {
+        const Symbol* param = FunctionSymbolTable_get_param(func, i);
+        fprintf(
+            nasm,
+            "; Move parameter '%s' to the stack frame\n"
+            "mov [rbp %+d], %s\n",
+            param->identifier,
+            param->addr,
+            Register_to_str(Register_param_to_reg(i)));
+    }
+    fputc(
+        '\n',
+        nasm
+    );
 }
 
 void CodeWriter_stackFrame_end(FILE* nasm, const FunctionSymbolTable* func) {

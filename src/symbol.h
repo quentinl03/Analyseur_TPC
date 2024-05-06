@@ -34,11 +34,9 @@ typedef struct Symbol {
     bool is_static;  // Static variables are stored in the bss section
     bool is_param;   // is a parameter of a function
 
-    bool on_register;
-    union {  // First 6 parameters are stored in registers, rest are stored in stack
-        Register reg;
-        int addr;
-    };
+    // First 6 parameters are stored in registers, rest are stored in stack
+    // The calle will have to save the registers in the stack
+    int addr;
 } Symbol;
 
 /**

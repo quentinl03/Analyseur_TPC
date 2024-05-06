@@ -19,7 +19,9 @@
  * @return ArrayListError
  */
 static ArrayListError _SymbolTable_init(SymbolTable* self) {
-    *self = (SymbolTable){0};
+    *self = (SymbolTable){
+        ._next_addr_param = 16,
+    };
     return ArrayList_init(&self->symbols, sizeof(Symbol), 30, Symbol_cmp);
 }
 
@@ -70,22 +72,30 @@ ErrorType _SymbolTable_add(SymbolTable* self, Symbol symbol) {
 
     /**
      * If the symbol is a parameter and there are less than 6 parameters
-     * on this function symbol table, we put parameters on registers
+     * ours parameters will be on registers, having to store them later on
+     * the callee's stack
      */
-    if (self->type == SYMBOL_TABLE_PARAM && ArrayList_get_length(&self->symbols) < 6) {
-        symbol.on_register = true;
-        symbol.reg = Register_param_to_reg(ArrayList_get_length(&self->symbols));
+    if (self->type == SYMBOL_TABLE_PARAM) {
+        if (ArrayList_get_length(&self->symbols) < 6) {
+            // Those symbols will be copied on the callee's stack
+            symbol.addr = -self->next_addr - symbol.total_size;
+            self->next_addr += symbol.total_size;
+        }
+        else {
+            symbol.addr = self->_next_addr_param; 
+            self->_next_addr_param += symbol.total_size;
+        }
     }
-    /**
-     * Else, we used all registers, and parameters are stored on the stack.
-     */
-    else {
-        symbol.on_register = false;
+    else if (self->type == SYMBOL_TABLE_GLOBAL) {
         symbol.addr = self->next_addr;
         self->next_addr += symbol.total_size;
     }
-    symbol.index = ArrayList_get_length(&self->symbols);
+    else {
+        symbol.addr = -self->next_addr - symbol.total_size;
+        self->next_addr += symbol.total_size;
+    }
 
+    symbol.index = ArrayList_get_length(&self->symbols);
     assert(ArrayList_sorted_insert(&self->symbols, &symbol) != ARRAYLIST_ERR_ALLOC);
 
     return ERR_NONE;

@@ -14,8 +14,12 @@ typedef enum SymbolTableType {
 
 typedef struct SymbolTable {
     ArrayList symbols;  // [Symbol]
-    SymbolTableType type;
     size_t next_addr;
+    SymbolTableType type;
+    int _next_addr_param; /*<
+        Used with symbol table of type SYMBOL_TABLE_PARAM.
+        Next address for 6+ parameters.
+    */
 } SymbolTable;
 
 typedef struct FunctionSymbolTable {

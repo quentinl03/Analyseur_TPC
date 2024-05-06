@@ -1,19 +1,34 @@
+int globalTab[10];
 
-int f(int tab[], int i) {
-
-    tab[i * 2] = 3 * i + 1;
-    tab[i * 1] = 2 * i + 1;
-    tab[i * 0] = 1 * i + 1;
-
-    return tab[0] + tab[1] + tab[2];
+int f2(void) {
+    return 7;
 }
 
+int f(int a[], int b, int c, int d, int e,
+    int f, int g[], int h[], int tab[]) {
+    int res;
+    return a[0] + b + c + d + e + f + f2() + g[0] + g[1] + h[0] + h[1] + tab[4];
+}
 
 int main(void) {
-    int i;
-int tab[5];
+    int res;
+    int tab[5], g[2], h[2], a[1];
 
-    i = 1;
+    a[0] = 1;
+    tab[0] = 1;
+    tab[1] = 2;
+    tab[2] = 3;
+    tab[3] = 4;
+    tab[4] = 12;
 
-    return f(tab, i);
+    g[0] = 8;
+    g[1] = 9;
+
+    h[0] = 10;
+    h[1] = 11;
+
+    res = f(a,2,3,4,5,6,g,h,tab);
+    putint(res);
+
+    return res;
 }

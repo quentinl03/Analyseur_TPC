@@ -28,9 +28,6 @@ const char* SymbolType_to_str(SymbolType type) {
 }
 
 static const char* _Symbol_get_location_str(const Symbol* self) {
-    if (self->on_register) {
-        return Register_to_str(self->reg);
-    }
 
     static char addr_str[256];
     snprintf(addr_str, 256, "%d", self->addr);

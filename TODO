@@ -5,7 +5,7 @@
 - [ ] Les appels de fonctions à revoir
   - Évaluer tous les arguments dans l'ordre inverse de leur apparition, en empilant successivement leur valeur dans la pile. Puis dépiler, les six premières valeurs de la pile vers les registres correspondants
 
-- [ ] Convention d'appel pour les appels de fonctions, à minima pour les registres sauvegardé par l'appelant (*caller-save register)*
+- [ ] Convention d'appel pour les appels de fonctions, à minima pour les registres sauvegardé par l'appelant (*caller-save register*)
 
 - [ ] Ne pas compiler le builtins.asm, mais copier son contenu dans le NASM généré
 
