@@ -125,3 +125,13 @@ void CodeWriter_Return(FILE* nasm);
  * @param nasm File to write into
  */
 void CodeWriter_Return_Expr(FILE* nasm);
+
+void CodeWriter_Cmp(FILE* nasm, Node* Node);
+
+int CodeWriter_If_Init(FILE* nasm);
+void CodeWriter_If_Else(FILE* nasm, int if_number);
+void CodeWriter_If_End(FILE* nasm, int if_number);
+
+int CodeWriter_While_Init(FILE* nasm);
+void CodeWriter_While_Eval(FILE* nasm, int while_number);
+void CodeWriter_While_End(FILE* nasm, int while_number);

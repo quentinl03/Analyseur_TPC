@@ -68,7 +68,7 @@ return                      {CHAR_INC; return RETURN;};
 
 [1-9][0-9]*|0               {yylval.num = atoi(yytext);
                             CHAR_INC; return NUM;};
-({IDENTIFIER})              {strcpy(yylval.key_word, yytext);
+({IDENTIFIER})              {strcpy(yylval.ident, yytext);
                             CHAR_INC; return IDENT;};
 ({LITERAL})                 {yylval.byte = litteral_to_char(yytext);
                             CHAR_INC; return CHARACTER;}; 

@@ -12,12 +12,15 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "registers.h"
 #include "symbol.h"
 #include "symboltable.h"
 #include "tree.h"
 #include "treeReader.h"
+
+int GLOBAL_CMP;
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -550,4 +553,111 @@ void CodeWriter_Return(FILE* nasm) {
 
 void CodeWriter_Return_Expr(FILE* nasm) {
     fprintf(nasm, "pop rax\n");
+}
+
+static char* _CodeWriter_Node_To_Eq(const Node* node) {
+    if (!strcmp(node->att.key_word, "==")) {
+        return "je";
+    }
+    if (!strcmp(node->att.key_word, "!=")) {
+        return "jne";
+    }
+    assert(0 && "We shoudn't be there (_CodeWriter_Node_To_Eq) (Unkonw cmp)");
+}
+
+static char* _CodeWriter_Node_to_Order(const Node* node) {
+    switch (node->att.key_word[0]) {
+        case '>':
+            if (node->att.key_word[1] == '=') {
+                return "jge";
+            }
+            return "jg";
+        case '<':
+            if (node->att.key_word[1] == '=') {
+                return "jle";
+            }
+            return "jl";
+
+        default:
+            assert(0 && "We shouldn't be there (CodeWriter_Node_to_Order) (Wrong comparator)");
+            break;
+    }
+}
+
+void CodeWriter_Cmp(FILE* nasm, Node* node) {
+    char* cmp = NULL;
+    if (node->label == Eq) {
+        cmp = _CodeWriter_Node_To_Eq(node);
+    } else if (node->label == Order) {
+        cmp = _CodeWriter_Node_to_Order(node);
+    }
+    assert(cmp && "Comparaison symbol unknow (CodeWriter_Cmp)");
+
+    fprintf(
+        nasm,
+        "; Comparaison sur les 2 dernieres valeurs de la pile\n"
+        "pop rcx\n"
+        "pop rax\n"
+        "cmp rcx, rax\n"
+        "%s cmp_%d ; comparateur si vrai va dans 2e cas\n"
+        "push 0\n"
+        "jmp cmp_end%d\n"
+        "cmp_%d :\n"
+        "push 1\n"
+        "jmp cmp_end%d\n"
+        "cmp_end%d : \n\n",
+        cmp, GLOBAL_CMP, GLOBAL_CMP, GLOBAL_CMP, GLOBAL_CMP, GLOBAL_CMP);
+    GLOBAL_CMP++;
+}
+
+int CodeWriter_If_Init(FILE* nasm) {
+    fprintf(
+        nasm,
+        "; Condition if_%d\n"
+        "pop rax\n"
+        "cmp rax, 0\n"
+        "je else_%d\n; if case\n",
+        GLOBAL_CMP, GLOBAL_CMP);
+    return GLOBAL_CMP++;
+}
+
+void CodeWriter_If_Else(FILE* nasm, int if_number) {
+    fprintf(
+        nasm,
+        "jmp end_if_%d\n"
+        "else_%d :\n; else case\n",
+        if_number, if_number);
+}
+
+void CodeWriter_If_End(FILE* nasm, int if_number) {
+    fprintf(
+        nasm,
+        "end_if_%d :\n",
+        if_number);
+}
+
+int CodeWriter_While_Init(FILE* nasm) {
+    fprintf(
+        nasm,
+        "; Condition while_%d\n"
+        "while_start_%d :\n; while eval cond\n",
+        GLOBAL_CMP, GLOBAL_CMP);
+    return GLOBAL_CMP++;
+}
+
+void CodeWriter_While_Eval(FILE* nasm, int while_number) {
+    fprintf(
+        nasm,
+        "pop rax\n"
+        "cmp rax, 0\n"
+        "je end_while_%d\n ; while expr\n",
+        while_number);
+}
+
+void CodeWriter_While_End(FILE* nasm, int while_number) {
+    fprintf(
+        nasm,
+        "jmp while_start_%d\n"
+        "end_while_%d :\n",
+        while_number, while_number);
 }
