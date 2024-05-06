@@ -121,12 +121,12 @@ void CodeWriter_ConstantCharacter(FILE* nasm, const Node* node) {
  * in the opposite order.
  * Recursively go to the last argument, and while going back, evaluate
  * the arguments and push them on the stack.
- * 
- * @param nasm 
- * @param node 
- * @param symtable 
- * @param func 
- * @param symbol 
+ *
+ * @param nasm
+ * @param node
+ * @param symtable
+ * @param func
+ * @param symbol
  */
 static void _CodeWriter_CallFunction_aux(FILE* nasm,
                                          Node* node,
@@ -142,7 +142,7 @@ static void _CodeWriter_CallFunction_aux(FILE* nasm,
 }
 
 /**
- * @brief Emit code to call a function with its arguments
+ * @brief Write code to call a function with its arguments
  *
  * @param nasm File to write to
  * @param node Function node (Ident node with EmptyArgs or ListExp node)
@@ -169,23 +169,22 @@ static ErrorType CodeWriter_CallFunction(FILE* nasm,
         // Call function with arguments
         _CodeWriter_CallFunction_aux(nasm, node->firstChild->firstChild, symtable, caller);
 
+        // compare to 6 beacause after 6 parameters we need to keep them on the stack
         int nb_params = MIN(FunctionSymbolTable_get_param_count(callee), 6);
 
         for (int i = 0; i < nb_params; ++i) {
-            const Symbol* param = FunctionSymbolTable_get_param(callee, i);
+            // const Symbol* param = FunctionSymbolTable_get_param(callee, i);
             fprintf(
                 nasm,
                 "pop %s\n",
-                Register_to_str(Register_param_to_reg(i))
-            );
+                Register_to_str(Register_param_to_reg(i)));
         }
     }
 
     fprintf(
         nasm,
         //"and rsp, -16\n"
-        "call %s\n", symbol->identifier
-    );
+        "call %s\n", symbol->identifier);
 
     // Push result on stack
     fprintf(
@@ -203,82 +202,76 @@ static ErrorType CodeWriter_CallFunction(FILE* nasm,
  * @brief Load a function parameter on the stack
  * If the parameter is a register, push the register value on the stack
  * Otherwise it is on the stack already, and we need to push it again
- * 
- * @param nasm 
- * @param node 
- * @param symtable 
- * @param func 
+ *
+ * @param nasm
+ * @param node
+ * @param symtable
+ * @param func
  */
 static void _CodeWriter_loadFunctionParam(
     FILE* nasm, Node* node, const ProgramSymbolTable* symtable,
-    const FunctionSymbolTable* func
-) {
+    const FunctionSymbolTable* func) {
     const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
 
     fprintf(
         nasm,
         "; Chargement de l'argument '%s' sur la tête de pile\n"
-        "push QWORD [rbp %+d]\n",
+        "push qword [rbp %+d]\n",
         symbol->identifier,
-        symbol->addr
-    );
+        symbol->addr);
 }
 
 /**
  * @brief Compute the address of an array and save it in ``rdx`` register
- * 
- * @param nasm 
+ *
+ * @param nasm
  * @param node Ident node of the array
- * @param symtable 
- * @param func 
+ * @param symtable
+ * @param func
  */
 static void _CodeWriter_ComputeArrayAddress(FILE* nasm,
-                                   Node* node,
-                                   const ProgramSymbolTable* symtable,
-                                   const FunctionSymbolTable* func) {
+                                            Node* node,
+                                            const ProgramSymbolTable* symtable,
+                                            const FunctionSymbolTable* func) {
     const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
 
     fprintf(
         nasm,
         "; Chargement de l'adresse du tableau '%s' dans rdx\n",
-        symbol->identifier
-    );
+        symbol->identifier);
     // rdx = Array address
     if (symbol->is_static) {
         fprintf(
             nasm,
             "mov rdx, global_vars + %d\n",
-            symbol->addr
-        );
+            symbol->addr);
     } else if (symbol->is_param) {
         _CodeWriter_loadFunctionParam(nasm, node, symtable, func);
         fprintf(
             nasm,
-            "pop rdx\n"
-        );
+            "pop rdx\n");
     } else /* symbol is local */ {
         fprintf(
             nasm,
             "lea rdx, [rbp %+d]; Calcul de l'adresse de %s[0] dans la pile\n",
             symbol->addr,
-            symbol->identifier
-        );
+            symbol->identifier);
     }
 }
 
 /**
  * @brief Load the address of an array on the stack, in order to
  * pass it as an argument to a function.
- * 
- * @param nasm 
- * @param node 
- * @param symtable 
- * @param func 
+ *
+ * @param nasm
+ * @param node
+ * @param symtable
+ * @param func
  */
 static void _CodeWriter_LoadArrayAddress(FILE* nasm,
-                                  Node* node,
-                                  const ProgramSymbolTable* symtable,
-                                  const FunctionSymbolTable* func) {
+                                         Node* node,
+                                         const ProgramSymbolTable* symtable,
+                                         const FunctionSymbolTable* func) {
     const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
 
     _CodeWriter_ComputeArrayAddress(nasm, node, symtable, func);
@@ -286,43 +279,40 @@ static void _CodeWriter_LoadArrayAddress(FILE* nasm,
     fprintf(
         nasm,
         "; Chargement de l'adresse du tableau '%s' sur la tête de pile\n",
-        symbol->identifier
-    );
+        symbol->identifier);
 
     fprintf(
         nasm,
-        "push rdx\n\n"
-    );
+        "push rdx\n\n");
 }
 
 /**
  * @brief Compute the address of an indexed element of an array,
  * and push it on the stack.
  * Should be used before loading or writing an element of an array
- * 
- * @param nasm 
+ *
+ * @param nasm
  * @param node ArrayLR node
- * @param symtable 
- * @param func 
+ * @param symtable
+ * @param func
  */
 static void _CodeWriter_ComputeArrayElementAddress(FILE* nasm,
-                                           Node* node,
-                                           const ProgramSymbolTable* symtable,
-                                           const FunctionSymbolTable* func) {
+                                                   Node* node,
+                                                   const ProgramSymbolTable* symtable,
+                                                   const FunctionSymbolTable* func) {
     assert(node->label == ArrayLR && node->firstChild != NULL);
     const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
-    
+
     fprintf(
         nasm,
         "; Calcul de l'expression d'indexation du tableau '%s'\n",
-        symbol->identifier
-    );
-    
+        symbol->identifier);
+
     TreeReader_Expr(symtable, node->firstChild, nasm, func);
 
     fprintf(
         nasm,
-        "pop rax\n" // rax = Index
+        "pop rax\n"  // rax = Index
     );
 
     _CodeWriter_ComputeArrayAddress(nasm, node, symtable, func);
@@ -330,31 +320,30 @@ static void _CodeWriter_ComputeArrayElementAddress(FILE* nasm,
     fprintf(
         nasm,
         "; Calcul de l'adresse d'un élément du tableau (%s) '%s'\n",
-        symbol->is_static ? "global" : symbol->is_param ? "paramétré" : "local",
-        symbol->identifier
-    );
+        symbol->is_static ? "global" : symbol->is_param ? "paramétré"
+                                                        : "local",
+        symbol->identifier);
 
     fprintf(
         nasm,
-        // lea : Compute effective address, without dereferencing
+        // lea : Compute effective address, without dereferencing (mov with operations)
         "lea rax, [rdx + rax * %d]; Calcul de l'adresse de l'élément indexé\n"
         "push rax\n",
-        symbol->type_size
-    );
+        symbol->type_size);
 }
 
 /**
  * @brief Load an element of an indexed array on the stack
- * 
- * @param nasm 
+ *
+ * @param nasm
  * @param node ArrayLR node
- * @param symtable 
- * @param func 
+ * @param symtable
+ * @param func
  */
 static void _CodeWriter_LoadArray(FILE* nasm,
-                          Node* node,
-                          const ProgramSymbolTable* symtable,
-                          const FunctionSymbolTable* func) {
+                                  Node* node,
+                                  const ProgramSymbolTable* symtable,
+                                  const FunctionSymbolTable* func) {
     assert(node->label == ArrayLR);
     const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
 
@@ -364,41 +353,38 @@ static void _CodeWriter_LoadArray(FILE* nasm,
         nasm,
         "; Chargement d'un élément du tableau '%s' sur la tête de pile\n"
         "pop rax\n"
-        "push QWORD [rax]\n\n",
-        symbol->identifier
-    );
+        "push qword [rax]\n\n",
+        symbol->identifier);
 }
 
 /**
  * @brief Load a value on the stack
- * 
- * @param nasm 
+ *
+ * @param nasm
  * @param node Ident node, but not an array
- * @param symtable 
- * @param func 
+ * @param symtable
+ * @param func
  */
 static void _CodeWriter_LoadValue(FILE* nasm, Node* node,
-                          const ProgramSymbolTable* symtable,
-                          const FunctionSymbolTable* func) {
-
+                                  const ProgramSymbolTable* symtable,
+                                  const FunctionSymbolTable* func) {
     assert(node->label == Ident && node->firstChild == NULL);
     const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
 
     if (symbol->is_param) {
         _CodeWriter_loadFunctionParam(nasm, node, symtable, func);
-    }
-    else if (symbol->is_static) {
+    } else if (symbol->is_static) {
         fprintf(
             nasm,
             "; Chargement de la variable globale '%s' sur la tête de pile\n"
-            "push QWORD [global_vars + %d]\n",
+            "push qword [global_vars + %d]\n",
             symbol->identifier,
             symbol->addr);
     } else /* local */ {
         fprintf(
             nasm,
             "; Chargement de la variable locale '%s' sur la tête de pile\n"
-            "push QWORD [rbp %+d]\n",
+            "push qword [rbp %+d]\n",
             symbol->identifier,
             symbol->addr);
     }
@@ -410,37 +396,39 @@ void CodeWriter_LoadVar(FILE* nasm,
                         const FunctionSymbolTable* func) {
     const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
 
-    if (symbol->symbol_type == SYMBOL_FUNCTION) {
-        CodeWriter_CallFunction(nasm, node, symtable, func, symbol);
-    } else if (symbol->symbol_type == SYMBOL_VALUE) {
-        _CodeWriter_LoadValue(nasm, node, symtable, func);
-    } else if (symbol->symbol_type == SYMBOL_ARRAY) {
-        // If the array is not indexed, we just need to load the array address
-        if (node->firstChild == NULL) {
-            _CodeWriter_LoadArrayAddress(nasm, node, symtable, func);
-        }
-        // Else the array is indexed, we need to load the indexed element
-        else {
+    switch (symbol->symbol_type) {
+        case SYMBOL_FUNCTION:
+            CodeWriter_CallFunction(nasm, node, symtable, func, symbol);
+            break;
+        case SYMBOL_VALUE:
+            _CodeWriter_LoadValue(nasm, node, symtable, func);
+            break;
+        case SYMBOL_ARRAY:
+            // If the array is not indexed, we just need to load the array address
+            if (node->firstChild == NULL) {
+                _CodeWriter_LoadArrayAddress(nasm, node, symtable, func);
+                break;
+            }
+            // Else the array is indexed, we need to load the indexed element
             _CodeWriter_LoadArray(nasm, node, symtable, func);
-        }
-    }
-    else {
-        assert(0 && "We shouldn't be there");
+            break;
+
+        default:
+            assert(0 && "We shouldn't be there (LoadVar)");
     }
 }
 
 /**
  * @brief Write a stacked value to a variable (local, global or parameter)
- * 
- * @param nasm 
- * @param node 
- * @param symtable 
- * @param func 
+ *
+ * @param nasm
+ * @param node
+ * @param symtable
+ * @param func
  */
 static void CodeWriter_WriteValue(FILE* nasm, Node* node,
-                             const ProgramSymbolTable* symtable,
-                             const FunctionSymbolTable* func) {
-
+                                  const ProgramSymbolTable* symtable,
+                                  const FunctionSymbolTable* func) {
     assert(node->label == Ident);
     const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
 
@@ -452,8 +440,7 @@ static void CodeWriter_WriteValue(FILE* nasm, Node* node,
             "mov [global_vars + %d], rax\n",
             symbol->identifier,
             symbol->addr);
-    }
-    else if (symbol->is_param) {
+    } else if (symbol->is_param) {
         fprintf(
             nasm,
             "; Assignation de la dernière valeur de la pile dans l'argument '%s'\n"
@@ -474,15 +461,15 @@ static void CodeWriter_WriteValue(FILE* nasm, Node* node,
 
 /**
  * @brief Write a stacked value to an indexed element of an array
- * 
- * @param nasm 
- * @param node 
- * @param symtable 
- * @param func 
+ *
+ * @param nasm
+ * @param node
+ * @param symtable
+ * @param func
  */
 static void CodeWriter_WriteArray(FILE* nasm, Node* node,
-                             const ProgramSymbolTable* symtable,
-                             const FunctionSymbolTable* func) {
+                                  const ProgramSymbolTable* symtable,
+                                  const FunctionSymbolTable* func) {
     assert(node->label == ArrayLR);
     const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
 
@@ -491,14 +478,12 @@ static void CodeWriter_WriteArray(FILE* nasm, Node* node,
     fprintf(
         nasm,
         "; Assignation de la dernière valeur de la pile dans l'élément du tableau '%s'\n",
-        symbol->identifier
-    );
+        symbol->identifier);
 
     fprintf(
         nasm,
         "pop rax\n"
-        "pop qword [rax]\n\n"
-    );
+        "pop qword [rax]\n\n");
 }
 
 void CodeWriter_WriteVar(FILE* nasm, Node* node,
@@ -508,20 +493,19 @@ void CodeWriter_WriteVar(FILE* nasm, Node* node,
 
     const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
 
-    if (symbol->symbol_type == SYMBOL_VALUE) {
-        CodeWriter_WriteValue(nasm, node, symtable, func);
-    }
-    else if (symbol->symbol_type == SYMBOL_ARRAY) {
-        CodeWriter_WriteArray(nasm, node, symtable, func);
-    }
-    else {
-        assert(0 && "We shouldn't be there");
+    switch (symbol->symbol_type) {
+        case SYMBOL_ARRAY:
+            CodeWriter_WriteArray(nasm, node, symtable, func);
+            break;
+        case SYMBOL_VALUE:
+            CodeWriter_WriteValue(nasm, node, symtable, func);
+            break;
+        default:
+            assert(0 && "We shouldn't be there (WriteVar)");
     }
 }
 
 void CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func) {
-    // TODO : Implement > 6 functions paramters (compute sum of size of
-    // paramters from index 6)
     fprintf(
         nasm,
         "; Init stack frame (save base pointer)\n"
@@ -545,10 +529,7 @@ void CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func) {
             param->addr,
             Register_to_str(Register_param_to_reg(i)));
     }
-    fputc(
-        '\n',
-        nasm
-    );
+    fputc('\n', nasm);
 }
 
 void CodeWriter_stackFrame_end(FILE* nasm, const FunctionSymbolTable* func) {
