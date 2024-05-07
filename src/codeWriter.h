@@ -9,6 +9,7 @@
  */
 
 #include <stdio.h>
+#define PATH_BUILTINS "src/builtins.asm"
 
 #include "symboltable.h"
 #include "tree.h"
@@ -23,6 +24,12 @@
  */
 void CodeWriter_Init_File(FILE* nasm, const SymbolTable* globals);
 
+/**
+ * @brief
+ *
+ * @param nasm
+ */
+void CodeWriter_load_builtins(FILE* nasm);
 /**
  * @brief Write a basic operation to the nasm file.
  * Pop two values from the stack, apply the operation and push the result.
@@ -126,12 +133,12 @@ void CodeWriter_Return(FILE* nasm);
  */
 void CodeWriter_Return_Expr(FILE* nasm);
 
-void CodeWriter_Cmp(FILE* nasm, Node* Node);
+void CodeWriter_Cmp(FILE* nasm, Node* Node, int cmp_number);
 
-int CodeWriter_If_Init(FILE* nasm);
+void CodeWriter_If_Init(FILE* nasm, int if_number);
 void CodeWriter_If_Else(FILE* nasm, int if_number);
 void CodeWriter_If_End(FILE* nasm, int if_number);
 
-int CodeWriter_While_Init(FILE* nasm);
+void CodeWriter_While_Init(FILE* nasm, int while_number);
 void CodeWriter_While_Eval(FILE* nasm, int while_number);
 void CodeWriter_While_End(FILE* nasm, int while_number);

@@ -56,12 +56,10 @@ $(BIN_DIR)/$(EXEC): $(OBJ_DIR)/$(LEXER).yy.o $(OBJ_DIR)/$(PARSER).tab.o $(MODULE
 
 # TODO : Faire un sous dossier pour les programmes compilés par le compilateur
 ASMFLAGS=-g -F dwarf -f elf64
-$(OBJ_DIR)/builtins.o: $(SRC_DIR)/builtins.asm
-	nasm $(ASMFLAGS) -o $@ $<
 
-produced_asm: $(OBJ_DIR)/builtins.o
+produced_asm:
 	nasm $(ASMFLAGS) -o $(OBJ_DIR)/_anonymous.o _anonymous.asm
-	$(CC) $(OBJ_DIR)/builtins.o $(OBJ_DIR)/_anonymous.o -o $(BIN_DIR)/_anonymous -nostartfiles -no-pie -m64 -g3
+	$(CC) $(OBJ_DIR)/_anonymous.o -o $(BIN_DIR)/_anonymous -nostartfiles -no-pie -m64 -g3
 
 rapport: $(REPORT_DIR)/rapport.pdf
 

@@ -17,6 +17,8 @@
 #include "symboltable.h"
 #include "tree.h"
 
+int GLOBAL_CMP;
+
 // ! à retirer avant rendu debug parcours arbre laisser pour le moment
 static const char* NODE_STRING[] = {
     FOREACH_NODE(GENERATE_STRING)};
@@ -135,6 +137,7 @@ void TreeReader_Prog(const ProgramSymbolTable* table, Tree tree, FILE* nasm) {
 
     CodeWriter_Init_File(nasm, &table->globals);
     _TreeReader_DeclFoncts(table, SECONDCHILD(tree), nasm);
+    CodeWriter_load_builtins(nasm);
 }
 
 /******************/
@@ -170,7 +173,7 @@ void TreeReader_Expr(const ProgramSymbolTable* table,
         case Order:
             TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);
             TreeReader_Expr(table, SECONDCHILD(tree), nasm, func);
-            CodeWriter_Cmp(nasm, tree);
+            CodeWriter_Cmp(nasm, tree, GLOBAL_CMP++);
             break;
         default:
             // ! Noeud non géré voloraiement ou non
@@ -222,8 +225,9 @@ static void _Instr_Assignation(const ProgramSymbolTable* table,
 static void _Instr_If(const ProgramSymbolTable* table,
                       Tree tree, FILE* nasm,
                       const FunctionSymbolTable* func) {
+    int if_number = GLOBAL_CMP++;
     TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);
-    int if_number = CodeWriter_If_Init(nasm);
+    CodeWriter_If_Init(nasm, if_number);
     TreeReader_SuiteInst(table, SECONDCHILD(tree), func, nasm);
     CodeWriter_If_Else(nasm, if_number);
     if (THIRDCHILD(tree)) {
@@ -235,7 +239,9 @@ static void _Instr_If(const ProgramSymbolTable* table,
 static void _Instr_While(const ProgramSymbolTable* table,
                          Tree tree, FILE* nasm,
                          const FunctionSymbolTable* func) {
-    int while_number = CodeWriter_While_Init(nasm);
+    int while_number = GLOBAL_CMP++;
+
+    CodeWriter_While_Init(nasm, while_number);
     TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);
     CodeWriter_While_Eval(nasm, while_number);
     TreeReader_SuiteInst(table, SECONDCHILD(tree), func, nasm);

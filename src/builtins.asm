@@ -1,14 +1,3 @@
-section .data
-    format_registers db "rbx:%ld r12:0x%lx r13:%ld r14:%ld r15:%ld", 10, 0
-    format_stack db "sommet (rsp): 0x%lx, base du bloc (rbp): 0x%lx", 10, 0
-
-section .text
-global putchar
-global getchar
-global putint
-global getint
-global show_registers
-global show_stack
 extern printf
 
 
@@ -207,3 +196,7 @@ getint:
 
     pop rbp
     ret
+
+section .data
+    format_registers db "rbx:%ld r12:0x%lx r13:%ld r14:%ld r15:%ld", 10, 0
+    format_stack db "sommet (rsp): 0x%lx, base du bloc (rbp): 0x%lx", 10, 0

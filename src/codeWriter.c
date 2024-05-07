@@ -20,8 +20,6 @@
 #include "tree.h"
 #include "treeReader.h"
 
-int GLOBAL_CMP;
-
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 static void CodeWriter_entrypoint(FILE* nasm) {
@@ -584,7 +582,7 @@ static char* _CodeWriter_Node_to_Order(const Node* node) {
     }
 }
 
-void CodeWriter_Cmp(FILE* nasm, Node* node) {
+void CodeWriter_Cmp(FILE* nasm, Node* node, int cmp_number) {
     char* cmp = NULL;
     if (node->label == Eq) {
         cmp = _CodeWriter_Node_To_Eq(node);
@@ -606,19 +604,17 @@ void CodeWriter_Cmp(FILE* nasm, Node* node) {
         "push 1\n"
         "jmp cmp_end%d\n"
         "cmp_end%d : \n\n",
-        cmp, GLOBAL_CMP, GLOBAL_CMP, GLOBAL_CMP, GLOBAL_CMP, GLOBAL_CMP);
-    GLOBAL_CMP++;
+        cmp, cmp_number, cmp_number, cmp_number, cmp_number, cmp_number);
 }
 
-int CodeWriter_If_Init(FILE* nasm) {
+void CodeWriter_If_Init(FILE* nasm, int if_number) {
     fprintf(
         nasm,
         "; Condition if_%d\n"
         "pop rax\n"
         "cmp rax, 0\n"
         "je else_%d\n; if case\n",
-        GLOBAL_CMP, GLOBAL_CMP);
-    return GLOBAL_CMP++;
+        if_number, if_number);
 }
 
 void CodeWriter_If_Else(FILE* nasm, int if_number) {
@@ -636,13 +632,12 @@ void CodeWriter_If_End(FILE* nasm, int if_number) {
         if_number);
 }
 
-int CodeWriter_While_Init(FILE* nasm) {
+void CodeWriter_While_Init(FILE* nasm, int while_number) {
     fprintf(
         nasm,
         "; Condition while_%d\n"
         "while_start_%d :\n; while eval cond\n",
-        GLOBAL_CMP, GLOBAL_CMP);
-    return GLOBAL_CMP++;
+        while_number, while_number);
 }
 
 void CodeWriter_While_Eval(FILE* nasm, int while_number) {
@@ -660,4 +655,13 @@ void CodeWriter_While_End(FILE* nasm, int while_number) {
         "jmp while_start_%d\n"
         "end_while_%d :\n",
         while_number, while_number);
+}
+
+void CodeWriter_load_builtins(FILE* nasm) {
+    FILE* f = fopen(PATH_BUILTINS, "r");
+    int c = fgetc(f);
+    while (c != EOF) {
+        fputc(c, nasm);
+        c = fgetc(f);
+    }
 }

@@ -11,13 +11,12 @@
 
 #include "codeWriter.h"
 #include "parser.h"
+#include "program.h"
 #include "semantic.h"
 #include "symboltable.h"
 #include "tpc_bison.h"
 #include "tree.h"
 #include "treeReader.h"
-
-#include "program.h"
 
 Program PROGRAM = {0};
 
