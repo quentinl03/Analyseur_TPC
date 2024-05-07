@@ -59,11 +59,9 @@ static void TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
                 _Instr_Return(table, child, nasm, func);
                 break;
             case Ident:
-                // TODO ajouter les autre case d'expression
                 CodeWriter_LoadVar(nasm, child, table, func);
                 break;
             case Assignation:
-                // TODO tableau
                 _Instr_Assignation(table, child, nasm, func);
                 break;
             case If:
@@ -76,7 +74,6 @@ static void TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
                 // ! Noeud non géré voloraiement ou non
                 fprintf(stderr, "Node not managed: %s\n", NODE_STRING[child->label]);
                 assert(0 && "We shoudn't be there\n");
-                break;
         }
         // printf("child->label: %s\n", NODE_STRING[child->label]);
     }
@@ -179,7 +176,6 @@ void TreeReader_Expr(const ProgramSymbolTable* table,
             // ! Noeud non géré voloraiement ou non
             fprintf(stderr, "Node not managed: %s\n", NODE_STRING[tree->label]);
             assert(0 && "We shoudn't be there\n");
-            break;
     }
 }
 
@@ -205,7 +201,12 @@ static void _Instr_Return(const ProgramSymbolTable* table,
         if (FIRSTCHILD(tree)) {
             TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);
             CodeWriter_Return_Expr(nasm);
+            CodeWriter_stackFrame_end(nasm, func);
+            CodeWriter_Return(nasm);
         }
+    } else {
+        CodeWriter_stackFrame_end(nasm, func);
+        CodeWriter_Return(nasm);
     }
 }
 

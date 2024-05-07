@@ -28,7 +28,6 @@ const char* SymbolType_to_str(SymbolType type) {
 }
 
 static const char* _Symbol_get_location_str(const Symbol* self) {
-
     static char addr_str[256];
     snprintf(addr_str, 256, "%d", self->addr);
     return addr_str;
@@ -40,8 +39,7 @@ static void _Symbol_print_Function(const Symbol* self) {
         self->identifier,
         SymbolType_to_str(self->symbol_type),
         Symbol_get_type_str(self->type),
-        self->index
-    );
+        self->index);
 }
 
 static void _Symbol_print_Array(const Symbol* self) {
@@ -53,8 +51,7 @@ static void _Symbol_print_Array(const Symbol* self) {
         self->array.length,
         self->total_size,
         self->index,
-        self->array.have_length ? "true" : "false"
-    );
+        self->array.have_length ? "true" : "false");
     printf(
         " addr=%s",
         _Symbol_get_location_str(self));
@@ -71,24 +68,11 @@ static void _Symbol_print_Value(const Symbol* self) {
         SymbolType_to_str(self->symbol_type),
         Symbol_get_type_str(self->type),
         self->total_size,
-        self->index
-    );
+        self->index);
     printf(
         "addr=%s",
         _Symbol_get_location_str(self));
     putchar('\n');
-}
-
-static void _Symbol_print_Pointer(const Symbol* self) {
-    printf(
-        "%-15s : symbol_type=%-16s type=%-5s total_size=%d addr=%s index=%-2d\n",
-        self->identifier,
-        SymbolType_to_str(self->symbol_type),
-        Symbol_get_type_str(self->type),
-        self->total_size,
-        _Symbol_get_location_str(self),
-        self->index
-    );
 }
 
 void Symbol_print(const Symbol* self) {
