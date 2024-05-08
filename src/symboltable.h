@@ -139,4 +139,11 @@ void FunctionSymbolTable_print(const FunctionSymbolTable* self);
  */
 void ProgramSymbolTable_print(const ProgramSymbolTable* self);
 
+/**
+ * @brief Free the memory allocated by a SymbolTable object
+ * 
+ * @param self 
+ */
+void ProgramSymbolTable_free(ProgramSymbolTable* self);
+
 #endif

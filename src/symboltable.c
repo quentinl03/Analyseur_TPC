@@ -25,6 +25,27 @@ static ArrayListError _SymbolTable_init(SymbolTable* self) {
     return ArrayList_init(&self->symbols, sizeof(Symbol), 30, Symbol_cmp);
 }
 
+static void _SymbolTable_free(SymbolTable* self) {
+    ArrayList_free(&self->symbols);
+    *self = (SymbolTable){0};
+}
+
+static void _FunctionSymbolTable_free(FunctionSymbolTable* self) {
+    _SymbolTable_free(&self->parameters);
+    _SymbolTable_free(&self->locals);
+    *self = (FunctionSymbolTable){0};
+}
+
+void ProgramSymbolTable_free(ProgramSymbolTable* self) {
+    _SymbolTable_free(&self->globals);
+    for (int i = 0; i < ArrayList_get_length(&self->functions); ++i) {
+        FunctionSymbolTable* function = ArrayList_get(&self->functions, i);
+        _FunctionSymbolTable_free(function);
+    }
+    ArrayList_free(&self->functions);
+    *self = (ProgramSymbolTable){0};
+}
+
 /**
  * @brief Initialize a FunctionSymbolTable object
  *
