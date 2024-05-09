@@ -590,8 +590,8 @@ void CodeWriter_Cmp(FILE* nasm, Node* node, int cmp_number) {
     fprintf(
         nasm,
         "; Comparaison sur les 2 dernieres valeurs de la pile\n"
-        "pop rcx\n"
         "pop rax\n"
+        "pop rcx\n"
         "cmp rcx, rax\n"
         "%s cmp_%d ; comparateur si vrai va dans 2e cas\n"
         "push 0\n"
