@@ -438,7 +438,7 @@ static ErrorType _Semantic_SuiteInstr(Tree tree,
 
     // Check if the function has a return statement (naive approch, should be improved)
     // Doesn't work with blocks of code (if, while)
-    if (!has_return) {
+    if (!has_return && func->ret_type != type_void) {
         CodeError_print(
             (CodeError){
                 .err = WARN_RETURN_TYPE_VOID,
