@@ -40,12 +40,6 @@ void CodeWriter_Init_File(FILE* nasm, const SymbolTable* globals) {
     fprintf(
         nasm,
         "global _start\n"
-        "extern show_registers\n"
-        "extern show_stack\n"
-        "extern putchar\n"
-        "extern getchar\n"
-        "extern putint\n"
-        "extern getint\n"
         "section .bss\n"
         "    global_vars: resb %ld\n\n"
         "section .text\n\n",
@@ -188,10 +182,12 @@ static ErrorType CodeWriter_CallFunction(FILE* nasm,
         "call %s\n", symbol->identifier);
 
     // Push result on stack
-    fprintf(
-        nasm,
-        "; Push valeur de retour sur la pile\n"
-        "push rax\n");
+    if (callee->ret_type != type_void) {
+        fprintf(
+            nasm,
+            "; Push valeur de retour sur la pile\n"
+            "push rax\n");
+    }
 
     fprintf(
         nasm, ";;; Fin de l'appel de la fonction %s ;;;\n\n", symbol->identifier);
@@ -664,4 +660,5 @@ void CodeWriter_load_builtins(FILE* nasm) {
         fputc(c, nasm);
         c = fgetc(f);
     }
+    fclose(f);
 }

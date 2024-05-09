@@ -136,8 +136,8 @@ void TreeReader_Prog(const ProgramSymbolTable* table, Tree tree, FILE* nasm) {
     assert(tree->label == Prog);
 
     CodeWriter_Init_File(nasm, &table->globals);
-    _TreeReader_DeclFoncts(table, SECONDCHILD(tree), nasm);
     CodeWriter_load_builtins(nasm);
+    _TreeReader_DeclFoncts(table, SECONDCHILD(tree), nasm);
 }
 
 /******************/

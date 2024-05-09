@@ -9,7 +9,7 @@
  */
 
 #include <stdio.h>
-#define PATH_BUILTINS "src/builtins.asm"
+#define PATH_BUILTINS "./src/builtins.asm"
 
 #include "symboltable.h"
 #include "tree.h"
