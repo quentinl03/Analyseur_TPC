@@ -60,7 +60,133 @@ static const char* _CodeWriter_Node_To_Ope(const Node* node) {
     }
 }
 
-void CodeWriter_Ope(FILE* nasm, const Node* node) {
+/**
+ * @brief Generate a unique label for boolean expressions operations
+ * 
+ * @return int 
+ */
+static int _CodeWriter_get_bool_label(void) {
+    static int label = 0;
+    return label++;
+}
+
+/**
+ * @brief Write code for a boolean logical AND operation
+ * Subexpressions are evaluated recursively, while
+ * jumping to the end if the first subexpression is false.
+ * (lazy evaluation)
+ * Childs of the node shouldn't be already evaluated, as they
+ * will be evaluated in this function.
+ * 
+ * @param nasm 
+ * @param node And node
+ * @param prog 
+ * @param func 
+ */
+static void _CodeWriter_BooleanAnd(FILE* nasm,
+                            const Tree node,
+                            const ProgramSymbolTable* prog,
+                            const FunctionSymbolTable* func) {
+    assert(node->label == And);
+
+    int label = _CodeWriter_get_bool_label();
+
+    TreeReader_Expr(prog, FIRSTCHILD(node), nasm, func);
+    fprintf(
+        nasm,
+        "; Evaluation de l'expression booléenne gauche \n"
+        "pop rax\n"
+        "cmp rax, 0\n"
+        "je bool_false_%d\n",
+        label
+    );
+    TreeReader_Expr(prog, SECONDCHILD(node), nasm, func);
+    fprintf(
+        nasm,
+        "; Evaluation de l'expression booléenne droite \n"
+        "pop rax\n"
+        "cmp rax, 0\n"
+        "je bool_false_%d\n",
+        label
+    );
+    fprintf(
+        nasm,
+        "push 1\n"
+        "jmp bool_end_%d\n"
+        "bool_false_%d:\n"
+        "push 0\n"
+        "bool_end_%d:\n\n",
+        label, label, label
+    );
+}
+
+/**
+ * @brief Write code for a boolean logical OR operation
+ * Subexpressions are evaluated recursively, while
+ * jumping to the end if the first subexpression is true.
+ * (lazy evaluation)
+ * Childs of the node shouldn't be already evaluated, as they
+ * will be evaluated in this function.
+ * 
+ * @param nasm 
+ * @param node 
+ * @param prog 
+ * @param func 
+ */
+static void _CodeWriter_BooleanOr(FILE* nasm,
+                           const Tree node,
+                           const ProgramSymbolTable* prog,
+                           const FunctionSymbolTable* func) {
+    assert(node->label == Or);
+
+    int label = _CodeWriter_get_bool_label();
+
+    TreeReader_Expr(prog, FIRSTCHILD(node), nasm, func);
+    fprintf(
+        nasm,
+        "; Evaluation de l'expression booléenne gauche \n"
+        "pop rax\n"
+        "cmp rax, 0\n"
+        "jne bool_true_%d\n",
+        label
+    );
+    TreeReader_Expr(prog, SECONDCHILD(node), nasm, func);
+    fprintf(
+        nasm,
+        "; Evaluation de l'expression booléenne droite \n"
+        "pop rax\n"
+        "cmp rax, 0\n"
+        "jne bool_true_%d\n",
+        label
+    );
+    fprintf(
+        nasm,
+        "push 0\n"
+        "jmp bool_end_%d\n"
+        "bool_true_%d:\n"
+        "push 1\n"
+        "bool_end_%d:\n\n",
+        label, label, label
+    );
+}
+
+void CodeWriter_Ope_Bool(FILE* nasm,
+                           const Tree node,
+                           const ProgramSymbolTable* prog,
+                           const FunctionSymbolTable* func) {
+    switch (node->label) {
+        case And:
+            _CodeWriter_BooleanAnd(nasm, node, prog, func);
+            break;
+        case Or:
+            _CodeWriter_BooleanOr(nasm, node, prog, func);
+            break;
+        default:
+            assert(0 && "We shoudn't be there\n");
+    }
+}
+
+void CodeWriter_Ope_Arith(FILE* nasm, const Node* node) {
     if (node->att.byte == '/' || node->att.byte == '%') {
         fprintf(
             nasm,
@@ -584,8 +710,9 @@ void CodeWriter_Cmp(FILE* nasm, Node* node, int cmp_number) {
         cmp = _CodeWriter_Node_To_Eq(node);
     } else if (node->label == Order) {
         cmp = _CodeWriter_Node_to_Order(node);
+    } else {
+        assert(cmp && "Comparaison symbol unknown (CodeWriter_Cmp)");
     }
-    assert(cmp && "Comparaison symbol unknow (CodeWriter_Cmp)");
 
     fprintf(
         nasm,
@@ -632,17 +759,21 @@ void CodeWriter_While_Init(FILE* nasm, int while_number) {
     fprintf(
         nasm,
         "; Condition while_%d\n"
-        "while_start_%d :\n; while eval cond\n",
-        while_number, while_number);
+        "while_start_%d :\n"
+        "; Evaluation de l'expression du while %d\n", // TreeReader_Expr is called after
+        while_number, while_number, while_number
+    );
 }
 
 void CodeWriter_While_Eval(FILE* nasm, int while_number) {
     fprintf(
         nasm,
+        "; Evaluation de la condition du while %d\n"
         "pop rax\n"
         "cmp rax, 0\n"
         "je end_while_%d\n ; while expr\n",
-        while_number);
+        while_number, while_number
+    );
 }
 
 void CodeWriter_While_End(FILE* nasm, int while_number) {

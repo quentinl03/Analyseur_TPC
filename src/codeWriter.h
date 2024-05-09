@@ -30,14 +30,17 @@ void CodeWriter_Init_File(FILE* nasm, const SymbolTable* globals);
  * @param nasm
  */
 void CodeWriter_load_builtins(FILE* nasm);
+
+
 /**
- * @brief Write a basic operation to the nasm file.
+ * @brief Evaluate an arithmetic binary operation
+ * Childs of the function should be evaluated before calling this function :
  * Pop two values from the stack, apply the operation and push the result.
- *
- * @param nasm File to write into
- * @param node Node to write
+ * 
+ * @param nasm 
+ * @param node 
  */
-void CodeWriter_Ope(FILE* nasm, const Node* node);
+void CodeWriter_Ope_Arith(FILE* nasm, const Node* node);
 
 /**
  * @brief Write a unary operation to the nasm file.
@@ -142,3 +145,18 @@ void CodeWriter_If_End(FILE* nasm, int if_number);
 void CodeWriter_While_Init(FILE* nasm, int while_number);
 void CodeWriter_While_Eval(FILE* nasm, int while_number);
 void CodeWriter_While_End(FILE* nasm, int while_number);
+
+/**
+ * @brief Write code for a boolean operation
+ * Childs of the node shouldn't be already evaluated, as they
+ * will be evaluated in this function.
+ * 
+ * @param nasm 
+ * @param node 
+ * @param prog 
+ * @param func 
+ */
+void CodeWriter_Ope_Bool(FILE* nasm,
+                           const Tree node,
+                           const ProgramSymbolTable* prog,
+                           const FunctionSymbolTable* func);

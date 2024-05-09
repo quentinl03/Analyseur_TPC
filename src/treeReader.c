@@ -153,11 +153,15 @@ void TreeReader_Expr(const ProgramSymbolTable* table,
             TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);
             CodeWriter_Ope_Unaire(nasm, tree);
             break;
+        case Or:
+        case And:
+            CodeWriter_Ope_Bool(nasm, tree, table, func);
+            break;
         case Addsub:
         case Divstar:
             TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);
             TreeReader_Expr(table, SECONDCHILD(tree), nasm, func);
-            CodeWriter_Ope(nasm, tree);
+            CodeWriter_Ope_Arith(nasm, tree);
             break;
         case Ident:
         case ArrayLR:
@@ -242,8 +246,10 @@ static void _Instr_While(const ProgramSymbolTable* table,
     int while_number = GLOBAL_CMP++;
 
     CodeWriter_While_Init(nasm, while_number);
+
     TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);
     CodeWriter_While_Eval(nasm, while_number);
+
     TreeReader_SuiteInst(table, SECONDCHILD(tree), func, nasm);
     CodeWriter_While_End(nasm, while_number);
 }

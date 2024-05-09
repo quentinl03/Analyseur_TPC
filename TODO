@@ -2,35 +2,38 @@
 
 ## Important
 
-- [ ] Les appels de fonctions à revoir
+- [ ] Négation unaire (!)
+
+- [X] Les appels de fonctions à revoir
   - Évaluer tous les arguments dans l'ordre inverse de leur apparition, en empilant successivement leur valeur dans la pile. Puis dépiler, les six premières valeurs de la pile vers les registres correspondants
 
 - [ ] Convention d'appel pour les appels de fonctions, à minima pour les registres sauvegardé par l'appelant (*caller-save register*)
+  - Pas vraiment utile ?
 
-- [ ] Ne pas compiler le builtins.asm, mais copier son contenu dans le NASM généré
+- [X] Ne pas compiler le builtins.asm, mais copier son contenu dans le NASM généré
 
 - [X] Les divisions / modulos
 
 - [X] Opérateur unaire (+/-)
 
-- [ ] Expressions booléennes
+- [X] Expressions booléennes
 
-- [ ] Instructions conditionnelles (if/else)
+- [X] Instructions conditionnelles (if/else)
 
-- [ ] Boucles while
-
+- [X] Boucles while
 
 ## A faire quand il y aura du temps / juste des idées
 
 - [ ] Les frees !
+  - 2 erreurs subsistent
 
 - [ ] Appeler GCC pour lier l'exécutable depuis le main, après la génération du NASM
 
 - Tests
 
-    - [ ] Erreurs sémantiques
+    - [X] Erreurs sémantiques
 
-    - [ ] Faire des tests pour vérifier les tables de symboles, et arbres produits
+    - [X] Faire des tests pour vérifier les tables de symboles, et arbres produits
 
     - [ ] Vérifier la validité du code NASM produit
 
