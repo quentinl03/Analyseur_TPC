@@ -160,3 +160,11 @@ void CodeWriter_Ope_Bool(FILE* nasm,
                            const Tree node,
                            const ProgramSymbolTable* prog,
                            const FunctionSymbolTable* func);
+
+/**
+ * @brief Logical not operation.
+ * Expects the value to negate to be on the top of the stack.
+ * 
+ * @param nasm 
+ */
+void CodeWriter_Ope_Bool_Not(FILE* nasm);

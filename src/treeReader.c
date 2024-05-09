@@ -157,6 +157,10 @@ void TreeReader_Expr(const ProgramSymbolTable* table,
         case And:
             CodeWriter_Ope_Bool(nasm, tree, table, func);
             break;
+        case Not:
+            TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);
+            CodeWriter_Ope_Bool_Not(nasm);
+            break;
         case Addsub:
         case Divstar:
             TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);

@@ -170,6 +170,18 @@ static void _CodeWriter_BooleanOr(FILE* nasm,
     );
 }
 
+void CodeWriter_Ope_Bool_Not(FILE* nasm) {
+    fprintf(
+        nasm,
+        "; Négation logique de la dernière valeur de la pile\n"
+        "pop rdi\n"
+        "cmp rdi, 0\n"
+        "sete al\n" // (Set if Equals) al = 1 if rdi == 0, 0 otherwise
+        "movzx rax, al\n" // Adds 0s to the left of the register
+        "push rax\n\n"
+    );
+}
+
 void CodeWriter_Ope_Bool(FILE* nasm,
                            const Tree node,
                            const ProgramSymbolTable* prog,
