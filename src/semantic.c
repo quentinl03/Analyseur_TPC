@@ -29,7 +29,7 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
     if (sym->symbol_type != SYMBOL_FUNCTION) {
         CodeError_print(
             (CodeError){
-                .err = (err |= ERR_SEM_IS_NOT_CALLABLE),
+                .err = ADD_ERR(err, ERR_SEM_IS_NOT_CALLABLE),
                 .line = tree->lineno,
                 .column = tree->column,
             },
@@ -42,7 +42,7 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
     if (!FunctionSymbolTable_is_defined_before_use(caller, calleefst)) {
         CodeError_print(
             (CodeError){
-                .err = (err |= ERR_USE_UNDEFINED_FUNCTION),
+                .err = ADD_ERR(err, WARN_USE_UNDEFINED_FUNCTION),
                 .column = tree->column,
                 .line = tree->lineno,
             },
@@ -60,7 +60,7 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
             // Check if we have more arguments than expected
             CodeError_print(
                 (CodeError){
-                    .err = (err |= ERR_INVALID_PARAM_COUNT),
+                    .err = ADD_ERR(err, ERR_INVALID_PARAM_COUNT),
                     .line = arg->lineno,
                     .column = tree->column,
                 },
@@ -81,7 +81,7 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
                 if (param_sym->symbol_type != arg_sym->symbol_type) {
                     CodeError_print(
                         (CodeError){
-                            .err = (err |= ERR_MISMATCH_ARRAY_TYPE),
+                            .err = ADD_ERR(err, ERR_MISMATCH_ARRAY_TYPE),
                             .line = arg->lineno,
                             .column = tree->column,
                         },
@@ -94,7 +94,7 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
                 else if (arg_sym->type != param_sym->type) {
                     CodeError_print(
                         (CodeError){
-                            .err = (err |= ERR_INVALID_ARRAY_TYPE),
+                            .err = ADD_ERR(err, ERR_INVALID_ARRAY_TYPE),
                             .line = arg->lineno,
                             .column = tree->column,
                         },
@@ -114,7 +114,7 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
         if (param_sym->symbol_type == SYMBOL_VALUE && ret.type == type_num && param_sym->type == type_byte) {
             CodeError_print(
                 (CodeError){
-                    .err = (err |= WARN_IMPLICIT_INT_TO_CHAR),
+                    .err = ADD_ERR(err, WARN_IMPLICIT_INT_TO_CHAR),
                     .line = arg->lineno,
                     .column = arg->column,
                 },
@@ -128,7 +128,7 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
     if (i < FunctionSymbolTable_get_param_count(calleefst)) {
         CodeError_print(
             (CodeError){
-                .err = (err |= ERR_INVALID_PARAM_COUNT),
+                .err = ADD_ERR(err, ERR_INVALID_PARAM_COUNT),
                 .line = tree->lineno,
                 .column = tree->column,
             },
@@ -305,7 +305,7 @@ static ErrorType _Semantic_Return(Tree tree,
     if (FIRSTCHILD(tree) == NULL && fsym->type != type_void) {
         CodeError_print(
             (CodeError){
-                .err = (err |= ERR_MUST_RETURN_VALUE),
+                .err = ADD_ERR(err, ERR_MUST_RETURN_VALUE),
                 .line = tree->lineno,
                 .column = tree->column,
             },
@@ -318,7 +318,7 @@ static ErrorType _Semantic_Return(Tree tree,
         if (fsym->type == type_byte && ret.type == type_num) {
             CodeError_print(
                 (CodeError){
-                    .err = (err |= WARN_IMPLICIT_INT_TO_CHAR),
+                    .err = ADD_ERR(err, WARN_IMPLICIT_INT_TO_CHAR),
                     .line = tree->lineno,
                     .column = tree->column,
                 },
@@ -329,7 +329,7 @@ static ErrorType _Semantic_Return(Tree tree,
         else if (fsym->type == type_void && ret.type == type_void) {
             CodeError_print(
                 (CodeError){
-                    .err = (err |= WARN_RETURN_TYPE_VOID),
+                    .err = ADD_ERR(err, WARN_RETURN_TYPE_VOID),
                     .line = tree->lineno,
                     .column = tree->column,
                 },
@@ -341,7 +341,7 @@ static ErrorType _Semantic_Return(Tree tree,
         else if (fsym->type == type_void) {
             CodeError_print(
                 (CodeError){
-                    .err = (err |= ERR_RETURN_TYPE_NON_VOID),
+                    .err = ADD_ERR(err, ERR_RETURN_TYPE_NON_VOID),
                     .line = tree->lineno,
                     .column = tree->column,
                 },
@@ -367,7 +367,7 @@ static ErrorType _Semantic_Assignation(Tree tree,
     else if (lvalue->symbol_type != SYMBOL_VALUE) {
         CodeError_print(
             (CodeError){
-                .err = (err |= ERR_NOT_AN_LVALUE),
+                .err = ADD_ERR(err, ERR_NOT_AN_LVALUE),
                 .line = lvalue->lineno,
                 .column = lvalue->column,
             },
@@ -383,7 +383,7 @@ static ErrorType _Semantic_Assignation(Tree tree,
     if (lvalue->type == type_byte && ret.type == type_num) {
         CodeError_print(
             (CodeError){
-                .err = (err |= WARN_IMPLICIT_INT_TO_CHAR),
+                .err = ADD_ERR(err, WARN_IMPLICIT_INT_TO_CHAR),
                 .line = tree->lineno,
                 .column = tree->column,
             },
@@ -395,7 +395,7 @@ static ErrorType _Semantic_Assignation(Tree tree,
     else if (ret.type == type_void) {
         CodeError_print(
             (CodeError){
-                .err = (err |= ERR_NO_VOID_EXPRESSION),
+                .err = ADD_ERR(err, ERR_NO_VOID_EXPRESSION),
                 .line = tree->lineno,
                 .column = tree->column,
             },
@@ -441,13 +441,12 @@ static ErrorType _Semantic_SuiteInstr(Tree tree,
     if (!has_return && func->ret_type != type_void) {
         CodeError_print(
             (CodeError){
-                .err = WARN_RETURN_TYPE_VOID,
+                .err = ADD_ERR(err, WARN_RETURN_TYPE_VOID),
                 .line = tree->lineno + 1,
                 .column = 0,
             },
             "missing return statement in function '%s' returning non-void",
             func->identifier);
-        err |= WARN_RETURN_TYPE_VOID;
     }
 
     return err;
@@ -488,7 +487,7 @@ ErrorType static Semantic_check_main(const ProgramSymbolTable* prog) {
     if ((fst_main = FunctionSymbolTable_get_from_name(prog, "main")) == NULL) {
         CodeError_print(
             (CodeError){
-                .err = (err |= ERR_MAIN_UNAVAILABLE),
+                .err = ADD_ERR(err, ERR_MAIN_UNAVAILABLE),
                 .line = 0,
                 .column = 0,
             },
@@ -498,7 +497,7 @@ ErrorType static Semantic_check_main(const ProgramSymbolTable* prog) {
         if (fst_main->ret_type != type_num) {
             CodeError_print(
                 (CodeError){
-                    .err = (err |= ERR_MAIN_RETURN_TYPE),
+                    .err = ADD_ERR(err, ERR_MAIN_RETURN_TYPE),
                     .line = sym_main->lineno,
                     .column = sym_main->column,
                 },
@@ -507,7 +506,7 @@ ErrorType static Semantic_check_main(const ProgramSymbolTable* prog) {
         if (FunctionSymbolTable_get_param_count(fst_main) > 0) {
             CodeError_print(
                 (CodeError){
-                    .err = (err |= ERR_MAIN_PARAM),
+                    .err = ADD_ERR(err, ERR_MAIN_PARAM),
                     .line = sym_main->lineno,
                     .column = sym_main->column,
                 },

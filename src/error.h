@@ -18,7 +18,6 @@ typedef enum ErrorType {
     ERR_UNDECLARED_SYMBOL       = ERR_SEMANTIC_FLAG | 1ULL << 18,
     ERR_RETURN_TYPE_NON_VOID    = ERR_SEMANTIC_FLAG | 1ULL << 19,
     ERR_MAIN_UNAVAILABLE        = ERR_SEMANTIC_FLAG | 1ULL << 21,
-    ERR_USE_UNDEFINED_FUNCTION  = ERR_SEMANTIC_FLAG | 1ULL << 22,
     ERR_MAIN_RETURN_TYPE        = ERR_SEMANTIC_FLAG | 1ULL << 23,
     ERR_MAIN_PARAM              = ERR_SEMANTIC_FLAG | 1ULL << 24,
     ERR_INVALID_PARAM_COUNT     = ERR_SEMANTIC_FLAG | 1ULL << 25,
@@ -36,8 +35,9 @@ typedef enum ErrorType {
     ERR_FILE_OPEN = ERR_CRITIAL_FLAG | 1ULL << 38,
 
     // 15 bits Warn (49 à 63)
-    WARN_IMPLICIT_INT_TO_CHAR   = ERR_WARN_FLAG | 1ULL << 48,
-    WARN_RETURN_TYPE_VOID       = ERR_WARN_FLAG | 1ULL << 20,
+    WARN_IMPLICIT_INT_TO_CHAR   = ERR_WARN_FLAG | 1ULL << 49,
+    WARN_RETURN_TYPE_VOID       = ERR_WARN_FLAG | 1ULL << 50,
+    WARN_USE_UNDEFINED_FUNCTION = ERR_WARN_FLAG | 1ULL << 51,
 
 } ErrorType;
 
@@ -59,6 +59,25 @@ typedef struct CodeError {
     int line;
     int column;
 } CodeError;
+
+/**
+ * @brief Add an error to the accumulator
+ * while returning the added error
+ * as an expression.
+ * Faciltates error accumulation + printing pattern.
+ * Example :
+ * 
+ * ```
+ *  ErrorType err = 0;
+ *  CodeError_print(
+ *   (CodeError) {
+ *       .err = ADD_ERR(err, WARN_IMPLICIT_INT_TO_CHAR),
+ *       ...
+ *  },
+ * ```
+ * 
+ */
+#define ADD_ERR(acc, err) (acc |= err, err)
 
 #define COLOR_ERR_RED "\e[1;31m"
 #define COLOR_WARN_YELLOW "\e[1;33m"

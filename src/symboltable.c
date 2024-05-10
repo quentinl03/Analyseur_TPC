@@ -173,7 +173,7 @@ static size_t _get_type_size(type_t type) {
         [type_num] = sizeof(uint64_t),
         [type_void] = 0,
     };
-    assert(type >= 0 && type < 5);
+    assert(type == type_byte || type == type_num || type == type_void);
 
     return sizes[type];
 }
@@ -240,14 +240,13 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                 if (length == 0) {
                     CodeError_print(
                         (CodeError){
-                            .err = ERR_ARRAY_ZERO_SIZE,
+                            .err = ADD_ERR(err, ERR_ARRAY_ZERO_SIZE),
                             .line = identNode->lineno,
                             .column = identNode->column,
                         },
                         "ISO C forbids zero-size array '%s'",
                         identNode->att.ident
                     );
-                    err |= ERR_ARRAY_ZERO_SIZE;
                 }
 
                 symbol = (Symbol){
@@ -275,6 +274,9 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                     .lineno = identNode->lineno,
                     .column = identNode->column,
                 };
+            }
+            else {
+              assert(0 && "Unreachable");
             }
             err |= _SymbolTable_add(self, symbol);
         }
@@ -339,13 +341,12 @@ static ErrorType _SymbolTable_check_redeclared_params_in_locals(FunctionSymbolTa
         if (param) {
             CodeError_print(
                 (CodeError){
-                    .err = ERR_SEM_REDECLARED_SYMBOL,
+                    .err = ADD_ERR(err, ERR_SEM_REDECLARED_SYMBOL),
                     .line = local->lineno,
                     .column = local->column,
                 },
                 "redeclaration of variable '%s' already declared in parameters list",
                 local->identifier);
-            err |= ERR_SEM_REDECLARED_SYMBOL;
         }
     }
 
@@ -367,12 +368,12 @@ static ErrorType _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Fu
         return ERR_NONE;
     }
 
+    assert(tree->label == DeclFonct);
     ErrorType err = ERR_NONE;
 
     // Go to the EnTeteFonct tree
     Node* header = tree->firstChild;
 
-    assert(tree->label == DeclFonct);
     bool is_void = header->firstChild->type == type_void;
 
     Node* identNode = header->firstChild->nextSibling;
