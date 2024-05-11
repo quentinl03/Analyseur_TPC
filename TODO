@@ -2,7 +2,7 @@
 
 ## Important
 
-- [ ] Négation unaire (!)
+- [X] Négation unaire (!)
 
 - [X] Les appels de fonctions à revoir
   - Évaluer tous les arguments dans l'ordre inverse de leur apparition, en empilant successivement leur valeur dans la pile. Puis dépiler, les six premières valeurs de la pile vers les registres correspondants
@@ -27,7 +27,7 @@
 - [ ] Les frees !
   - 2 erreurs subsistent
 
-- [ ] Appeler GCC pour lier l'exécutable depuis le main, après la génération du NASM
+~~- [ ] Appeler GCC pour lier l'exécutable depuis le main, après la génération du NASM~~
 
 - Tests
 

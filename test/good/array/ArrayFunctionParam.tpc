@@ -5,6 +5,9 @@ int f(int tab[], char tab2[]) {
 int main(void) {
     int tab[10];
     char tab2[10];
-    f(tab, tab2);
-    return 0;
+
+    tab[0] = 10;
+    tab2[0] = 'A';
+
+    return f(tab, tab2);
 }

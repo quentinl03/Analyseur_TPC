@@ -23,8 +23,11 @@ int main(void) {
     int input, res;
     char c;
 
-    res = h() + g(input, 'a');
-    putint(res);
+    input = 10;
 
-    return res;
+    res = h() + g(input, 'a');
+    putint(res); // -1385
+    putchar('\n');
+
+    return res; // -1385 % 256 = 151
 }
