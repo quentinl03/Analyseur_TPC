@@ -26,11 +26,14 @@ Node *makeNode(label_t label) {
         printf("Run out of memory\n");
         exit(1);
     }
-    node->label = label;
-    node->firstChild = node->nextSibling = NULL;
-    node->lineno = nbline;
-    node->column = nbchar;
-    node->type = type_void;
+    *node = (Node) {
+        .label = label,
+        .firstChild = NULL,
+        .nextSibling = NULL,
+        .lineno = nbline,
+        .column = nbchar,
+        .type = type_void,
+    };
     return node;
 }
 

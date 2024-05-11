@@ -72,6 +72,8 @@ static void TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
             case While:
                 _Instr_While(table, child, nasm, func);
                 break;
+            case EmptyInstr:
+                break;
             default:
                 // ! Noeud non géré voloraiement ou non
                 fprintf(stderr, "Node not managed: %s\n", NODE_STRING[child->label]);
