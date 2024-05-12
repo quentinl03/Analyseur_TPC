@@ -96,7 +96,7 @@ ErrorType _SymbolTable_add(SymbolTable* self, Symbol symbol) {
     }
 
     symbol.index = ArrayList_get_length(&self->symbols);
-    assert(ArrayList_sorted_insert(&self->symbols, &symbol) != ARRAYLIST_ERR_ALLOC);
+    ArrayList_sorted_insert(&self->symbols, &symbol);
 
     return ERR_NONE;
 }
