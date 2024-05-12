@@ -1,3 +1,8 @@
+; Declared as global to allow linking with gcc-compiled programs for test purposes
+global putchar
+global putint
+global getint
+global getchar
 
 putchar:
     push rbp

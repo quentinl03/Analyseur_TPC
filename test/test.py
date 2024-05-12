@@ -62,7 +62,7 @@ class SourceCodeStats:
             """Extract a comment from a source file
 
             Args:
-                attribute (str): Attribute : "nb_warning", "nb_errors"
+                attribute (str): Attribute : "nb_warnings", "nb_errors"
                 text (str): Source file
 
             Returns:
@@ -119,15 +119,16 @@ def test_input(file: Path, expected_retcode: int, prefix_exec=[], args=[]) -> Tu
         Tuple[int, SourceCodeStats]: return code, and the result of the compiler's
         warning/error emission
     """
-    src_code = str(file)
     logger.debug(f"Test with {file} ...")
     process = run(
-        [*prefix_exec, EXECUTABLE, src_code, *args],
+        [*prefix_exec, EXECUTABLE, str(file), *args],
         capture_output=True, text=True,
         check=False
     )
 
-    scs = SourceCodeStats.from_file(src_code, process.stderr)
+    with open(file, "r", encoding="utf-8") as f:
+        src_code = f.read()
+        scs = SourceCodeStats.from_file(src_code, process.stderr)
 
     if process.returncode == expected_retcode:
         logger.info(process.stderr)
@@ -176,7 +177,7 @@ class SyntaxTest(unittest.TestCase):
         self._subtest_files(["--only-semantic"], "warn/**/*.tpc", 0, "A warning caused an error different than 0")
 
     def test_4_semantic_good(self):
-        logger.debug("# Test semantically good source code")
+        logger.debug("# Test if good codes are semantically right as intended")
         files = list(Path(".").glob("good/**/*.tpc"))
 
         for filename in files:
@@ -185,17 +186,75 @@ class SyntaxTest(unittest.TestCase):
                 self.assertEqual(retcode, 0, "")
                 self.assertEqual(scs.result, CompileResults(0, 0))
 
+    # @skip
+    def test_5_compare_compiled_programs_output(self):
+        logger.debug("# Test good programs output")
+        Path('bin/').mkdir(exist_ok=True)
+        run([
+            "nasm", "-f", "elf64",
+            "../src/builtins.asm", "-o", "bin/builtins.o"],
+            check=True
+        )
+
+        files = set(Path(".").glob("good/**/*.tpc")) - set(Path(".").glob("good/random/interactive/*.tpc"))
+
+        for filename in sorted(files):
+            with self.subTest(str(filename)):
+                with open(filename, "r") as f:
+                    src_code = f.read()
+                # Compile with TPC Compiler
+                logger.debug(f"Test with {filename} ...")
+                run(
+                    [EXECUTABLE],
+                    cwd="../",
+                    input=src_code,
+                    text=True,
+                    check=True,
+                    capture_output=True
+                ) # TPC compiler will create the asm file under ../test/_anonymous.asm
+                run([
+                    "nasm", "-f", "elf64",
+                    "../_anonymous.asm", "-o", "bin/_anonymous.o"
+                ], check=True)
+                run([
+                    "gcc", "bin/_anonymous.o", "-o", "bin/tpcc_exec", "-nostartfiles", "-no-pie"
+                ], check=True)
+
+                # Compile with GCC
+                run([
+                    "gcc", "-Wno-implicit-function-declaration",
+                    "bin/builtins.o", "-x", "c", filename, "-o", "bin/gcc_exec"
+                ], check=True)
+
+                # Run TPCC's executable
+                p1 = run(["./bin/tpcc_exec"], capture_output=True, text=True, check=False)
+                p2 = run(["./bin/gcc_exec"], capture_output=True, text=True, check=False)
+
+                self.assertEqual(
+                    p1.returncode, p2.returncode,
+                    "TPCC compiled program return an invalid code"
+                )
+                self.assertEqual(
+                    p1.stdout, p2.stdout,
+                    "TPCC complied program didn't produced expected output on stdout"
+                )
+
     def _valgrind_conditionnal_jumps(self, path_glob: str, expected_retcode: int):
         """Use valgrind against inputs, to check for conditionnal jumps"""
         files = list(Path(".").glob(path_glob))
 
         for filename in files:
             with self.subTest(str(filename)):
-                retcode, _ = test_input(filename, expected_retcode, ["valgrind", "--error-exitcode=10", "--leak-check=no", "--track-origins=yes"], args=["--only-semantic"])
+                retcode, _ = test_input(
+                    filename,
+                    expected_retcode,
+                    ["valgrind", "--error-exitcode=10", "--leak-check=no", "--track-origins=yes"],
+                    args=["--only-semantic"]
+                )
                 self.assertEqual(retcode, expected_retcode, "Valgrind detected conditionnl jumps")
 
     # @skip
-    def test_5_valid_valgrind_conditionnal_jumps(self):
+    def test_6_valid_valgrind_conditionnal_jumps(self):
         logger.debug("# Test valgrind for conditionnal jumps :")
         self._valgrind_conditionnal_jumps("good/random/*.tpc", 0)
         self._valgrind_conditionnal_jumps("syn-err/random/*.tpc", 1)

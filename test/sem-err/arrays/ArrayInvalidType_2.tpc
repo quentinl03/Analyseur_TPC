@@ -1,4 +1,4 @@
-// nb_warning=0
+// nb_warnings=0
 // nb_errors=1
 
 void f(int tab[]) {
