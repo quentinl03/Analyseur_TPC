@@ -52,10 +52,16 @@ static void _Instr_While(const ProgramSymbolTable* table,
  */
 static void TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
                                  const FunctionSymbolTable* func, FILE* nasm) {
-    // printf("SuiteInst \t");
-    // printf("func_name: %s\n", func_name);
 
-    for (Node* child = tree->firstChild; child != NULL; child = child->nextSibling) {
+    assert(
+        tree->label == SuiteInstr || tree->label == Return
+        || tree->label == Assignation || tree->label == Ident
+        || tree->label == If || tree->label == While || tree->label == EmptyInstr
+    );
+
+    Node* child = tree->label == SuiteInstr ? FIRSTCHILD(tree) : tree;
+
+    for (; child != NULL; child = child->nextSibling) {
         switch (child->label) {
             case Return:
                 _Instr_Return(table, child, nasm, func);
@@ -152,7 +158,6 @@ void TreeReader_Prog(const ProgramSymbolTable* table, Tree tree, FILE* nasm) {
 void TreeReader_Expr(const ProgramSymbolTable* table,
                      Tree tree, FILE* nasm,
                      const FunctionSymbolTable* func) {
-    // printf("TreeReader_Expr\n");
     switch (tree->label) {
         case AddsubU:
             TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);
@@ -229,8 +234,6 @@ static void _Instr_Return(const ProgramSymbolTable* table,
 static void _Instr_Assignation(const ProgramSymbolTable* table,
                                Tree tree, FILE* nasm,
                                const FunctionSymbolTable* func) {
-    // TODO : Verif si la fonction marche
-    // printf("Instr_Assignation\n");
     TreeReader_Expr(table, SECONDCHILD(tree), nasm, func);
     CodeWriter_WriteVar(nasm, FIRSTCHILD(tree), table, func);
 }
@@ -238,6 +241,8 @@ static void _Instr_Assignation(const ProgramSymbolTable* table,
 static void _Instr_If(const ProgramSymbolTable* table,
                       Tree tree, FILE* nasm,
                       const FunctionSymbolTable* func) {
+    assert(tree->label == If);
+
     int if_number = GLOBAL_CMP++;
     TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);
     CodeWriter_If_Init(nasm, if_number);

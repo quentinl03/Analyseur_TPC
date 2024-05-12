@@ -29,6 +29,7 @@ typedef enum ErrorType {
     ERR_MISMATCH_ARRAY_TYPE     = ERR_SEMANTIC_FLAG | 1ULL << 31,
     ERR_INVALID_ARRAY_TYPE      = ERR_SEMANTIC_FLAG | 1ULL << 32,
     ERR_ARRAY_ZERO_SIZE         = ERR_SEMANTIC_FLAG | 1ULL << 33,
+    ERR_RETURN_VOID_EXPR        = ERR_SEMANTIC_FLAG | 1ULL << 50,
 
     // 15 bits err critical (37 à 48)
     ERR_NO_MEMORY = ERR_CRITIAL_FLAG | 1ULL << 37,
@@ -36,8 +37,8 @@ typedef enum ErrorType {
 
     // 15 bits Warn (49 à 63)
     WARN_IMPLICIT_INT_TO_CHAR   = ERR_WARN_FLAG | 1ULL << 49,
-    WARN_RETURN_TYPE_VOID       = ERR_WARN_FLAG | 1ULL << 50,
     WARN_USE_UNDEFINED_FUNCTION = ERR_WARN_FLAG | 1ULL << 51,
+    WARN_MISSING_RETURN         = ERR_WARN_FLAG | 1ULL << 52,
 
 } ErrorType;
 
