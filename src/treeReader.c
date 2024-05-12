@@ -72,6 +72,9 @@ static void TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
             case While:
                 _Instr_While(table, child, nasm, func);
                 break;
+            case SuiteInstr:
+                TreeReader_SuiteInst(table, child, func, nasm);
+                break;
             case EmptyInstr:
                 break;
             default:

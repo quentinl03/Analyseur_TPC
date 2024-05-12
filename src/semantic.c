@@ -409,7 +409,8 @@ static ErrorType _Semantic_Assignation(Tree tree,
 
 static ErrorType _Semantic_SuiteInstr(Tree tree,
                                       const FunctionSymbolTable* func,
-                                      const ProgramSymbolTable* prog) {
+                                      const ProgramSymbolTable* prog,
+                                      int depth) {
     assert(tree->label == SuiteInstr);
     ErrorType err = ERR_NONE;
     bool has_return = false;
@@ -426,6 +427,11 @@ static ErrorType _Semantic_SuiteInstr(Tree tree,
             case Ident:
                 err |= _Semantic_FunctionCall(child, func, prog);
                 break;
+            case SuiteInstr:
+                err |= _Semantic_SuiteInstr(child, func, prog, depth + 1);
+                break;
+            case EmptyInstr:
+                break;
             case If:
             case While:
                 err |= _Semantic_Expr(FIRSTCHILD(child), func, prog).err;
@@ -437,7 +443,7 @@ static ErrorType _Semantic_SuiteInstr(Tree tree,
 
     // Check if the function has a return statement (naive approch, should be improved)
     // Doesn't work with blocks of code (if, while)
-    if (!has_return && func->ret_type != type_void) {
+    if (!has_return && func->ret_type != type_void && depth == 0) {
         CodeError_print(
             (CodeError){
                 .err = ADD_ERR(err, WARN_RETURN_TYPE_VOID),
@@ -460,7 +466,7 @@ static ErrorType _Semantic_DeclFonct(Tree tree,
         FIRSTCHILD(tree)->firstChild->nextSibling->att.ident);
     ErrorType err = ERR_NONE;
     err |= _Semantic_SuiteInstr(SECONDCHILD(tree)->firstChild->nextSibling,
-                                func, prog);
+                                func, prog, 0);
     return err;
 }
 
