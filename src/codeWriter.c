@@ -206,6 +206,7 @@ void CodeWriter_Ope_Arith(FILE* nasm, const Node* node) {
             "mov rdx, 0\n"
             "pop rcx\n"
             "pop rax\n"
+            "cqo\n"
             "idiv rcx\n"
             "push %s\n\n",
             (node->att.byte == '%') ? "rdx" : "rax");
