@@ -275,18 +275,14 @@ static void _CodeWriter_CallFunction_aux(FILE* nasm,
     TreeReader_Expr(symtable, node, nasm, func);
 }
 
-/**
- * @brief Write code to call a function with its arguments
- *
- * @param nasm File to write to
- * @param node Function node (Ident node with EmptyArgs or ListExp node)
- * @return int
- */
-static ErrorType CodeWriter_CallFunction(FILE* nasm,
-                                         Node* node,
-                                         const ProgramSymbolTable* symtable,
-                                         const FunctionSymbolTable* caller,
-                                         const Symbol* symbol) {
+void CodeWriter_CallFunction(
+    FILE* nasm,
+    Node* node,
+    const ProgramSymbolTable* symtable,
+    const FunctionSymbolTable* caller
+) {
+    const Symbol* symbol = SymbolTable_resolve_from_node(symtable, caller, node);
+
     assert(
         node->label == Ident &&
         "Node should be an Ident node (function call)");
@@ -329,19 +325,27 @@ static ErrorType CodeWriter_CallFunction(FILE* nasm,
             (FunctionSymbolTable_get_param_count(callee) - 6) * 8
         );
     }
+    fprintf(
+        nasm, ";;; Fin de l'appel de la fonction %s ;;;\n\n", symbol->identifier
+    );
+}
+
+void CodeWriter_CallFunctionAsExpression(
+    FILE* nasm,
+    Node* callee_node,
+    const ProgramSymbolTable* symtable,
+    const FunctionSymbolTable* caller
+) {
+    const FunctionSymbolTable* callee = FunctionSymbolTable_get_from_name(symtable, callee_node->att.ident);
+
+    CodeWriter_CallFunction(nasm, callee_node, symtable, caller);
 
     // Push result on stack
-    if (callee->ret_type != type_void) {
-        fprintf(
-            nasm,
-            "; Push valeur de retour sur la pile\n"
-            "push rax\n");
-    }
-
+    assert(callee->ret_type != type_void);
     fprintf(
-        nasm, ";;; Fin de l'appel de la fonction %s ;;;\n\n", symbol->identifier);
-
-    return ERR_NONE;
+        nasm,
+        "; Push valeur de retour sur la pile\n"
+        "push rax\n");
 }
 
 /**
@@ -544,7 +548,7 @@ void CodeWriter_LoadVar(FILE* nasm,
 
     switch (symbol->symbol_type) {
         case SYMBOL_FUNCTION:
-            CodeWriter_CallFunction(nasm, node, symtable, func, symbol);
+            CodeWriter_CallFunctionAsExpression(nasm, node, symtable, func);
             break;
         case SYMBOL_VALUE:
             _CodeWriter_LoadValue(nasm, node, symtable, func);

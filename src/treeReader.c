@@ -67,7 +67,7 @@ static void TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
                 _Instr_Return(table, child, nasm, func);
                 break;
             case Ident:
-                CodeWriter_LoadVar(nasm, child, table, func);
+                CodeWriter_CallFunction(nasm, child, table, func);
                 break;
             case Assignation:
                 _Instr_Assignation(table, child, nasm, func);

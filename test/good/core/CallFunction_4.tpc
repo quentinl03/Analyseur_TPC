@@ -1,7 +1,10 @@
+// Check if the function call with more than 6 arguments is working
+// The caller must pop g, h from the stack after the call
+
+
 int f(int a, int b, int c, int d, int e, int f, int g, int h) {
     return a + b + c + d + e + f + g + h;
 }
-
 
 int main(void) {
     return 13 + f(1,2,3,4,5,6,7,8);

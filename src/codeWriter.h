@@ -31,6 +31,36 @@ void CodeWriter_Init_File(FILE* nasm, const SymbolTable* globals);
  */
 void CodeWriter_load_builtins(FILE* nasm);
 
+/**
+ * @brief Write code to call a function with its arguments
+ * 
+ * @param nasm File to write to
+ * @param node Function node (Ident node with EmptyArgs or ListExp node)
+ * @param symtable 
+ * @param caller 
+ */
+void CodeWriter_CallFunction(
+    FILE* nasm,
+    Node* node,
+    const ProgramSymbolTable* symtable,
+    const FunctionSymbolTable* caller
+);
+
+/**
+ * @brief Call a function, and push the result on the stack.
+ * Called function should be non-void.
+ * 
+ * @param nasm 
+ * @param node 
+ * @param symtable 
+ * @param caller 
+ */
+void CodeWriter_CallFunctionAsExpression(
+    FILE* nasm,
+    Node* callee_node,
+    const ProgramSymbolTable* symtable,
+    const FunctionSymbolTable* caller
+);
 
 /**
  * @brief Evaluate an arithmetic binary operation

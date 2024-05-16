@@ -1,0 +1,11 @@
+int f(int a) {
+    return 5;
+}
+
+int main(void) {
+    int a;
+
+    a = f(1);
+
+    return a;
+}
