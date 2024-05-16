@@ -320,6 +320,16 @@ static ErrorType CodeWriter_CallFunction(FILE* nasm,
         //"and rsp, -16\n"
         "call %s\n", symbol->identifier);
 
+    if (FunctionSymbolTable_get_param_count(callee) > 6) {
+        // Pop arguments if they are more than 6
+        fprintf(
+            nasm,
+            "add rsp, %d\n",
+            // ! 8 bytes per parameter hardcoded
+            (FunctionSymbolTable_get_param_count(callee) - 6) * 8
+        );
+    }
+
     // Push result on stack
     if (callee->ret_type != type_void) {
         fprintf(
