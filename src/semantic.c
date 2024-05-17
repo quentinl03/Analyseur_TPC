@@ -53,7 +53,6 @@ static ErrorType _Semantic_FunctionCall(Tree tree,
             },
             "implicit declaration of function '%s'",
             tree->att.ident);
-        return err;
     }
 
     int i = 0;

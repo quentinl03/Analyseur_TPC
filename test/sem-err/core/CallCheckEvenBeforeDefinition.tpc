@@ -1,11 +1,11 @@
-// nb_errors=0
+// nb_errors=1
 // nb_warnings=1
 
 int impair(int n) {
     if (n == 0) {
         return 0;
     }
-    return pair(n - 1);
+    return pair(n - 1, 4);
 }
 
 int pair(int n) {

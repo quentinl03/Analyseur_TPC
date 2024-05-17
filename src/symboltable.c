@@ -499,7 +499,7 @@ static void _SymbolTable_add_default_functions(ProgramSymbolTable* table) {
         table,
         (Symbol){
             .identifier = "putchar",
-            .type = type_num,
+            .type = type_void,
         },
         (Symbol[]){
             (Symbol){

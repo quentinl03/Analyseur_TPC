@@ -12,7 +12,7 @@ typedef enum ErrorType {
     // 15 bits err de parse (5 à 15)
     ERR_PARSE_SYNTAX = ERR_PARSE_FLAG | 1ULL << 4,
 
-    // 15 bits err de semantic (17 à 32)
+    // 15 bits err de semantic (17 à 36)
     ERR_SEM_REDECLARED_SYMBOL   = ERR_SEMANTIC_FLAG | 1ULL << 16,
     ERR_SEM_IS_NOT_CALLABLE     = ERR_SEMANTIC_FLAG | 1ULL << 17,
     ERR_UNDECLARED_SYMBOL       = ERR_SEMANTIC_FLAG | 1ULL << 18,
@@ -29,7 +29,7 @@ typedef enum ErrorType {
     ERR_MISMATCH_ARRAY_TYPE     = ERR_SEMANTIC_FLAG | 1ULL << 31,
     ERR_INVALID_ARRAY_TYPE      = ERR_SEMANTIC_FLAG | 1ULL << 32,
     ERR_ARRAY_ZERO_SIZE         = ERR_SEMANTIC_FLAG | 1ULL << 33,
-    ERR_RETURN_VOID_EXPR        = ERR_SEMANTIC_FLAG | 1ULL << 50,
+    ERR_RETURN_VOID_EXPR        = ERR_SEMANTIC_FLAG | 1ULL << 34,
 
     // 15 bits err critical (37 à 48)
     ERR_NO_MEMORY = ERR_CRITIAL_FLAG | 1ULL << 37,
