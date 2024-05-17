@@ -43,10 +43,10 @@ static void _Instr_While(const ProgramSymbolTable* table,
                          const FunctionSymbolTable* func);
 
 /**
- * @brief
+ * @brief Write code for a function body.
  *
  * @param table
- * @param tree
+ * @param tree SuitInstr node, or a single instruction node
  * @param func
  * @param nasm
  */
@@ -84,11 +84,13 @@ static void TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
             case EmptyInstr:
                 break;
             default:
-                // ! Noeud non géré voloraiement ou non
                 fprintf(stderr, "Node not managed: %s\n", NODE_STRING[child->label]);
                 assert(0 && "We shoudn't be there\n");
         }
-        // printf("child->label: %s\n", NODE_STRING[child->label]);
+        // We stop the loop if the we are not in a SuiteInstr node
+        if (tree->label != SuiteInstr) {
+            break;
+        }
     }
 }
 /**

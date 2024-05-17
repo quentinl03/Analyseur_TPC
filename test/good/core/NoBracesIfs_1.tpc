@@ -1,0 +1,12 @@
+int main(void) {
+    int n;
+
+    n = 2;
+
+    if (n % 2 == 0) 
+        putchar('a');
+    else
+        putchar('b');
+
+    return n;
+}
