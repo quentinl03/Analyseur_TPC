@@ -2,6 +2,8 @@
 
 ## Important
 
+- [ ] Eviter les double copies de returns
+
 - [ ] Nommer les labels en préfixant par un ``.``
 
 - [X] Négation unaire (!)
