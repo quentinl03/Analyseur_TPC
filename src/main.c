@@ -29,7 +29,7 @@ void atexit_function(void) {
         PROGRAM.file_out != stderr) {
         fclose(PROGRAM.file_out);
     }
-    //! @todo free symtable
+    ProgramSymbolTable_free(&PROGRAM.symtable);
 }
 
 int main(int argc, char* argv[]) {
