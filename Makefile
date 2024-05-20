@@ -5,7 +5,7 @@
 # $< : the first current prerequisite
 
 CC=gcc
-CFLAGS=-Wall -g3 -O0
+CFLAGS=-Wall -g3 -O0 # -DNDEBUG
 LDFLAGS=-Wall -lfl -Werror -Wfatal-errors
 EXEC=tpcc
 

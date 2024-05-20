@@ -25,26 +25,10 @@ Pour nettoyer le projet une fois l'utilisation terminée vous pouvez utiliser le
 Pour lancer le programme compilé vous devez utiliser la commande suivante :
 
 ```bash
-./bin/tpcas
+// TODO
 ```
 
 ## Les paramètres
-
-Prototype des paramètres de la commande.
-
-```bash
-./bin/tpcas [-t] [-h] file
-```
-
-- `file` (facultatif) : Chemin vers le fichier source à charger avec l'analyseur syntaxique, par défaut, lecture de l'entrée standard.
-
-- `-t / --tree` (facultatif) :
-
-   - Si le code source est valide, affiche l'arbre abstrait.
-
-   - Attention : si le code possède une erreur syntaxique, l'arbre ne s'affiche pas !
-
-- `-h / --help` (facultatif) : Affiche un bref menu d'aide.
 
 \pagebreak
 
@@ -78,74 +62,52 @@ Vous pouvez lancer les tests par deux manières différentes :
 
 ## Langage basique / Extensions
 
-Nous avons réalisé l'analyseur "basique", mais également ajouté le support des tableaux.
-Comme le sujet le requiert, ceux-cis peuvent être déclarés par une constante entière, les expressions constantes sont interdites.
-
 ## Messages d'erreur
 
-Les messages d'erreur affichent le couple ligne et colonne de leurs localisation.
-
-## Arbres abstraits
-
-Les arbres abstraits ont été implémentés et peuvent être affichés avec l'option [`-t/--tree`](#les-paramètres)
-
-## Divergence sur l'élaboration des tests unitaires
+## Élaboration des tests unitaires
 
 Pour lancer les tests pensez à regarder la section ['Test'](#tests).
 
-Nous avons choisi, après en avoir demandé l'autorisation, d'utiliser un script Python, et non Bash, pour exécuter les tests unitaires.
+Dans la continuité du projet d'analyse syntaxique, nous avons implémenté notre série de test avec Python.
 
-En effet, l'usage de Python nous permet l'utilisation de la bibliothèque native ``unittest``.
-Elle permet de simplifier la création de tests unitaires, en les séparant par type de tests, et permet de produire automatiquement un rapport des comportements inattendus.
+Nous avons conservé les tests de notre précédent projet désormais présents sous les répertoires ``syn-good`` et ``syn-err``. Nous les avons étendues avec des tests pour l'émission d'avertissement (``warn``), d'erreurs sémantiques (``sem-err``), et enfin pour avec des codes compilables avec une sortie prédictible (``good``).
 
-De plus, le module ``unittest`` est intégré dans de nombreux environnements de programmation, en particulier VSCode qui possède un menu spécifique affichant le déroulement en détail des tests exécutés.
+### C'est quoi ces commentaires dans les codes ``sem-err/`` et ``warn/`` !?
 
-Il serait également enviseagable d'automatiser l'exécution du script, par un système d'intégration coninue pouvant être fourni par les ``workflow``s de Github et Gitlab.
+Pendant le développement de la partie de vérification sémantique du projet, nous nous sommes demandé de comment s'assurer que notre compilateur émette toujours les mêmes erreurs et warnings.
+
+La solution la plus évidente était d'afficher en sortie (``stdout``) un code d'erreur correspondant. Cependant nous avons écarté ce choix pour éviter de complexifier la structure du projet. Nous nous sommes donc satisfait de compter les occurrences d'erreurs et avertissements. Par conséquent, nous écrivons dans les codes de tests, le nombre d'erreur/avertissement attendu à l'aide commentaires comme ceci :
+
+```c
+// nb_errors=1
+// nb_warnings=0
+```
+
+Ces derniers sont interprétés par le script Python, et comparés à la sortie du compilateur.
 
 \pagebreak
 
+### Valgrind mais pas pour les fuites
+
+Malheuresement, le projet possède des fuites de mémoire qui n'ont pas su être corrigées.
+
+Cependant nous l'avons tout de même implémenté parmi les tests, mais uniquement pour vérifier l'absence d'accès à des zones mémoires non-initialisées. Cela devrait limiter les problèmes "It's works on my machine.``...
+
+### Emprunt d'un compilateur concurrent...
+
+Développer un compilateur c'est bien, mais développer un compilateur qui génère du code *correct* c'est encore mieux.
+
+Pour vérifier que nos programmes générés possèdent bien le comportement désiré, nous avons décidé d'implémenter dans nos tests une phase de compilation des codes ``good/`` avec TPCC et GCC.
+Les binaires produits sont exécutés et leurs sortie standard/codes d'erreurs comparées.
+Cela permet ainsi de nous assurer en partie de validité du code produit.
+
 ## Difficultés rencontrées
-
-### Création des arbres avec valeurs
-
-Lorsque nous avons voulu produire les "arbres à valeurs", nous avons, dans un premier temps, pensés à créer une unique fonction pour ajouter les attributs.
-Cependant, nous avons rencontré des problèmes pour le transformer en union d'attributs. Nous avons donc créé une fonction par champ de l'union.
-
-### Dépendances dans le Makefile :
-
-La compilation d'un projet utilisant flex et bison est assez particulière, notamment car Bison crée deux fichiers en sortie : l'analyseur syntaxique, et un fichier en-tête contenant la définition des tokens et de l'union. Or ce dernier, est nécessaire à flex. Il faut donc pouvoir signifier à Make, que la commande bison produit deux cibles. Cependant, nous n'avions pas encore rencontré un tel cas dans nos précédents projets de C.
-
-Après quelques recherches, et examination de la documentation, il s'avère que Make permet la définition de "cibles groupées" (*grouped targets*) à l'aide du séparateur ``&:``, nous pouvons donc utiliser cette règle :
-
-```make
-obj/tpc.tab.h obj/tpc.tab.c &: src/tpc.y $(MODULES)
-```
 
 # Conclusion
 
 ## Améliorations possibles
 
-- Nous pourrions envisager l'ajout d'un mode permettant de continuer la construction de l'arbre, malgré la détection d'une erreur syntaxique.
-
 ## Points positifs
-
-- Projet innovant :
-  - Nous n'avions pas eu de projets similaires auparavant. Il a été agréable de découvrir `flex` et `bison`.
-
-- Arbres abstraits :
-
-  - Création et organisation des nœuds de l'arbre (nœuds listes, nœuds particuliers (``EmptyInstr``))
-
-- Creation des tests unitaires :
-
-  - Création de tests règles par règles.
-
-  - Chercher à "casser" le programme.
 
 ## Points négatifs
 
-Nous n'avons pas vraiment de points négatifs, nous avons apprécié le projet dans son ensemble.
-
-_____
-
-Quentin Laborde & Nicolas Seban
