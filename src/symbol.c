@@ -44,7 +44,8 @@ static void _Symbol_print_Function(const Symbol* self) {
 
 static void _Symbol_print_Array(const Symbol* self) {
     printf(
-        "%-15s : symbol_type=%-16s type=%-5s length=%d total_size=%d index=%-2d have_length=%s",
+        "%-15s : symbol_type=%-16s type=%-5s length=%d "
+        "total_size=%d index=%-2d have_length=%s",
         self->identifier,
         SymbolType_to_str(self->symbol_type),
         Symbol_get_type_str(self->type),

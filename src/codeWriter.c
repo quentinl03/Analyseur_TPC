@@ -16,7 +16,7 @@
 
 #include "registers.h"
 #include "symbol.h"
-#include "symboltable.h"
+#include "symbolTable.h"
 #include "tree.h"
 #include "treeReader.h"
 
@@ -85,8 +85,8 @@ static int _CodeWriter_get_bool_label(void) {
  */
 static void _CodeWriter_BooleanAnd(FILE* nasm,
                                    const Tree node,
-                                   const ProgramSymbolTable* prog,
-                                   const FunctionSymbolTable* func) {
+                                   const ProgramST* prog,
+                                   const FunctionST* func) {
     assert(node->label == And);
 
     int label = _CodeWriter_get_bool_label();
@@ -132,8 +132,8 @@ static void _CodeWriter_BooleanAnd(FILE* nasm,
  */
 static void _CodeWriter_BooleanOr(FILE* nasm,
                                   const Tree node,
-                                  const ProgramSymbolTable* prog,
-                                  const FunctionSymbolTable* func) {
+                                  const ProgramST* prog,
+                                  const FunctionST* func) {
     assert(node->label == Or);
 
     int label = _CodeWriter_get_bool_label();
@@ -170,16 +170,15 @@ void CodeWriter_Ope_Bool_Not(FILE* nasm) {
         "; Négation logique de la dernière valeur de la pile\n"
         "pop rdi\n"
         "cmp rdi, 0\n"
-        "sete al\n" // (Set if Equals) al = 1 if rdi == 0, 0 otherwise
-        "movzx rax, al\n" // Adds 0s to the left of the register
-        "push rax\n\n"
-    );
+        "sete al\n"        // (Set if Equals) al = 1 if rdi == 0, 0 otherwise
+        "movzx rax, al\n"  // Adds 0s to the left of the register
+        "push rax\n\n");
 }
 
 void CodeWriter_Ope_Bool(FILE* nasm,
                          const Tree node,
-                         const ProgramSymbolTable* prog,
-                         const FunctionSymbolTable* func) {
+                         const ProgramST* prog,
+                         const FunctionST* func) {
     switch (node->label) {
         case And:
             _CodeWriter_BooleanAnd(nasm, node, prog, func);
@@ -258,8 +257,8 @@ void CodeWriter_ConstantCharacter(FILE* nasm, const Node* node) {
  */
 static void _CodeWriter_CallFunction_aux(FILE* nasm,
                                          Node* node,
-                                         const ProgramSymbolTable* symtable,
-                                         const FunctionSymbolTable* func) {
+                                         const ProgramST* symtable,
+                                         const FunctionST* func) {
     if (node == NULL) {
         return;
     }
@@ -272,10 +271,9 @@ static void _CodeWriter_CallFunction_aux(FILE* nasm,
 void CodeWriter_CallFunction(
     FILE* nasm,
     Node* node,
-    const ProgramSymbolTable* symtable,
-    const FunctionSymbolTable* caller
-) {
-    const Symbol* symbol = SymbolTable_resolve_from_node(symtable, caller, node);
+    const ProgramST* symtable,
+    const FunctionST* caller) {
+    const Symbol* symbol = ST_resolve_from_node(symtable, caller, node);
 
     assert(
         node->label == Ident &&
@@ -287,17 +285,20 @@ void CodeWriter_CallFunction(
 
     fprintf(nasm, ";;; Appel de la fonction %s ;;;\n", symbol->identifier);
 
-    const FunctionSymbolTable* callee = FunctionSymbolTable_get_from_name(symtable, symbol->identifier);
+    const FunctionST* callee = FunctionST_get_from_name(symtable,
+                                                        symbol->identifier);
 
     if (node->firstChild->label != EmptyArgs) {
         // Call function with arguments
-        _CodeWriter_CallFunction_aux(nasm, node->firstChild->firstChild, symtable, caller);
+        _CodeWriter_CallFunction_aux(nasm, node->firstChild->firstChild,
+                                     symtable, caller);
 
-        // compare to 6 beacause after 6 parameters we need to keep them on the stack
-        int nb_params = MIN(FunctionSymbolTable_get_param_count(callee), 6);
+        // compare to 6 beacause after 6 parameters
+        // we need to keep them on the stack
+        int nb_params = MIN(FunctionST_get_param_count(callee), 6);
 
         for (int i = 0; i < nb_params; ++i) {
-            // const Symbol* param = FunctionSymbolTable_get_param(callee, i);
+            // const Symbol* param = FunctionST_get_param(callee, i);
             fprintf(
                 nasm,
                 "pop %s\n",
@@ -310,27 +311,26 @@ void CodeWriter_CallFunction(
         //"and rsp, -16\n"
         "call %s\n", symbol->identifier);
 
-    if (FunctionSymbolTable_get_param_count(callee) > 6) {
+    if (FunctionST_get_param_count(callee) > 6) {
         // Pop arguments if they are more than 6
         fprintf(
             nasm,
             "add rsp, %d\n",
             // ! 8 bytes per parameter hardcoded
-            (FunctionSymbolTable_get_param_count(callee) - 6) * 8
-        );
+            (FunctionST_get_param_count(callee) - 6) * 8);
     }
     fprintf(
-        nasm, ";;; Fin de l'appel de la fonction %s ;;;\n\n", symbol->identifier
-    );
+        nasm, ";;; Fin de l'appel de la fonction %s ;;;\n\n",
+        symbol->identifier);
 }
 
 void CodeWriter_CallFunctionAsExpression(
     FILE* nasm,
     Node* callee_node,
-    const ProgramSymbolTable* symtable,
-    const FunctionSymbolTable* caller
-) {
-    const FunctionSymbolTable* callee = FunctionSymbolTable_get_from_name(symtable, callee_node->att.ident);
+    const ProgramST* symtable,
+    const FunctionST* caller) {
+    const FunctionST* callee = FunctionST_get_from_name(symtable,
+                                                        callee_node->att.ident);
 
     CodeWriter_CallFunction(nasm, callee_node, symtable, caller);
 
@@ -353,9 +353,9 @@ void CodeWriter_CallFunctionAsExpression(
  * @param func
  */
 static void _CodeWriter_loadFunctionParam(
-    FILE* nasm, Node* node, const ProgramSymbolTable* symtable,
-    const FunctionSymbolTable* func) {
-    const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
+    FILE* nasm, Node* node, const ProgramST* symtable,
+    const FunctionST* func) {
+    const Symbol* symbol = ST_resolve_from_node(symtable, func, node);
 
     fprintf(
         nasm,
@@ -375,9 +375,9 @@ static void _CodeWriter_loadFunctionParam(
  */
 static void _CodeWriter_ComputeArrayAddress(FILE* nasm,
                                             Node* node,
-                                            const ProgramSymbolTable* symtable,
-                                            const FunctionSymbolTable* func) {
-    const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
+                                            const ProgramST* symtable,
+                                            const FunctionST* func) {
+    const Symbol* symbol = ST_resolve_from_node(symtable, func, node);
 
     fprintf(
         nasm,
@@ -414,9 +414,9 @@ static void _CodeWriter_ComputeArrayAddress(FILE* nasm,
  */
 static void _CodeWriter_LoadArrayAddress(FILE* nasm,
                                          Node* node,
-                                         const ProgramSymbolTable* symtable,
-                                         const FunctionSymbolTable* func) {
-    const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
+                                         const ProgramST* symtable,
+                                         const FunctionST* func) {
+    const Symbol* symbol = ST_resolve_from_node(symtable, func, node);
 
     _CodeWriter_ComputeArrayAddress(nasm, node, symtable, func);
 
@@ -442,10 +442,10 @@ static void _CodeWriter_LoadArrayAddress(FILE* nasm,
  */
 static void _CodeWriter_ComputeArrayElementAddress(FILE* nasm,
                                                    Node* node,
-                                                   const ProgramSymbolTable* symtable,
-                                                   const FunctionSymbolTable* func) {
+                                                   const ProgramST* symtable,
+                                                   const FunctionST* func) {
     assert(node->label == ArrayLR && node->firstChild != NULL);
-    const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
+    const Symbol* symbol = ST_resolve_from_node(symtable, func, node);
 
     fprintf(
         nasm,
@@ -470,7 +470,8 @@ static void _CodeWriter_ComputeArrayElementAddress(FILE* nasm,
 
     fprintf(
         nasm,
-        // lea : Compute effective address, without dereferencing (mov with operations)
+        // lea : Compute effective address, without dereferencing
+        // (mov with operations)
         "lea rax, [rdx + rax * %d]; Calcul de l'adresse de l'élément indexé\n"
         "push rax\n",
         symbol->type_size);
@@ -486,10 +487,10 @@ static void _CodeWriter_ComputeArrayElementAddress(FILE* nasm,
  */
 static void _CodeWriter_LoadArray(FILE* nasm,
                                   Node* node,
-                                  const ProgramSymbolTable* symtable,
-                                  const FunctionSymbolTable* func) {
+                                  const ProgramST* symtable,
+                                  const FunctionST* func) {
     assert(node->label == ArrayLR);
-    const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
+    const Symbol* symbol = ST_resolve_from_node(symtable, func, node);
 
     _CodeWriter_ComputeArrayElementAddress(nasm, node, symtable, func);
 
@@ -510,10 +511,10 @@ static void _CodeWriter_LoadArray(FILE* nasm,
  * @param func
  */
 static void _CodeWriter_LoadValue(FILE* nasm, Node* node,
-                                  const ProgramSymbolTable* symtable,
-                                  const FunctionSymbolTable* func) {
+                                  const ProgramST* symtable,
+                                  const FunctionST* func) {
     assert(node->label == Ident && node->firstChild == NULL);
-    const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
+    const Symbol* symbol = ST_resolve_from_node(symtable, func, node);
 
     if (symbol->is_param) {
         _CodeWriter_loadFunctionParam(nasm, node, symtable, func);
@@ -536,9 +537,9 @@ static void _CodeWriter_LoadValue(FILE* nasm, Node* node,
 
 void CodeWriter_LoadVar(FILE* nasm,
                         Node* node,
-                        const ProgramSymbolTable* symtable,
-                        const FunctionSymbolTable* func) {
-    const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
+                        const ProgramST* symtable,
+                        const FunctionST* func) {
+    const Symbol* symbol = ST_resolve_from_node(symtable, func, node);
 
     switch (symbol->symbol_type) {
         case SYMBOL_FUNCTION:
@@ -548,7 +549,8 @@ void CodeWriter_LoadVar(FILE* nasm,
             _CodeWriter_LoadValue(nasm, node, symtable, func);
             break;
         case SYMBOL_ARRAY:
-            // If the array is not indexed, we just need to load the array address
+            // If the array is not indexed,
+            // we just need to load the array address
             if (node->firstChild == NULL) {
                 _CodeWriter_LoadArrayAddress(nasm, node, symtable, func);
                 break;
@@ -571,15 +573,16 @@ void CodeWriter_LoadVar(FILE* nasm,
  * @param func
  */
 static void CodeWriter_WriteValue(FILE* nasm, Node* node,
-                                  const ProgramSymbolTable* symtable,
-                                  const FunctionSymbolTable* func) {
+                                  const ProgramST* symtable,
+                                  const FunctionST* func) {
     assert(node->label == Ident);
-    const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
+    const Symbol* symbol = ST_resolve_from_node(symtable, func, node);
 
     if (symbol->is_static) {
         fprintf(
             nasm,
-            "; Assignation de la dernière valeur de la pile dans la variable globale '%s'\n"
+            "; Assignation de la dernière valeur de la pile "
+            "dans la variable globale '%s'\n"
             "pop rax\n"
             "mov [global_vars + %d], rax\n",
             symbol->identifier,
@@ -587,7 +590,8 @@ static void CodeWriter_WriteValue(FILE* nasm, Node* node,
     } else if (symbol->is_param) {
         fprintf(
             nasm,
-            "; Assignation de la dernière valeur de la pile dans l'argument '%s'\n"
+            "; Assignation de la dernière valeur de la pile "
+            "dans l'argument '%s'\n"
             "pop rax\n"
             "mov [rbp %+d], rax\n",
             symbol->identifier,
@@ -595,7 +599,8 @@ static void CodeWriter_WriteValue(FILE* nasm, Node* node,
     } else /* local */ {
         fprintf(
             nasm,
-            "; Assignation de la dernière valeur de la pile dans la variable locale '%s'\n"
+            "; Assignation de la dernière valeur de la pile "
+            "dans la variable locale '%s'\n"
             "pop rax\n"
             "mov [rbp %+d], rax\n",
             symbol->identifier,
@@ -612,16 +617,17 @@ static void CodeWriter_WriteValue(FILE* nasm, Node* node,
  * @param func
  */
 static void CodeWriter_WriteArray(FILE* nasm, Node* node,
-                                  const ProgramSymbolTable* symtable,
-                                  const FunctionSymbolTable* func) {
+                                  const ProgramST* symtable,
+                                  const FunctionST* func) {
     assert(node->label == ArrayLR);
-    const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
+    const Symbol* symbol = ST_resolve_from_node(symtable, func, node);
 
     _CodeWriter_ComputeArrayElementAddress(nasm, node, symtable, func);
 
     fprintf(
         nasm,
-        "; Assignation de la dernière valeur de la pile dans l'élément du tableau '%s'\n",
+        "; Assignation de la dernière valeur de la pile "
+        "dans l'élément du tableau '%s'\n",
         symbol->identifier);
 
     fprintf(
@@ -631,11 +637,11 @@ static void CodeWriter_WriteArray(FILE* nasm, Node* node,
 }
 
 void CodeWriter_WriteVar(FILE* nasm, Node* node,
-                         const ProgramSymbolTable* symtable,
-                         const FunctionSymbolTable* func) {
+                         const ProgramST* symtable,
+                         const FunctionST* func) {
     assert(node->label == Ident || node->label == ArrayLR);
 
-    const Symbol* symbol = SymbolTable_resolve_from_node(symtable, func, node);
+    const Symbol* symbol = ST_resolve_from_node(symtable, func, node);
 
     switch (symbol->symbol_type) {
         case SYMBOL_ARRAY:
@@ -649,7 +655,7 @@ void CodeWriter_WriteVar(FILE* nasm, Node* node,
     }
 }
 
-void CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func) {
+void CodeWriter_stackFrame_start(FILE* nasm, const FunctionST* func) {
     fprintf(
         nasm,
         "; Init stack frame (save base pointer)\n"
@@ -661,10 +667,10 @@ void CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func) {
         func->locals.next_addr);
 
     // Move parameters to the callee's stack frame
-    int nb_params_to_save = MIN(FunctionSymbolTable_get_param_count(func), 6);
+    int nb_params_to_save = MIN(FunctionST_get_param_count(func), 6);
 
     for (int i = 0; i < nb_params_to_save; ++i) {
-        const Symbol* param = FunctionSymbolTable_get_param(func, i);
+        const Symbol* param = FunctionST_get_param(func, i);
         fprintf(
             nasm,
             "; Move parameter '%s' to the stack frame\n"
@@ -676,7 +682,7 @@ void CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func) {
     fputc('\n', nasm);
 }
 
-void CodeWriter_stackFrame_end(FILE* nasm, const FunctionSymbolTable* func) {
+void CodeWriter_stackFrame_end(FILE* nasm, const FunctionST* func) {
     fprintf(
         nasm,
         "; Frees stack frame, (reset stack pointer to caller's state)\n"
@@ -684,7 +690,7 @@ void CodeWriter_stackFrame_end(FILE* nasm, const FunctionSymbolTable* func) {
         "pop rbp\n\n");
 }
 
-void CodeWriter_FunctionLabel(FILE* nasm, const FunctionSymbolTable* func) {
+void CodeWriter_FunctionLabel(FILE* nasm, const FunctionST* func) {
     fprintf(nasm, "%s:\n\n", func->identifier);
 }
 
@@ -720,7 +726,9 @@ static char* _CodeWriter_Node_to_Order(const Node* node) {
             return "jl";
 
         default:
-            assert(0 && "We shouldn't be there (CodeWriter_Node_to_Order) (Wrong comparator)");
+            assert(0 &&
+                   "We shouldn't be there (CodeWriter_Node_to_Order) "
+                   "(Wrong comparator)");
             break;
     }
 }
@@ -781,7 +789,8 @@ void CodeWriter_While_Init(FILE* nasm, int while_number) {
         nasm,
         "; Condition while_%d\n"
         "while_start_%d :\n"
-        "; Evaluation de l'expression du while %d\n",  // TreeReader_Expr is called after
+        "; Evaluation de l'expression du while %d\n",
+        // TreeReader_Expr is called after
         while_number, while_number, while_number);
 }
 

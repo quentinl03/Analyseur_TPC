@@ -1,4 +1,4 @@
-#include "symboltable.h"
+#include "symbolTable.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -18,50 +18,52 @@
  * @param self SymbolTable object
  * @return ArrayListError
  */
-static ArrayListError _SymbolTable_init(SymbolTable* self) {
+static ArrayListError _ST_init(SymbolTable* self) {
     *self = (SymbolTable){
         ._next_addr_param = 16,
     };
     return ArrayList_init(&self->symbols, sizeof(Symbol), 30, Symbol_cmp);
 }
 
-static void _SymbolTable_free(SymbolTable* self) {
+static void _ST_free(SymbolTable* self) {
     ArrayList_free(&self->symbols);
     *self = (SymbolTable){0};
 }
 
-static void _FunctionSymbolTable_free(FunctionSymbolTable* self) {
-    _SymbolTable_free(&self->parameters);
-    _SymbolTable_free(&self->locals);
-    *self = (FunctionSymbolTable){0};
+static void _FunctionST_free(FunctionST* self) {
+    _ST_free(&self->parameters);
+    _ST_free(&self->locals);
+    *self = (FunctionST){0};
 }
 
-void ProgramSymbolTable_free(ProgramSymbolTable* self) {
-    _SymbolTable_free(&self->globals);
+void ProgramST_free(ProgramST* self) {
+    _ST_free(&self->globals);
     for (int i = 0; i < ArrayList_get_length(&self->functions); ++i) {
-        FunctionSymbolTable* function = ArrayList_get(&self->functions, i);
-        _FunctionSymbolTable_free(function);
+        FunctionST* function = ArrayList_get(&self->functions, i);
+        _FunctionST_free(function);
     }
     ArrayList_free(&self->functions);
-    *self = (ProgramSymbolTable){0};
+    *self = (ProgramST){0};
 }
 
 /**
- * @brief Initialize a FunctionSymbolTable object
+ * @brief Initialize a FunctionST object
  *
- * @param self FunctionSymbolTable object
+ * @param self FunctionST object
  * @param identifier Function name, should be pre-allocated
  */
-static void _FunctionSymbolTable_init(FunctionSymbolTable* self, const char* identifier, type_t ret_type) {
-    *self = (FunctionSymbolTable){
+static void _FunctionST_init(FunctionST* self,
+                             const char* identifier,
+                             type_t ret_type) {
+    *self = (FunctionST){
         .identifier = identifier,
         .ret_type = ret_type,
     };
 
-    _SymbolTable_init(&self->parameters);
+    _ST_init(&self->parameters);
     self->parameters.type = SYMBOL_TABLE_PARAM;
 
-    _SymbolTable_init(&self->locals);
+    _ST_init(&self->locals);
     self->locals.type = SYMBOL_TABLE_LOCAL;
 }
 
@@ -70,9 +72,10 @@ static void _FunctionSymbolTable_init(FunctionSymbolTable* self, const char* ide
  *
  * @param self SymbolTable object
  * @param symbol Symbol to add
- * @return ErrorType ERR_SEM_REDECLARED_SYMBOL if the symbol is already in the table
+ * @return ErrorType ERR_SEM_REDECLARED_SYMBOL
+ * if the symbol is already in the table
  */
-ErrorType _SymbolTable_add(SymbolTable* self, Symbol symbol) {
+ErrorType _ST_add(SymbolTable* self, Symbol symbol) {
     if (ArrayList_contains(&self->symbols, &symbol)) {
         CodeError_print(
             (CodeError){
@@ -80,9 +83,11 @@ ErrorType _SymbolTable_add(SymbolTable* self, Symbol symbol) {
                 .line = symbol.lineno,
                 .column = symbol.column,
             },
-            self->type == SYMBOL_TABLE_PARAM        ? "redeclaration of parameter '%s'"
-            : symbol.symbol_type == SYMBOL_FUNCTION ? "redefinition of function '%s'"
-                                                    : "redeclaration of '%s'",
+            self->type == SYMBOL_TABLE_PARAM
+                ? "redeclaration of parameter '%s'"
+            : symbol.symbol_type == SYMBOL_FUNCTION
+                ? "redefinition of function '%s'"
+                : "redeclaration of '%s'",
             symbol.identifier);
         return ERR_SEM_REDECLARED_SYMBOL;
     }
@@ -101,17 +106,14 @@ ErrorType _SymbolTable_add(SymbolTable* self, Symbol symbol) {
             // Those symbols will be copied on the callee's stack
             symbol.addr = -self->next_addr - symbol.total_size;
             self->next_addr += symbol.total_size;
-        }
-        else {
-            symbol.addr = self->_next_addr_param; 
+        } else {
+            symbol.addr = self->_next_addr_param;
             self->_next_addr_param += symbol.total_size;
         }
-    }
-    else if (self->type == SYMBOL_TABLE_GLOBAL) {
+    } else if (self->type == SYMBOL_TABLE_GLOBAL) {
         symbol.addr = self->next_addr;
         self->next_addr += symbol.total_size;
-    }
-    else {
+    } else {
         symbol.addr = -self->next_addr - symbol.total_size;
         self->next_addr += symbol.total_size;
     }
@@ -122,7 +124,7 @@ ErrorType _SymbolTable_add(SymbolTable* self, Symbol symbol) {
     return ERR_NONE;
 }
 
-Symbol* SymbolTable_get(const SymbolTable* self, const char* identifier) {
+Symbol* ST_get(const SymbolTable* self, const char* identifier) {
     /* Returns a symbol associated to an identifier */
 
     const Symbol symbol = (Symbol){
@@ -132,26 +134,27 @@ Symbol* SymbolTable_get(const SymbolTable* self, const char* identifier) {
     return ArrayList_search(&self->symbols, &symbol);
 }
 
-Symbol* SymbolTable_resolve(const ProgramSymbolTable* table,
-                            const FunctionSymbolTable* func,
-                            const char* identifier) {
+Symbol* ST_resolve(const ProgramST* table,
+                   const FunctionST* func,
+                   const char* identifier) {
     Symbol* symbol = NULL;
 
-    if ((symbol = SymbolTable_get(&func->locals, identifier))) {
-    } else if ((symbol = SymbolTable_get(&func->parameters, identifier))) {
-    } else if ((symbol = SymbolTable_get(&table->globals, identifier)))
+    if ((symbol = ST_get(&func->locals, identifier))) {
+    } else if ((symbol = ST_get(&func->parameters, identifier))) {
+    } else if ((symbol = ST_get(&table->globals, identifier)))
         ;
 
     return symbol;
 }
 
-bool FunctionSymbolTable_is_defined_before_use(const FunctionSymbolTable* caller, const FunctionSymbolTable* callee) {
+bool FunctionST_is_defined_before_use(const FunctionST* caller,
+                                      const FunctionST* callee) {
     //* The function array isn't sorted, and thus preserve insertion order
-    //* Moreover, we only pass FunctionSymbolTable through pointers
+    //* Moreover, we only pass FunctionST through pointers
     return callee <= caller;
 }
 
-const Symbol* FunctionSymbolTable_get_param(const FunctionSymbolTable* self, int i) {
+const Symbol* FunctionST_get_param(const FunctionST* self, int i) {
     for (int j = 0; j < ArrayList_get_length(&self->parameters.symbols); ++j) {
         const Symbol* symbol = ArrayList_get(&self->parameters.symbols, j);
         if (symbol->index == i) {
@@ -161,11 +164,11 @@ const Symbol* FunctionSymbolTable_get_param(const FunctionSymbolTable* self, int
     return NULL;
 }
 
-Symbol* SymbolTable_resolve_from_node(const ProgramSymbolTable* table,
-                                      const FunctionSymbolTable* func,
-                                      const Node* node) {
+Symbol* ST_resolve_from_node(const ProgramST* table,
+                             const FunctionST* func,
+                             const Node* node) {
     Symbol* symbol = NULL;
-    if ((symbol = SymbolTable_resolve(table, func, node->att.ident))) {
+    if ((symbol = ST_resolve(table, func, node->att.ident))) {
         return symbol;
     } else {
         // Variable not found
@@ -221,9 +224,10 @@ static type_t _get_type_from_string(const Attribut* att) {
  *
  * @param self SymbolTable to populate
  * @param tree Type/DeclFonctArray tree
- * @return ErrorType ERR_SEM_REDECLARED_SYMBOL if a symbol was already in the table
+ * @return ErrorType ERR_SEM_REDECLARED_SYMBOL
+ * if a symbol was already in the table
  */
-static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
+static ErrorType _ST_create_from_Type(SymbolTable* self, Tree tree) {
     assert(tree != NULL);
     assert(tree->label == Type || tree->label == DeclFonctArray);
     ErrorType err = 0;
@@ -247,8 +251,6 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                     .symbol_type = SYMBOL_ARRAY,
                     .array.have_length = false,
                     .is_static = false,
-
-                    // TODO: Is this ok? An array is decayed to a pointer in C (8 bytes on x86_64 systems)
                     .total_size = 8,
                     .lineno = identNode->lineno,
                     .column = identNode->column,
@@ -266,8 +268,7 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                             .column = identNode->column,
                         },
                         "ISO C forbids zero-size array '%s'",
-                        identNode->att.ident
-                    );
+                        identNode->att.ident);
                 }
 
                 symbol = (Symbol){
@@ -295,11 +296,10 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
                     .lineno = identNode->lineno,
                     .column = identNode->column,
                 };
+            } else {
+                assert(0 && "Unreachable");
             }
-            else {
-              assert(0 && "Unreachable");
-            }
-            err |= _SymbolTable_add(self, symbol);
+            err |= _ST_add(self, symbol);
         }
     }
 
@@ -313,9 +313,12 @@ static ErrorType _SymbolTable_create_from_Type(SymbolTable* self, Tree tree) {
  * @param offset Offset to start adding variables
  * (functions parameters could be stored on the stack if they are more than 6)
  * @param tree Tree of DeclVars containing variables
- * @return ErrorType ERR_SEM_REDECLARED_SYMBOL if a symbol was already in the table
+ * @return ErrorType ERR_SEM_REDECLARED_SYMBOL
+ * if a symbol was already in the table
  */
-static ErrorType SymbolTable_create_from_DeclVars(SymbolTable* self, int offset, Tree tree) {
+static ErrorType ST_create_from_DeclVars(SymbolTable* self,
+                                         int offset,
+                                         Tree tree) {
     assert(tree->label == DeclVars);
     self->next_addr = offset;
 
@@ -325,18 +328,20 @@ static ErrorType SymbolTable_create_from_DeclVars(SymbolTable* self, int offset,
         return ERR_NONE;
     }
 
-    return _SymbolTable_create_from_Type(self, node);
+    return _ST_create_from_Type(self, node);
 }
 
 /**
  * @brief Add function parameters to the symbol table
  * Begins exploration from ListTypVar
  *
- * @param func FunctionSymbolTable object to fill
+ * @param func FunctionST object to fill
  * @param tree Tree ListTypVar tree
- * @return ErrorType ERR_SEM_REDECLARED_SYMBOL if a symbol is already in the table
+ * @return ErrorType ERR_SEM_REDECLARED_SYMBOL
+ * if a symbol is already in the table
  */
-static ErrorType _FunctionSymbolTable_create_from_ListTypVar(FunctionSymbolTable* func, Tree tree) {
+static ErrorType _FunctionST_create_from_ListTypVar(FunctionST* func,
+                                                    Tree tree) {
     if (tree->label == Void) {
         return 0;
     }
@@ -344,21 +349,22 @@ static ErrorType _FunctionSymbolTable_create_from_ListTypVar(FunctionSymbolTable
     // We go to the the first Type/DeclFontArray
     tree = tree->firstChild;
 
-    return _SymbolTable_create_from_Type(&func->parameters, tree);
+    return _ST_create_from_Type(&func->parameters, tree);
 }
 
 /**
  * @brief Check if a local variable is redeclared in the parameters list
  *
- * @param func FunctionSymbolTable object to check
- * @return ErrorType ERR_SEM_REDECLARED_SYMBOL if a symbol was already in the table
+ * @param func FunctionST object to check
+ * @return ErrorType ERR_SEM_REDECLARED_SYMBOL
+ * if a symbol was already in the table
  */
-static ErrorType _SymbolTable_check_redeclared_params_in_locals(FunctionSymbolTable* func) {
+static ErrorType _ST_check_redeclared_params_in_locals(FunctionST* func) {
     ErrorType err = ERR_NONE;
 
     for (int i = 0; i < ArrayList_get_length(&func->locals.symbols); ++i) {
         Symbol* local = ArrayList_get(&func->locals.symbols, i);
-        Symbol* param = SymbolTable_get(&func->parameters, local->identifier);
+        Symbol* param = ST_get(&func->parameters, local->identifier);
         if (param) {
             CodeError_print(
                 (CodeError){
@@ -366,7 +372,7 @@ static ErrorType _SymbolTable_check_redeclared_params_in_locals(FunctionSymbolTa
                     .line = local->lineno,
                     .column = local->column,
                 },
-                "redeclaration of variable '%s' already declared in parameters list",
+                "redeclaration of '%s' was already declared in parameters list",
                 local->identifier);
         }
     }
@@ -375,16 +381,19 @@ static ErrorType _SymbolTable_check_redeclared_params_in_locals(FunctionSymbolTa
 }
 
 /**
- * @brief Create a FunctionSymbolTable from a DeclFonct tree
+ * @brief Create a FunctionST from a DeclFonct tree
  * Adds the function to the program's global symbol table
  * and creates a symbol table for the function's parameters and local variables
  *
  * @param prog SymbolTable of the program
- * @param func FunctionSymbolTable of the function
+ * @param func FunctionST of the function
  * @param func DeclFonct tree
- * @return ErrorType ERR_SEM_REDECLARED_SYMBOL if a symbol is already in the table
+ * @return ErrorType ERR_SEM_REDECLARED_SYMBOL
+ * if a symbol is already in the table
  */
-static ErrorType _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, FunctionSymbolTable* func, Tree tree) {
+static ErrorType _ST_create_from_DeclFonct(ProgramST* prog,
+                                           FunctionST* func,
+                                           Tree tree) {
     if (!tree) {
         return ERR_NONE;
     }
@@ -399,11 +408,12 @@ static ErrorType _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Fu
 
     Node* identNode = header->firstChild->nextSibling;
 
-    type_t ret_type = is_void ? type_void : _get_type_from_string(&header->firstChild->att);
-    _FunctionSymbolTable_init(func, identNode->att.ident, ret_type);
+    type_t ret_type = is_void ? type_void
+                              : _get_type_from_string(&header->firstChild->att);
+    _FunctionST_init(func, identNode->att.ident, ret_type);
 
     // * Add the function to the program's global symbol table
-    err |= _SymbolTable_add(
+    err |= _ST_add(
         &prog->globals,
         (Symbol){
             // function name
@@ -420,15 +430,16 @@ static ErrorType _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Fu
 
     // * Add the function's parameters to the function's symbol table, if any
     Node* listParams = header->firstChild->nextSibling->nextSibling;
-    err |= _FunctionSymbolTable_create_from_ListTypVar(func, listParams);
+    err |= _FunctionST_create_from_ListTypVar(func, listParams);
 
     // * Add the function's local variables to the function's symbol table
-    int offset = func->parameters.next_addr;  // Parameters could be stored on the stack
+    // Parameters could be stored on the stack
+    int offset = func->parameters.next_addr;
     // DeclFonct->EnTeteFonct->Corps->DeclVars
     Node* listLocals = tree->firstChild->nextSibling->firstChild;
-    err |= SymbolTable_create_from_DeclVars(&func->locals, offset, listLocals);
+    err |= ST_create_from_DeclVars(&func->locals, offset, listLocals);
 
-    err |= _SymbolTable_check_redeclared_params_in_locals(func);
+    err |= _ST_check_redeclared_params_in_locals(func);
 
     return err;
 }
@@ -437,19 +448,20 @@ static ErrorType _SymbolTable_create_from_DeclFonct(ProgramSymbolTable* prog, Fu
  * @brief Starts tree exploration from a DeclFoncts
  * and creates a symbol table for each function
  *
- * @param self ProgramSymbolTable object to fill
+ * @param self ProgramST object to fill
  * @param tree DeclFoncts tree to explore
- * @return ErrorType ERR_SEM_REDECLARED_SYMBOL if a symbol is already in the table
+ * @return ErrorType ERR_SEM_REDECLARED_SYMBOL
+ * if a symbol is already in the table
  */
-static ErrorType _ProgramSymbolTable_from_DeclFoncts(ProgramSymbolTable* self, Tree tree) {
+static ErrorType _ProgramST_from_DeclFoncts(ProgramST* self, Tree tree) {
     assert(tree->label == DeclFoncts);
     ErrorType err = ERR_NONE;
 
     Node* funcNode = tree->firstChild;
     FOREACH_SIBLING(funcNode) {
-        FunctionSymbolTable function;
+        FunctionST function;
 
-        err |= _SymbolTable_create_from_DeclFonct(self, &function, funcNode);
+        err |= _ST_create_from_DeclFonct(self, &function, funcNode);
 
         ArrayList_append(&self->functions, &function);
     }
@@ -464,13 +476,15 @@ static ErrorType _ProgramSymbolTable_from_DeclFoncts(ProgramSymbolTable* self, T
  * @param prog
  * @param ret A Symbol object representing the return value, with only
  * identifier and type defined
- * @param symbols Array of symbols to add as parameters. Last element should be {0}
- * in order to stop the loop (a NULL identifier is considered as the end of the array)
+ * @param symbols Array of symbols to add as parameters.
+ * Last element should be {0}
+ * in order to stop the loop
+ * (a NULL identifier is considered as the end of the array)
  * NULL if none (void parameter)
  */
-static void ProgramSymbolTable_add_default_function(ProgramSymbolTable* prog,
-                                                    Symbol ret,
-                                                    Symbol symbols[]) {
+static void ProgramST_add_default_function(ProgramST* prog,
+                                           Symbol ret,
+                                           Symbol symbols[]) {
     ret = (Symbol){
         .identifier = ret.identifier,
         .type = ret.type,
@@ -480,16 +494,16 @@ static void ProgramSymbolTable_add_default_function(ProgramSymbolTable* prog,
         .type_size = _get_type_size(ret.type),
         .total_size = 1 * _get_type_size(ret.type),
     };
-    _SymbolTable_add(&prog->globals, ret);
+    _ST_add(&prog->globals, ret);
 
-    FunctionSymbolTable fun;
-    _FunctionSymbolTable_init(&fun, ret.identifier, ret.type);
+    FunctionST fun;
+    _FunctionST_init(&fun, ret.identifier, ret.type);
 
     // If there are parameters, add them to the function's symbol table
     if (symbols != NULL) {
         // Loop until we find a NULL identifier (end of the array)
         for (const Symbol* param = symbols; param->identifier; ++param) {
-            _SymbolTable_add(
+            _ST_add(
                 &fun.parameters,
                 (Symbol){
                     .identifier = param->identifier,
@@ -515,8 +529,8 @@ static void ProgramSymbolTable_add_default_function(ProgramSymbolTable* prog,
  *
  * @param globals SymbolTable object to fill
  */
-static void _SymbolTable_add_default_functions(ProgramSymbolTable* table) {
-    ProgramSymbolTable_add_default_function(
+static void _ST_add_default_functions(ProgramST* table) {
+    ProgramST_add_default_function(
         table,
         (Symbol){
             .identifier = "putchar",
@@ -529,7 +543,7 @@ static void _SymbolTable_add_default_functions(ProgramSymbolTable* table) {
             },
             {0}});
 
-    ProgramSymbolTable_add_default_function(
+    ProgramST_add_default_function(
         table,
         (Symbol){
             .identifier = "putint",
@@ -542,7 +556,7 @@ static void _SymbolTable_add_default_functions(ProgramSymbolTable* table) {
             },
             {0}});
 
-    ProgramSymbolTable_add_default_function(
+    ProgramST_add_default_function(
         table,
         (Symbol){
             .identifier = "getchar",
@@ -550,7 +564,7 @@ static void _SymbolTable_add_default_functions(ProgramSymbolTable* table) {
         },
         NULL);
 
-    ProgramSymbolTable_add_default_function(
+    ProgramST_add_default_function(
         table,
         (Symbol){
             .identifier = "getint",
@@ -565,37 +579,37 @@ static void _SymbolTable_add_default_functions(ProgramSymbolTable* table) {
  *  - global variables
  *  - functions prototypes
  *
- * functions is a list of FunctionSymbolTable objects
- * Each FunctionSymbolTable contains:
+ * functions is a list of FunctionST objects
+ * Each FunctionST contains:
  * - parameters
  * - local variables
  *
- * @param self ProgramSymbolTable object to fill
+ * @param self ProgramST object to fill
  * @param tree Prog tree
  * @return Error ERR_SEM_REDECLARED_SYMBOL if a symbol is already in the table
  */
-ErrorType ProgramSymbolTable_from_Prog(ProgramSymbolTable* self, Tree tree) {
+ErrorType ProgramST_from_Prog(ProgramST* self, Tree tree) {
     ErrorType err = ERR_NONE;
 
-    *self = (ProgramSymbolTable){0};
-    _SymbolTable_init(&self->globals);
+    *self = (ProgramST){0};
+    _ST_init(&self->globals);
     self->globals.type = SYMBOL_TABLE_GLOBAL;
-    ArrayList_init(&self->functions, sizeof(FunctionSymbolTable), 10, NULL);
-    _SymbolTable_add_default_functions(self);
+    ArrayList_init(&self->functions, sizeof(FunctionST), 10, NULL);
+    _ST_add_default_functions(self);
 
     // tree->firstChild is the a DeclVars tree of globals variables
-    err |= SymbolTable_create_from_DeclVars(&self->globals, 0, tree->firstChild);
+    err |= ST_create_from_DeclVars(&self->globals, 0, tree->firstChild);
 
     // tree->firstChild->nextSibling is the first function to process
-    err |= _ProgramSymbolTable_from_DeclFoncts(self, tree->firstChild->nextSibling);
+    err |= _ProgramST_from_DeclFoncts(self, tree->firstChild->nextSibling);
 
     return err;
 }
 
-FunctionSymbolTable* FunctionSymbolTable_get_from_name(const ProgramSymbolTable* self,
-                                                       const char* func_name) {
+FunctionST* FunctionST_get_from_name(const ProgramST* self,
+                                     const char* func_name) {
     for (int i = 0; i < ArrayList_get_length(&self->functions); ++i) {
-        FunctionSymbolTable* function = ArrayList_get(&self->functions, i);
+        FunctionST* function = ArrayList_get(&self->functions, i);
         if (!strcmp(function->identifier, func_name)) {
             return function;
         }
@@ -603,35 +617,35 @@ FunctionSymbolTable* FunctionSymbolTable_get_from_name(const ProgramSymbolTable*
     return NULL;
 }
 
-int FunctionSymbolTable_get_param_count(const FunctionSymbolTable* self) {
+int FunctionST_get_param_count(const FunctionST* self) {
     return ArrayList_get_length(&self->parameters.symbols);
 }
 
-void SymbolTable_print(const SymbolTable* self) {
+void ST_print(const SymbolTable* self) {
     for (int i = 0; i < ArrayList_get_length(&self->symbols); ++i) {
         Symbol* symbol = ArrayList_get(&self->symbols, i);
         Symbol_print(symbol);
     }
 }
 
-void FunctionSymbolTable_print(const FunctionSymbolTable* self) {
+void FunctionST_print(const FunctionST* self) {
     printf(
-        BOLD UNDERLINE "FunctionSymbolTable of %s(...) -> %s:\n" RESET,
+        BOLD UNDERLINE "FunctionST of %s(...) -> %s:\n" RESET,
         self->identifier, Symbol_get_type_str(self->ret_type));
     printf(BOLD "Parameters:\n" RESET);
-    SymbolTable_print(&self->parameters);
+    ST_print(&self->parameters);
     printf(BOLD "Locals:\n" RESET);
-    SymbolTable_print(&self->locals);
+    ST_print(&self->locals);
 }
 
-void ProgramSymbolTable_print(const ProgramSymbolTable* self) {
-    printf(BOLD UNDERLINE "ProgramSymbolTable:\n" RESET);
+void ProgramST_print(const ProgramST* self) {
+    printf(BOLD UNDERLINE "ProgramST:\n" RESET);
     printf(UNDERLINE "Globals:\n" RESET);
-    SymbolTable_print(&self->globals);
+    ST_print(&self->globals);
     printf(UNDERLINE "Functions:\n\n" RESET);
     for (int i = 0; i < ArrayList_get_length(&self->functions); i++) {
-        FunctionSymbolTable* function = ArrayList_get(&self->functions, i);
-        FunctionSymbolTable_print(function);
+        FunctionST* function = ArrayList_get(&self->functions, i);
+        FunctionST_print(function);
         putchar('\n');
     }
 }

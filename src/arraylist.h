@@ -129,7 +129,8 @@ void* ArrayList_pop_index(ArrayList* self, int64_t i);
  * @param i index
  * @param type value's type
  */
-#define ArrayList_pop_index_v(self, i, type) (*((type*)ArrayList_pop_index(self, i)))
+#define ArrayList_pop_index_v(self, i, type) \
+    (*((type*)ArrayList_pop_index(self, i)))
 
 /**
  * @brief Resize vector

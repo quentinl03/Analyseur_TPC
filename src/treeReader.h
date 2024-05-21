@@ -10,12 +10,12 @@
 
 #include <stdio.h>
 
-#include "symboltable.h"
+#include "symbolTable.h"
 #include "tree.h"
 
-void TreeReader_Prog(const ProgramSymbolTable* table,
+void TreeReader_Prog(const ProgramST* table,
                      Tree tree, FILE* nasm);
 
-void TreeReader_Expr(const ProgramSymbolTable* table,
+void TreeReader_Expr(const ProgramST* table,
                      Tree tree, FILE* nasm,
-                     const FunctionSymbolTable* func);
+                     const FunctionST* func);

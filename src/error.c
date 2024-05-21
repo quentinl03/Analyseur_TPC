@@ -22,9 +22,12 @@ extern Program PROGRAM;
 static const char* get_str_error_level(ErrorType err) {
     switch (err & LEVEL_MASK(err)) {
         case ERR_SEMANTIC_FLAG:
-        case ERR_PARSE_FLAG:    return "error";
-        case ERR_CRITIAL_FLAG:  return "critical";
-        case ERR_WARN_FLAG:     return "warning";
+        case ERR_PARSE_FLAG:
+            return "error";
+        case ERR_CRITIAL_FLAG:
+            return "critical";
+        case ERR_WARN_FLAG:
+            return "warning";
 
         default:
             return "Unknown error";
@@ -34,9 +37,12 @@ static const char* get_str_error_level(ErrorType err) {
 static const char* get_level_color(ErrorType err) {
     switch (err & LEVEL_MASK(err)) {
         case ERR_SEMANTIC_FLAG:
-        case ERR_PARSE_FLAG:    return COLOR_RED;
-        case ERR_CRITIAL_FLAG:  return COLOR_RED;
-        case ERR_WARN_FLAG:     return COLOR_PURPLE;
+        case ERR_PARSE_FLAG:
+            return COLOR_RED;
+        case ERR_CRITIAL_FLAG:
+            return COLOR_RED;
+        case ERR_WARN_FLAG:
+            return COLOR_PURPLE;
 
         default:
             return COLOR_RED;
@@ -92,9 +98,12 @@ void CodeError_print(CodeError err, const char* format, ...) {
     va_list arguments;
     va_start(arguments, format);
 
-    safe_color_print(BOLD, "%s:%d:%d: ", PROGRAM.opt.path ? PROGRAM.opt.path : "stdin", err.line, err.column);
+    safe_color_print(BOLD, "%s:%d:%d: ",
+                     PROGRAM.opt.path ? PROGRAM.opt.path : "stdin",
+                     err.line, err.column);
 
-    safe_color_print(get_level_color(err.err), "%s: ", get_str_error_level(err.err));
+    safe_color_print(get_level_color(err.err), "%s: ",
+                     get_str_error_level(err.err));
 
     vfprintf(stderr, format, arguments);
     putc('\n', stderr);

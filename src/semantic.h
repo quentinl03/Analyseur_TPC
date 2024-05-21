@@ -1,5 +1,5 @@
 #include "error.h"
-#include "symboltable.h"
+#include "symbolTable.h"
 #include "tree.h"
 
 typedef struct ExprReturn {
@@ -11,7 +11,7 @@ typedef struct ExprReturn {
  * @brief Check semantic vailidity before producing assembler
  *
  * @param tree Prog node
- * @param prog filled ProgramSymbolTable
+ * @param prog filled ProgramST
  * @return ErrorType
  */
-ErrorType Semantic_check(Tree tree, const ProgramSymbolTable* prog);
+ErrorType Semantic_check(Tree tree, const ProgramST* prog);

@@ -1,4 +1,5 @@
-; Declared as global to allow linking with gcc-compiled programs for test purposes
+; Declared as global to allow linking with gcc-compiled
+; programs for test purposes
 global putchar
 global putint
 global getint
@@ -19,7 +20,8 @@ putchar:
     pop rdi ; on retire le char de la pile
 
     mov rax, 0
-    mov eax, edi ; Pour se conformer au vrai putchar, on renvoie la caractère écrit
+    mov eax, edi ; Pour se conformer au vrai putchar,
+                 ; on renvoie la caractère écrit
 
     pop rbp
     ret
@@ -117,7 +119,7 @@ getint:
         cmp rax, '-'
         jne my_getint_end_check_minus ; si pas '-' on passe
         cmp r15, 0
-        jne my_getint_end_check_minus ; si on a deja lu un autre - avant on passe
+        jne my_getint_end_check_minus ; si on a deja lu un - avant on passe
         mov r15, 1
         jmp my_getint_reader_loop ; on a lu le moins 
         

@@ -1,13 +1,14 @@
 #ifndef PROGRAM_H
 #define PROGRAM_H
 
-#include "tree.h"
-#include "symboltable.h"
-#include "parser.h"
 #include <stdio.h>
 
+#include "parser.h"
+#include "symbolTable.h"
+#include "tree.h"
+
 typedef struct {
-    ProgramSymbolTable symtable;
+    ProgramST symtable;
     Node* abr;
     Option opt;
     FILE* file_in;

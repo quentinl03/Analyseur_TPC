@@ -7,16 +7,6 @@
 extern int nbline; /* from lexer */
 extern int nbchar; /* from lexer */
 
-// static const char *StringFromLabel[] = {
-//     "E",
-//     "T",
-//     "divstar",
-//     "id"
-//     /* list all other node labels, if any */
-//     /* The list must coincide with the label_t enum in tree.h */
-//     /* To avoid listing them twice, see https://stackoverflow.com/a/10966395 */
-// };
-
 const char *NODE_STRING[] = {
     FOREACH_NODE(GENERATE_STRING)};
 
@@ -26,7 +16,7 @@ Node *makeNode(label_t label) {
         printf("Run out of memory\n");
         exit(1);
     }
-    *node = (Node) {
+    *node = (Node){
         .label = label,
         .firstChild = NULL,
         .nextSibling = NULL,
@@ -130,8 +120,10 @@ void printTree(Node *node) {
     for (int i = 1; i < depth; i++) {  // 2502 = vertical line
         printf(rightmost[i] ? "    " : "\u2502   ");
     }
-    if (depth > 0) {  // 2514 = L form; 2500 = horizontal line; 251c = vertical line and right horiz
-        printf(rightmost[depth] ? "\u2514\u2500\u2500 " : "\u251c\u2500\u2500 ");
+    if (depth > 0) {  // 2514 = L form; 2500 = horizontal line;
+                      // 251c = vertical line and right horiz
+        printf(rightmost[depth] ? "\u2514\u2500\u2500 "
+                                : "\u251c\u2500\u2500 ");
     }
 
     printf("%s : ", NODE_STRING[node->label]);
@@ -170,7 +162,9 @@ void printTree(Node *node) {
             break;
     }
     depth++;
-    for (Node *child = node->firstChild; child != NULL; child = child->nextSibling) {
+    for (Node *child = node->firstChild;
+         child != NULL;
+         child = child->nextSibling) {
         rightmost[depth] = (child->nextSibling) ? false : true;
         printTree(child);
     }

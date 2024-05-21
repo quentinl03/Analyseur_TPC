@@ -60,18 +60,6 @@ typedef enum {
     FOREACH_NODE(GENERATE_ENUM)
 } label_t;
 
-// extern const char *NODE_STRING[];
-
-// typedef enum {
-//     E,
-//     T,
-//     divstar,
-//     id
-//     /* list all other node labels, if any */
-//     /* The list must coincide with the string array in tree.c */
-//     /* To avoid listing them twice, see https://stackoverflow.com/a/10966395 */
-// } label_t;
-
 typedef union {
     char byte;
     int num;

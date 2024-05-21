@@ -36,7 +36,8 @@ SEPARATOR                   [\t\r\n ]
 ESCAPED_ASCII               \\['0rnt\\]
 
 /* Allow escaped characters, and select all printable characters between
- 33 and 126 included, while excluding non-escaped single quote character and backslash */
+ 33 and 126 included, while excluding non-escaped 
+ single quote character and backslash */
 LITERAL                     \'({ESCAPED_ASCII}|[^'\\[:cntrl:]])\'
 
 %%

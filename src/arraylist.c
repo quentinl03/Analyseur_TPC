@@ -43,7 +43,8 @@ static ArrayListError _ArrayList_realloc_extend(ArrayList *self) {
     if (self->len < self->capacity) {
         return ARRAYLIST_ERR_NONE;
     }
-    return _ArrayList_realloc(self, self->capacity * ARRAYLIST_REALLOC_MULTIPLIER);
+    return _ArrayList_realloc(self,
+                              self->capacity * ARRAYLIST_REALLOC_MULTIPLIER);
 }
 
 ArrayListError ArrayList_append(ArrayList *self, void *elem) {

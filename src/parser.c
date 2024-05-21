@@ -36,7 +36,8 @@ static void print_help(char* path, int exitcode) {
         "-a / --only-tree :\n"
         "\t Only generate the syntax tree, and stop the execution.\n\n"
         "-w / --only-semantic :\n"
-        "\t Only generate the semantics errors/warnings, and stop the execution.\n\n",
+        "\t Only generate the semantics errors/warnings,"
+        "and stop the execution.\n\n",
         path);
     exit(exitcode);
 }
@@ -76,7 +77,9 @@ static char* default_output_name(char* path) {
 
     if (extension) {
         // We replace the extension by ".asm"
-        snprintf(result, PATH_MAX, "%.*s.asm", (int)(extension - last_slash), last_slash);
+        snprintf(result, PATH_MAX, "%.*s.asm",
+                 (int)(extension - last_slash),
+                 last_slash);
     } else {  // File have no extension
         snprintf(result, PATH_MAX, "%s.asm", last_slash);
     }
@@ -95,7 +98,8 @@ Option parser(int argc, char** argv) {
         {"only-semantic", no_argument, 0, 'w'},
         {0, 0, 0, 0}};
 
-    while ((opt = getopt_long(argc, argv, "asht", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "asht",
+                              long_options, &option_index)) != -1) {
         switch (opt) {
             case 't':
                 option.flag_show_tree = true;

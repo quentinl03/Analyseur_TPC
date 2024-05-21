@@ -11,7 +11,7 @@
 #include <stdio.h>
 #define PATH_BUILTINS "./src/builtins.asm"
 
-#include "symboltable.h"
+#include "symbolTable.h"
 #include "tree.h"
 
 /**
@@ -33,42 +33,40 @@ void CodeWriter_load_builtins(FILE* nasm);
 
 /**
  * @brief Write code to call a function with its arguments
- * 
+ *
  * @param nasm File to write to
  * @param node Function node (Ident node with EmptyArgs or ListExp node)
- * @param symtable 
- * @param caller 
+ * @param symtable
+ * @param caller
  */
 void CodeWriter_CallFunction(
     FILE* nasm,
     Node* node,
-    const ProgramSymbolTable* symtable,
-    const FunctionSymbolTable* caller
-);
+    const ProgramST* symtable,
+    const FunctionST* caller);
 
 /**
  * @brief Call a function, and push the result on the stack.
  * Called function should be non-void.
- * 
- * @param nasm 
- * @param node 
- * @param symtable 
- * @param caller 
+ *
+ * @param nasm
+ * @param node
+ * @param symtable
+ * @param caller
  */
 void CodeWriter_CallFunctionAsExpression(
     FILE* nasm,
     Node* callee_node,
-    const ProgramSymbolTable* symtable,
-    const FunctionSymbolTable* caller
-);
+    const ProgramST* symtable,
+    const FunctionST* caller);
 
 /**
  * @brief Evaluate an arithmetic binary operation
  * Childs of the function should be evaluated before calling this function :
  * Pop two values from the stack, apply the operation and push the result.
- * 
- * @param nasm 
- * @param node 
+ *
+ * @param nasm
+ * @param node
  */
 void CodeWriter_Ope_Arith(FILE* nasm, const Node* node);
 
@@ -109,8 +107,8 @@ void CodeWriter_ConstantCharacter(FILE* nasm, const Node* node);
  * @param func Function symbol table
  */
 void CodeWriter_LoadVar(FILE* nasm, Node* node,
-                        const ProgramSymbolTable* symtable,
-                        const FunctionSymbolTable* func);
+                        const ProgramST* symtable,
+                        const FunctionST* func);
 
 /**
  * @brief Change the value of a variable from the last value on the stack.
@@ -124,8 +122,8 @@ void CodeWriter_LoadVar(FILE* nasm, Node* node,
  * @param func Function symbol table
  */
 void CodeWriter_WriteVar(FILE* nasm, Node* node,
-                         const ProgramSymbolTable* symtable,
-                         const FunctionSymbolTable* func);
+                         const ProgramST* symtable,
+                         const FunctionST* func);
 
 /**
  * @brief Write the start of a stack frame.
@@ -133,7 +131,7 @@ void CodeWriter_WriteVar(FILE* nasm, Node* node,
  * @param nasm File to write into
  * @param func Function symbol table
  */
-void CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func);
+void CodeWriter_stackFrame_start(FILE* nasm, const FunctionST* func);
 
 /**
  * @brief Write the end of a stack frame.
@@ -141,7 +139,7 @@ void CodeWriter_stackFrame_start(FILE* nasm, const FunctionSymbolTable* func);
  * @param nasm File to write into
  * @param func Function symbol table
  */
-void CodeWriter_stackFrame_end(FILE* nasm, const FunctionSymbolTable* func);
+void CodeWriter_stackFrame_end(FILE* nasm, const FunctionST* func);
 
 /**
  * @brief Write the label of a function.
@@ -149,7 +147,7 @@ void CodeWriter_stackFrame_end(FILE* nasm, const FunctionSymbolTable* func);
  * @param nasm File to write into
  * @param func Function symbol table
  */
-void CodeWriter_FunctionLabel(FILE* nasm, const FunctionSymbolTable* func);
+void CodeWriter_FunctionLabel(FILE* nasm, const FunctionST* func);
 
 /**
  * @brief Write `ret` instruction.
@@ -180,21 +178,21 @@ void CodeWriter_While_End(FILE* nasm, int while_number);
  * @brief Write code for a boolean operation
  * Childs of the node shouldn't be already evaluated, as they
  * will be evaluated in this function.
- * 
- * @param nasm 
- * @param node 
- * @param prog 
- * @param func 
+ *
+ * @param nasm
+ * @param node
+ * @param prog
+ * @param func
  */
 void CodeWriter_Ope_Bool(FILE* nasm,
-                           const Tree node,
-                           const ProgramSymbolTable* prog,
-                           const FunctionSymbolTable* func);
+                         const Tree node,
+                         const ProgramST* prog,
+                         const FunctionST* func);
 
 /**
  * @brief Logical not operation.
  * Expects the value to negate to be on the top of the stack.
- * 
- * @param nasm 
+ *
+ * @param nasm
  */
 void CodeWriter_Ope_Bool_Not(FILE* nasm);

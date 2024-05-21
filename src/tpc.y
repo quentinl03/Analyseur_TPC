@@ -18,15 +18,19 @@ extern unsigned int nbchar;
     char ident[64];
     char key_word[5];
 }
-%type <node> Prog DeclVars Declarateurs DeclFoncts DeclFonct EnTeteFonct Parametres ListTypVar Corps
-%type <node> SuiteInstr Instr Exp TB FB M E T F LValue Arguments ListExp DeclArray DeclFonctArray ArrayLR
+%type <node> Prog DeclVars Declarateurs DeclFoncts DeclFonct 
+%type <node> EnTeteFonct Parametres ListTypVar Corps
+%type <node> SuiteInstr Instr Exp TB FB M E T F LValue 
+%type <node> Arguments ListExp DeclArray DeclFonctArray ArrayLR
 %token <byte> ADDSUB DIVSTAR CHARACTER
 %token <num> NUM
 %token <ident> IDENT VOID RETURN IF ELSE WHILE
 %token <key_word> OR AND EQ ORDER TYPE
 
-%destructor { free($$); } DeclVars Declarateurs DeclFoncts DeclFonct EnTeteFonct Parametres ListTypVar Corps
-%destructor { free($$); } SuiteInstr Instr Exp TB FB M E T F LValue Arguments ListExp DeclArray DeclFonctArray ArrayLR
+%destructor { free($$); } DeclVars Declarateurs DeclFoncts DeclFonct 
+%destructor { free($$); } EnTeteFonct Parametres ListTypVar Corps
+%destructor { free($$); } SuiteInstr Instr Exp TB FB M E T F LValue 
+%destructor { free($$); } Arguments ListExp DeclArray DeclFonctArray ArrayLR
 
 %expect 1
 /* Character in key_word not char -> in case of \n, \t, \r and \0*/

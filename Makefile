@@ -23,8 +23,8 @@ TESTS_DIR=test
 REPORT_DIR=rep
 OUT_DIRS=$(OBJ_DIR) $(BIN_DIR)
 
-MODULES=$(patsubst %.c, $(OBJ_DIR)/%.o, tree.c parser.c main.c symbol.c symboltable.c arraylist.c registers.c treeReader.c codeWriter.c error.c semantic.c)
-OBJS=$(wildcard $(OBJ_DIR)/*.tab.* $(OBJ_DIR)/*.yy.* $(OBJ_DIR)/*.o)
+MODULES=$(patsubst %.c, $(OBJ_DIR)/%.o, tree.c parser.c main.c symbol.c symbolTable.c arraylist.c registers.c treeReader.c codeWriter.c error.c semantic.c)
+OBJS=$(wildcard $(OBJ_DIR)/*.tab.* $(OBJ_DIR)/*.yy.* $(OBJ_DIR)/*.o $(OBJ_DIR)/*.inc)
 
 TAR_CONTENT=$(SRC_DIR)/ $(TESTS_DIR)/ $(REPORT_DIR)/ $(OBJ_DIR)/ $(BIN_DIR) Makefile README.md
 TAR_NAME=ProjetCompilationL3_LABORDE_SEBAN
@@ -39,7 +39,7 @@ obj/$(PARSER).o: obj/$(PARSER).c src/tree.h
 obj/codeWriter.o: obj/builtins.asm.inc
 
 obj/builtins.asm.inc: src/builtins.asm
-	perl -pe 's,^(.*)$$,\"\1\\n\",gm' ./src/builtins.asm > $@ 
+	perl -pe 's,^(.*)$$,\"\1\\n\",gm' $< > $@ 
 
 # https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
 # Evite de créer les dossiers à chaque fois, et n'impacte pas le message "Up to date"

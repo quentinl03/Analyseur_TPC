@@ -13,7 +13,7 @@
 #include "parser.h"
 #include "program.h"
 #include "semantic.h"
-#include "symboltable.h"
+#include "symbolTable.h"
 #include "tpc_bison.h"
 #include "tree.h"
 #include "treeReader.h"
@@ -29,7 +29,7 @@ void atexit_function(void) {
         PROGRAM.file_out != stderr) {
         fclose(PROGRAM.file_out);
     }
-    ProgramSymbolTable_free(&PROGRAM.symtable);
+    ProgramST_free(&PROGRAM.symtable);
 }
 
 int main(int argc, char* argv[]) {
@@ -61,10 +61,10 @@ int main(int argc, char* argv[]) {
         return EXIT_SUCCESS;
     }
 
-    ProgramSymbolTable symtable;
-    err = ProgramSymbolTable_from_Prog(&symtable, PROGRAM.abr);
+    ProgramST symtable;
+    err = ProgramST_from_Prog(&symtable, PROGRAM.abr);
     if (PROGRAM.opt.flag_symtabs) {
-        ProgramSymbolTable_print(&symtable);
+        ProgramST_print(&symtable);
     }
     if (IS_SEMANTIC(err) || IS_CRITICAL(err)) {
         return EXIT_CODE(err);

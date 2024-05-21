@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 #include "codeWriter.h"
-#include "symboltable.h"
+#include "symbolTable.h"
 #include "tree.h"
 
 int GLOBAL_CMP;
@@ -23,24 +23,24 @@ int GLOBAL_CMP;
 static const char* NODE_STRING[] = {
     FOREACH_NODE(GENERATE_STRING)};
 
-static void _Instr_Return(const ProgramSymbolTable* table,
+static void _Instr_Return(const ProgramST* table,
                           Tree tree, FILE* nasm,
-                          const FunctionSymbolTable* func);
-static void _Instr_Assignation(const ProgramSymbolTable* table,
+                          const FunctionST* func);
+static void _Instr_Assignation(const ProgramST* table,
                                Tree tree, FILE* nasm,
-                               const FunctionSymbolTable* func);
-static void _TreeReader_DeclFoncts(const ProgramSymbolTable* table,
+                               const FunctionST* func);
+static void _TreeReader_DeclFoncts(const ProgramST* table,
                                    Tree tree, FILE* nasm);
-static void TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
-                                 const FunctionSymbolTable* func, FILE* nasm);
+static void TreeReader_SuiteInst(const ProgramST* table, Tree tree,
+                                 const FunctionST* func, FILE* nasm);
 
-static void _Instr_If(const ProgramSymbolTable* table,
+static void _Instr_If(const ProgramST* table,
                       Tree tree, FILE* nasm,
-                      const FunctionSymbolTable* func);
+                      const FunctionST* func);
 
-static void _Instr_While(const ProgramSymbolTable* table,
+static void _Instr_While(const ProgramST* table,
                          Tree tree, FILE* nasm,
-                         const FunctionSymbolTable* func);
+                         const FunctionST* func);
 
 /**
  * @brief Write code for a function body.
@@ -50,14 +50,13 @@ static void _Instr_While(const ProgramSymbolTable* table,
  * @param func
  * @param nasm
  */
-static void TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
-                                 const FunctionSymbolTable* func, FILE* nasm) {
-
+static void TreeReader_SuiteInst(const ProgramST* table, Tree tree,
+                                 const FunctionST* func, FILE* nasm) {
     assert(
-        tree->label == SuiteInstr || tree->label == Return
-        || tree->label == Assignation || tree->label == Ident
-        || tree->label == If || tree->label == While || tree->label == EmptyInstr
-    );
+        tree->label == SuiteInstr || tree->label == Return ||
+        tree->label == Assignation || tree->label == Ident ||
+        tree->label == If || tree->label == While ||
+        tree->label == EmptyInstr);
 
     Node* child = tree->label == SuiteInstr ? FIRSTCHILD(tree) : tree;
 
@@ -84,7 +83,8 @@ static void TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
             case EmptyInstr:
                 break;
             default:
-                fprintf(stderr, "Node not managed: %s\n", NODE_STRING[child->label]);
+                fprintf(stderr, "Node not managed: %s\n",
+                        NODE_STRING[child->label]);
                 assert(0 && "We shoudn't be there\n");
         }
         // We stop the loop if the we are not in a SuiteInstr node
@@ -101,8 +101,8 @@ static void TreeReader_SuiteInst(const ProgramSymbolTable* table, Tree tree,
  * @param tree
  * @param nasm
  */
-static void _TreeReader_Corps(const ProgramSymbolTable* prog,
-                              const FunctionSymbolTable* func,
+static void _TreeReader_Corps(const ProgramST* prog,
+                              const FunctionST* func,
                               Tree tree, FILE* nasm) {
     assert(tree->label == Corps);
     // Implement stack frame
@@ -121,10 +121,10 @@ static void _TreeReader_Corps(const ProgramSymbolTable* prog,
  * @param nasm
  * @return int
  */
-static void _TreeReader_DeclFonct(const ProgramSymbolTable* prog,
+static void _TreeReader_DeclFonct(const ProgramST* prog,
                                   Tree tree, FILE* nasm) {
     assert(tree->label == DeclFonct);
-    FunctionSymbolTable* func = FunctionSymbolTable_get_from_name(
+    FunctionST* func = FunctionST_get_from_name(
         prog,
         // DeclFonct->EnTeteFonct->Ident
         FIRSTCHILD(tree)->firstChild->nextSibling->att.ident);
@@ -132,7 +132,7 @@ static void _TreeReader_DeclFonct(const ProgramSymbolTable* prog,
     _TreeReader_Corps(prog, func, SECONDCHILD(tree), nasm);
 }
 
-static void _TreeReader_DeclFoncts(const ProgramSymbolTable* table,
+static void _TreeReader_DeclFoncts(const ProgramST* table,
                                    Tree tree, FILE* nasm) {
     // Si est pas dans le noeux c'est grave car la suite du parcours est foutu.
     assert(tree->label == DeclFoncts);
@@ -144,7 +144,7 @@ static void _TreeReader_DeclFoncts(const ProgramSymbolTable* table,
     }
 }
 
-void TreeReader_Prog(const ProgramSymbolTable* table, Tree tree, FILE* nasm) {
+void TreeReader_Prog(const ProgramST* table, Tree tree, FILE* nasm) {
     // Si est pas dans le noeux c'est grave car la suite du parcours est foutu.
     assert(tree->label == Prog);
 
@@ -157,9 +157,9 @@ void TreeReader_Prog(const ProgramSymbolTable* table, Tree tree, FILE* nasm) {
 /* Instr Unitaire */
 /******************/
 
-void TreeReader_Expr(const ProgramSymbolTable* table,
+void TreeReader_Expr(const ProgramST* table,
                      Tree tree, FILE* nasm,
-                     const FunctionSymbolTable* func) {
+                     const FunctionST* func) {
     switch (tree->label) {
         case AddsubU:
             TreeReader_Expr(table, FIRSTCHILD(tree), nasm, func);
@@ -213,11 +213,11 @@ void TreeReader_Expr(const ProgramSymbolTable* table,
  * @param func
  * @return int
  */
-static void _Instr_Return(const ProgramSymbolTable* table,
+static void _Instr_Return(const ProgramST* table,
                           Tree tree, FILE* nasm,
-                          const FunctionSymbolTable* func) {
+                          const FunctionST* func) {
     // printf("Instr_Return\n");
-    const Symbol* sym = SymbolTable_get(&table->globals, func->identifier);
+    const Symbol* sym = ST_get(&table->globals, func->identifier);
 
     if (sym->type != type_void) /* Non void */ {
         // Verifiy if a value to returns exists, see _Instr_Return
@@ -233,16 +233,16 @@ static void _Instr_Return(const ProgramSymbolTable* table,
     }
 }
 
-static void _Instr_Assignation(const ProgramSymbolTable* table,
+static void _Instr_Assignation(const ProgramST* table,
                                Tree tree, FILE* nasm,
-                               const FunctionSymbolTable* func) {
+                               const FunctionST* func) {
     TreeReader_Expr(table, SECONDCHILD(tree), nasm, func);
     CodeWriter_WriteVar(nasm, FIRSTCHILD(tree), table, func);
 }
 
-static void _Instr_If(const ProgramSymbolTable* table,
+static void _Instr_If(const ProgramST* table,
                       Tree tree, FILE* nasm,
-                      const FunctionSymbolTable* func) {
+                      const FunctionST* func) {
     assert(tree->label == If);
 
     int if_number = GLOBAL_CMP++;
@@ -256,9 +256,9 @@ static void _Instr_If(const ProgramSymbolTable* table,
     CodeWriter_If_End(nasm, if_number);
 }
 
-static void _Instr_While(const ProgramSymbolTable* table,
+static void _Instr_While(const ProgramST* table,
                          Tree tree, FILE* nasm,
-                         const FunctionSymbolTable* func) {
+                         const FunctionST* func) {
     int while_number = GLOBAL_CMP++;
 
     CodeWriter_While_Init(nasm, while_number);
