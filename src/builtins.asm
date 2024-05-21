@@ -19,7 +19,7 @@ putchar:
     pop rdi ; on retire le char de la pile
 
     mov rax, 0
-    mov eax, edi ; Pour se "conformer" au vrai putchar, on renvoie la caractère écrit
+    mov eax, edi ; Pour se conformer au vrai putchar, on renvoie la caractère écrit
 
     pop rbp
     ret
@@ -44,7 +44,7 @@ getchar:
 
     cmp rcx, 0 ; case of ctrl D
     jne my_get_char_end
-    mov rax, -1
+    mov rax, 0
 
     my_get_char_end:    
     
@@ -109,6 +109,9 @@ getint:
     my_getint_reader_loop:
         call getchar
 
+        cmp rax, 0 ; case of ctrl D
+        je my_get_int_end
+
         cmp r12, 20
         jne my_getint_end_check_minus ; si pas le premier que je lit on passe
         cmp rax, '-'
@@ -163,6 +166,8 @@ getint:
     my_getint_end_sign_change:
 
     mov rax, r13
+
+    my_get_int_end:
 
     pop rbp
     ret

@@ -62,8 +62,8 @@ static const char* _CodeWriter_Node_To_Ope(const Node* node) {
 
 /**
  * @brief Generate a unique label for boolean expressions operations
- * 
- * @return int 
+ *
+ * @return int
  */
 static int _CodeWriter_get_bool_label(void) {
     static int label = 0;
@@ -77,16 +77,16 @@ static int _CodeWriter_get_bool_label(void) {
  * (lazy evaluation)
  * Childs of the node shouldn't be already evaluated, as they
  * will be evaluated in this function.
- * 
- * @param nasm 
+ *
+ * @param nasm
  * @param node And node
- * @param prog 
- * @param func 
+ * @param prog
+ * @param func
  */
 static void _CodeWriter_BooleanAnd(FILE* nasm,
-                            const Tree node,
-                            const ProgramSymbolTable* prog,
-                            const FunctionSymbolTable* func) {
+                                   const Tree node,
+                                   const ProgramSymbolTable* prog,
+                                   const FunctionSymbolTable* func) {
     assert(node->label == And);
 
     int label = _CodeWriter_get_bool_label();
@@ -98,8 +98,7 @@ static void _CodeWriter_BooleanAnd(FILE* nasm,
         "pop rax\n"
         "cmp rax, 0\n"
         "je bool_false_%d\n",
-        label
-    );
+        label);
     TreeReader_Expr(prog, SECONDCHILD(node), nasm, func);
     fprintf(
         nasm,
@@ -107,8 +106,7 @@ static void _CodeWriter_BooleanAnd(FILE* nasm,
         "pop rax\n"
         "cmp rax, 0\n"
         "je bool_false_%d\n",
-        label
-    );
+        label);
     fprintf(
         nasm,
         "push 1\n"
@@ -116,8 +114,7 @@ static void _CodeWriter_BooleanAnd(FILE* nasm,
         "bool_false_%d:\n"
         "push 0\n"
         "bool_end_%d:\n\n",
-        label, label, label
-    );
+        label, label, label);
 }
 
 /**
@@ -127,16 +124,16 @@ static void _CodeWriter_BooleanAnd(FILE* nasm,
  * (lazy evaluation)
  * Childs of the node shouldn't be already evaluated, as they
  * will be evaluated in this function.
- * 
- * @param nasm 
- * @param node 
- * @param prog 
- * @param func 
+ *
+ * @param nasm
+ * @param node
+ * @param prog
+ * @param func
  */
 static void _CodeWriter_BooleanOr(FILE* nasm,
-                           const Tree node,
-                           const ProgramSymbolTable* prog,
-                           const FunctionSymbolTable* func) {
+                                  const Tree node,
+                                  const ProgramSymbolTable* prog,
+                                  const FunctionSymbolTable* func) {
     assert(node->label == Or);
 
     int label = _CodeWriter_get_bool_label();
@@ -148,8 +145,7 @@ static void _CodeWriter_BooleanOr(FILE* nasm,
         "pop rax\n"
         "cmp rax, 0\n"
         "jne bool_true_%d\n",
-        label
-    );
+        label);
     TreeReader_Expr(prog, SECONDCHILD(node), nasm, func);
     fprintf(
         nasm,
@@ -157,8 +153,7 @@ static void _CodeWriter_BooleanOr(FILE* nasm,
         "pop rax\n"
         "cmp rax, 0\n"
         "jne bool_true_%d\n",
-        label
-    );
+        label);
     fprintf(
         nasm,
         "push 0\n"
@@ -166,8 +161,7 @@ static void _CodeWriter_BooleanOr(FILE* nasm,
         "bool_true_%d:\n"
         "push 1\n"
         "bool_end_%d:\n\n",
-        label, label, label
-    );
+        label, label, label);
 }
 
 void CodeWriter_Ope_Bool_Not(FILE* nasm) {
@@ -183,9 +177,9 @@ void CodeWriter_Ope_Bool_Not(FILE* nasm) {
 }
 
 void CodeWriter_Ope_Bool(FILE* nasm,
-                           const Tree node,
-                           const ProgramSymbolTable* prog,
-                           const FunctionSymbolTable* func) {
+                         const Tree node,
+                         const ProgramSymbolTable* prog,
+                         const FunctionSymbolTable* func) {
     switch (node->label) {
         case And:
             _CodeWriter_BooleanAnd(nasm, node, prog, func);
@@ -787,9 +781,8 @@ void CodeWriter_While_Init(FILE* nasm, int while_number) {
         nasm,
         "; Condition while_%d\n"
         "while_start_%d :\n"
-        "; Evaluation de l'expression du while %d\n", // TreeReader_Expr is called after
-        while_number, while_number, while_number
-    );
+        "; Evaluation de l'expression du while %d\n",  // TreeReader_Expr is called after
+        while_number, while_number, while_number);
 }
 
 void CodeWriter_While_Eval(FILE* nasm, int while_number) {
@@ -799,8 +792,7 @@ void CodeWriter_While_Eval(FILE* nasm, int while_number) {
         "pop rax\n"
         "cmp rax, 0\n"
         "je end_while_%d\n ; while expr\n",
-        while_number, while_number
-    );
+        while_number, while_number);
 }
 
 void CodeWriter_While_End(FILE* nasm, int while_number) {
@@ -812,11 +804,11 @@ void CodeWriter_While_End(FILE* nasm, int while_number) {
 }
 
 void CodeWriter_load_builtins(FILE* nasm) {
-    FILE* f = fopen(PATH_BUILTINS, "r");
-    int c = fgetc(f);
-    while (c != EOF) {
-        fputc(c, nasm);
-        c = fgetc(f);
-    }
-    fclose(f);
+    // paste builtin.asm in nasm file
+    // clang-format off
+    fprintf(
+        nasm,
+    #include "../obj/builtins.asm.inc"
+    );
+    //clang-format on
 }

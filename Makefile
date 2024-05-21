@@ -36,6 +36,10 @@ all: $(BIN_DIR)/$(EXEC)
 obj/tree.o: src/tree.c src/tree.h
 obj/parser.o: src/parser.c src/parser.h
 obj/$(PARSER).o: obj/$(PARSER).c src/tree.h
+obj/codeWriter.o: obj/builtins.asm.inc
+
+obj/builtins.asm.inc: src/builtins.asm
+	perl -pe 's,^(.*)$$,\"\1\\n\",gm' ./src/builtins.asm > $@ 
 
 # https://www.gnu.org/software/make/manual/html_node/Prerequisite-Types.html
 # Evite de créer les dossiers à chaque fois, et n'impacte pas le message "Up to date"
