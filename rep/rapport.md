@@ -4,11 +4,11 @@
 
 ## Compilation
 
-Pour lancer le projet, vous devez décompresser l'archive puis vous déplacer vers la racine du projet pour enfin le compiler avec la commande `make`.
+Pour lancer le projet, vous devez décompresser l'archive puis vous déplacer vers la racine du projet avant de le compiler avec la commande `make` :
 
 ```bash
-tar xvf ProjetASL3_LABORDE_SEBAN.tar.gz
-cd ProjetASL3_LABORDE_SEBAN
+tar xvf ProjetCompilationL3_LABORDE_SEBAN.tar.gz
+cd ProjetCompilationL3_LABORDE_SEBAN
 make
 ```
 
@@ -20,19 +20,39 @@ Pour nettoyer le projet une fois l'utilisation terminée vous pouvez utiliser le
 
 -  `make clean`: pour supprimmer les fichiers objets et l'exécutable.
 
-## Lancer le programme
+## Utilisation
 
-Pour lancer le programme compilé vous devez utiliser la commande suivante :
+Notre compilateur peut accepter plusieurs paramètres en argument :
 
-```bash
-// TODO
+  - ``-t ``, ``--tree`` : Affiche l'arbre syntaxique généré (hérité du projet d'Analyse Syntaxique)
+
+  - ``-a ``, ``--only-tree`` : Stoppe l'exécution après l'affichage de l'arbre syntaxique
+
+  - ``-s ``, ``--symtabs`` : Affiche les tables des symboles de chacune des fonctions
+
+  - ``-w ``, ``--only-semantic`` : Vérifie seulement la validité du code, et génère avertissements/erreur le cas échéant.
+
+  - ``-h ``, ``--help`` : Affiche un menu d'aide
+
+Le fichier source devra être fourni soit par l'entrée standard, soit par argument positionnel.
+
+Exemple d'utilisation :
+
+```shell
+./bin/tpcc monFichierSource.tpc
 ```
+
+```shell
+./bin/tpcc -ts < monFichierSource.tpc
+```
+
+**Remarque :** Afin de pouvoir ajouter correctement les fonctions par défaut (``builtin``), le compilateur a besoin de charger lors de l'exécution le fichier ``./src/builtins.asm``. Vous devrez par conséquent lancer le compilateur depuis la racine du projet.
 
 ## Les paramètres
 
 \pagebreak
 
-## Tests (lancement)
+## Tests
 
 Vous pouvez lancer les tests par deux manières différentes :
 
@@ -66,11 +86,11 @@ Vous pouvez lancer les tests par deux manières différentes :
 
 ## Élaboration des tests unitaires
 
-Pour lancer les tests pensez à regarder la section ['Test'](#tests).
+Pour lancer les tests, veuillez vous référer à la section ['Test'](#tests).
 
 Dans la continuité du projet d'analyse syntaxique, nous avons implémenté notre série de test avec Python.
 
-Nous avons conservé les tests de notre précédent projet désormais présents sous les répertoires ``syn-good`` et ``syn-err``. Nous les avons étendues avec des tests pour l'émission d'avertissement (``warn``), d'erreurs sémantiques (``sem-err``), et enfin pour avec des codes compilables avec une sortie prédictible (``good``).
+Nous avons conservé les tests de notre précédent projet, désormais situés dans les répertoires ``syn-good`` et ``syn-err``. Nous les avons étendu avec des tests pour l'émission d'avertissement (``warn``), d'erreurs sémantiques (``sem-err``), et enfin pour des codes compilables avec une sortie prédictible  (``good``).
 
 ### C'est quoi ces commentaires dans les codes ``sem-err/`` et ``warn/`` !?
 
@@ -89,7 +109,7 @@ Ces derniers sont interprétés par le script Python, et comparés à la sortie 
 
 ### Valgrind mais pas pour les fuites
 
-Malheuresement, le projet possède des fuites de mémoire qui n'ont pas su être corrigées.
+Malheureusement, le projet possède des fuites de mémoire qui n'ont pas su être corrigées.
 
 Cependant nous l'avons tout de même implémenté parmi les tests, mais uniquement pour vérifier l'absence d'accès à des zones mémoires non-initialisées. Cela devrait limiter les problèmes "It's works on my machine.``...
 
@@ -99,7 +119,13 @@ Développer un compilateur c'est bien, mais développer un compilateur qui gén�
 
 Pour vérifier que nos programmes générés possèdent bien le comportement désiré, nous avons décidé d'implémenter dans nos tests une phase de compilation des codes ``good/`` avec TPCC et GCC.
 Les binaires produits sont exécutés et leurs sortie standard/codes d'erreurs comparées.
-Cela permet ainsi de nous assurer en partie de validité du code produit.
+Cela permet ainsi de nous assurer en partie de la validité du code produit.
+
+### Fiabiliser l'intégration continue
+
+Afin de s'assurer que nos tests soient exécutés régulièrement, nous avons à l'aide des *Actions* de Github, mis en place un système d'intégration continue.
+Ainsi à chaque *push* sur une branche les suites de tests sont toujours exécutées. Cela nous permet par conséquent de limiter les régressions entre les commits.
+
 
 ## Difficultés rencontrées
 
