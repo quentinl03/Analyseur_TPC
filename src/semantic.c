@@ -227,7 +227,7 @@ static ExprReturn _Semantic_IdentRValue(Tree tree,
         (CodeError){
             .err = (error |= ERR_NOT_AN_RVALUE),
             .line = tree->lineno,
-            .column = tree->column,
+            .column = tree->column - 1,
         },
         "'%s' is not an rvalue",
         sym->identifier);
@@ -371,8 +371,8 @@ static ErrorType _Semantic_Assignation(Tree tree,
         CodeError_print(
             (CodeError){
                 .err = ADD_ERR(err, ERR_NOT_AN_LVALUE),
-                .line = lvalue->lineno,
-                .column = lvalue->column,
+                .line = FIRSTCHILD(tree)->lineno,
+                .column = FIRSTCHILD(tree)->column - 1,
             },
             "'%s' is not an lvalue",
             lvalue->identifier);
