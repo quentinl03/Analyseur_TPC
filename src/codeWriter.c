@@ -97,7 +97,7 @@ static void _CodeWriter_BooleanAnd(FILE* nasm,
         "; Evaluation de l'expression booléenne gauche \n"
         "pop rax\n"
         "cmp rax, 0\n"
-        "je bool_false_%d\n",
+        "je .bool_false_%d\n",
         label);
     TreeReader_Expr(prog, SECONDCHILD(node), nasm, func);
     fprintf(
@@ -105,15 +105,15 @@ static void _CodeWriter_BooleanAnd(FILE* nasm,
         "; Evaluation de l'expression booléenne droite \n"
         "pop rax\n"
         "cmp rax, 0\n"
-        "je bool_false_%d\n",
+        "je .bool_false_%d\n",
         label);
     fprintf(
         nasm,
         "push 1\n"
-        "jmp bool_end_%d\n"
-        "bool_false_%d:\n"
+        "jmp .bool_end_%d\n"
+        ".bool_false_%d:\n"
         "push 0\n"
-        "bool_end_%d:\n\n",
+        ".bool_end_%d:\n\n",
         label, label, label);
 }
 
@@ -144,7 +144,7 @@ static void _CodeWriter_BooleanOr(FILE* nasm,
         "; Evaluation de l'expression booléenne gauche \n"
         "pop rax\n"
         "cmp rax, 0\n"
-        "jne bool_true_%d\n",
+        "jne .bool_true_%d\n",
         label);
     TreeReader_Expr(prog, SECONDCHILD(node), nasm, func);
     fprintf(
@@ -152,15 +152,15 @@ static void _CodeWriter_BooleanOr(FILE* nasm,
         "; Evaluation de l'expression booléenne droite \n"
         "pop rax\n"
         "cmp rax, 0\n"
-        "jne bool_true_%d\n",
+        "jne .bool_true_%d\n",
         label);
     fprintf(
         nasm,
         "push 0\n"
-        "jmp bool_end_%d\n"
-        "bool_true_%d:\n"
+        "jmp .bool_end_%d\n"
+        ".bool_true_%d:\n"
         "push 1\n"
-        "bool_end_%d:\n\n",
+        ".bool_end_%d:\n\n",
         label, label, label);
 }
 
@@ -749,13 +749,13 @@ void CodeWriter_Cmp(FILE* nasm, Node* node, int cmp_number) {
         "pop rax\n"
         "pop rcx\n"
         "cmp rcx, rax\n"
-        "%s cmp_%d ; comparateur si vrai va dans 2e cas\n"
+        "%s .cmp_%d ; comparateur si vrai va dans 2e cas\n"
         "push 0\n"
-        "jmp cmp_end%d\n"
-        "cmp_%d :\n"
+        "jmp .cmp_end%d\n"
+        ".cmp_%d :\n"
         "push 1\n"
-        "jmp cmp_end%d\n"
-        "cmp_end%d : \n\n",
+        "jmp .cmp_end%d\n"
+        ".cmp_end%d : \n\n",
         cmp, cmp_number, cmp_number, cmp_number, cmp_number, cmp_number);
 }
 
@@ -765,22 +765,22 @@ void CodeWriter_If_Init(FILE* nasm, int if_number) {
         "; Condition if_%d\n"
         "pop rax\n"
         "cmp rax, 0\n"
-        "je else_%d\n; if case\n",
+        "je .else_%d\n; if case\n",
         if_number, if_number);
 }
 
 void CodeWriter_If_Else(FILE* nasm, int if_number) {
     fprintf(
         nasm,
-        "jmp end_if_%d\n"
-        "else_%d :\n; else case\n",
+        "jmp .end_if_%d\n"
+        ".else_%d :\n; else case\n",
         if_number, if_number);
 }
 
 void CodeWriter_If_End(FILE* nasm, int if_number) {
     fprintf(
         nasm,
-        "end_if_%d :\n",
+        ".end_if_%d :\n",
         if_number);
 }
 
@@ -788,7 +788,7 @@ void CodeWriter_While_Init(FILE* nasm, int while_number) {
     fprintf(
         nasm,
         "; Condition while_%d\n"
-        "while_start_%d :\n"
+        ".while_start_%d :\n"
         "; Evaluation de l'expression du while %d\n",
         // TreeReader_Expr is called after
         while_number, while_number, while_number);
@@ -800,15 +800,15 @@ void CodeWriter_While_Eval(FILE* nasm, int while_number) {
         "; Evaluation de la condition du while %d\n"
         "pop rax\n"
         "cmp rax, 0\n"
-        "je end_while_%d\n ; while expr\n",
+        "je .end_while_%d\n ; while expr\n",
         while_number, while_number);
 }
 
 void CodeWriter_While_End(FILE* nasm, int while_number) {
     fprintf(
         nasm,
-        "jmp while_start_%d\n"
-        "end_while_%d :\n",
+        "jmp .while_start_%d\n"
+        ".end_while_%d :\n",
         while_number, while_number);
 }
 
@@ -817,7 +817,7 @@ void CodeWriter_load_builtins(FILE* nasm) {
     // clang-format off
     fprintf(
         nasm,
-    #include "../obj/builtins.asm.inc"
+        #include "../obj/builtins.asm.inc"
     );
-    //clang-format on
+    // clang-format on
 }
