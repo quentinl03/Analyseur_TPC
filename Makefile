@@ -71,7 +71,7 @@ rep/rapport.pdf: $(REPORT_DIR)/rapport.md
 	@mkdir --parents $(REPORT_DIR)/logos
 	@wget --quiet --show-progress --no-clobber -O rep/logos/LogoLIGM.png "https://drive.google.com/uc?export=download&confirm=yes&id=1cZjxS6Rwp8LU4Eyahqz0eUS8aH0_VrVB" || true
 	@wget --quiet --show-progress --no-clobber -O rep/logos/namedlogoUGE.png "https://drive.google.com/uc?export=download&confirm=yes&id=1YGm1N7griuDbJhC6rSgBHrrcOsHKM5xg" || true
-	pandoc --toc $^ -o $@ --metadata-file=rep/metadata.yaml 
+	pandoc --pdf-engine=xelatex -V "monofont:DejaVu Sans Mono" --toc $^ -o $@ --metadata-file=rep/metadata.yaml 
 
 .PHONY: clean distclean dir test
 
