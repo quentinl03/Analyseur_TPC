@@ -158,20 +158,68 @@ void CodeWriter_Return(FILE* nasm);
 
 /**
  * @brief Move computed expression present on stack's head
- * to `rax` register
+ * to `rax` register.
  *
  * @param nasm File to write into
  */
 void CodeWriter_Return_Expr(FILE* nasm);
 
+/**
+ * @brief Write a boolean coparator between two values.
+ * 
+ * @param nasm File to write into
+ * @param Node Node to write
+ * @param cmp_number Global number for the jump.
+ */
 void CodeWriter_Cmp(FILE* nasm, Node* Node, int cmp_number);
 
+/**
+ * @brief Write the first part of the If segment (cmp).
+ * 
+ * @param nasm File to write into
+ * @param if_number Global number for the jump.
+ */
 void CodeWriter_If_Init(FILE* nasm, int if_number);
+
+/**
+ * @brief Write the second part of the If segment 
+    (end 1st part + start 2nd part).
+ * 
+ * @param nasm File to write into
+ * @param if_number Global number for the jump.
+ */
 void CodeWriter_If_Else(FILE* nasm, int if_number);
+
+/**
+ * @brief Write the last part of the If segment (end_if :)
+ * 
+ * @param nasm File to write into
+ * @param if_number Global number for the jump. 
+ */
 void CodeWriter_If_End(FILE* nasm, int if_number);
 
+/**
+ * @brief Write the first part of the While segment (jmp start)
+ * 
+ * @param nasm File to write into
+ * @param while_number Global number for the jump.
+ */
 void CodeWriter_While_Init(FILE* nasm, int while_number);
+
+/**
+ * @brief Write the 2nd part of the While segment (cmp + jmp if false)
+ * 
+ * @param nasm File to write into
+ * @param while_number Global number for the jump.
+ */
 void CodeWriter_While_Eval(FILE* nasm, int while_number);
+
+/**
+ * @brief Write the last part of the While segment (jmp start + end_while bal)
+ * 
+ * @param nasm File to write into
+ * @param while_number Global number for the jump.
+ */
 void CodeWriter_While_End(FILE* nasm, int while_number);
 
 /**
@@ -179,10 +227,10 @@ void CodeWriter_While_End(FILE* nasm, int while_number);
  * Childs of the node shouldn't be already evaluated, as they
  * will be evaluated in this function.
  *
- * @param nasm
- * @param node
- * @param prog
- * @param func
+ * @param nasm File to write into
+ * @param node Node to write
+ * @param symtable Program symbol table
+ * @param func Function symbol table
  */
 void CodeWriter_Ope_Bool(FILE* nasm,
                          const Tree node,
@@ -193,6 +241,6 @@ void CodeWriter_Ope_Bool(FILE* nasm,
  * @brief Logical not operation.
  * Expects the value to negate to be on the top of the stack.
  *
- * @param nasm
+ * @param nasm File to write into
  */
 void CodeWriter_Ope_Bool_Not(FILE* nasm);
